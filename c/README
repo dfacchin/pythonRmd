@@ -1,0 +1,2 @@
+//How to compile
+gcc -Wall test1.cpp RMD.cpp -o newhell
