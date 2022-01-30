@@ -24,7 +24,7 @@ int RMD_Motor::command(uint8_t *pui8Data)
 	memcpy(frame.data,pui8Data,8);
 	//Transmit on the Can Bus
 	if (write(this->iSocket, &frame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
-		perror("Write");
+		perror("WriteX");
 		return 1;
 	}
 
@@ -32,8 +32,8 @@ int RMD_Motor::command(uint8_t *pui8Data)
 	nbytes = read(this->iSocket, &frame, sizeof(struct can_frame));
 	if (nbytes < 0) 
 	{
-		perror("Read");
-		return 1;
+		perror("ReadX");
+		return 2;
 	}
 	
 	//Copy content of the can frame to the shared buffer
@@ -67,6 +67,8 @@ int RMD_Motor::getPosition()
 	this->pBuffer[0] = 0x92;
 	if (command(this->pBuffer) == 0)
 	{
+		//Transmit data is a uint64_t but only 7 bytes are transmitted
+		//MSB is a copy of the last MSB 
 		this->pBuffer[8] =  this->pBuffer[7];
 		for (int i = 0; i < 8; i++)
 		{
@@ -92,21 +94,93 @@ int RMD_Motor::goPosition(int32_t i32Position, uint16_t maxSpeed)
 	return command(this->pBuffer);
 };
 
+// Read Encoder
+int RMD_Motor::getEncoderPosition()
+{
+	uint16_t ui16Tmp = 0;
+	memset(this->pBuffer,0,8);
+	this->pBuffer[0] = 0x90;
+	if (command(this->pBuffer) == 0)
+	{
+		//Encoder
+		ui16Tmp = this->pBuffer[2] ;
+		ui16Tmp += (this->pBuffer[3] <<8);
+		this->ui16EncoderPosition = ui16Tmp;
+		//Encoder RAW
+		ui16Tmp = this->pBuffer[4] ;
+		ui16Tmp += (this->pBuffer[5] <<8);
+		this->ui16EncoderPositionRaw = ui16Tmp;
+		//Encoder Offset
+		ui16Tmp = this->pBuffer[6] ;
+		ui16Tmp += (this->pBuffer[7] <<8);
+		this->ui16EncoderOffset = ui16Tmp;
+		return 0;
+	}
+	return 1;			
+};
+
 //Set actual position as 0 position for the internal motor
 //Writes an offset - we use this to be able to work with the motor without calibrating it every time
 //its important that when the motor is powerd on, the arm is in the init position		
 int RMD_Motor::calibrate()
 {
-	this->pBuffer[0] = 0x19;
+	//int16_t i16CalibratePosition;
+	//Set actual encoder position to 0
+	// this->pBuffer[0] = 0x19;
+	// this->pBuffer[1] = 0;
+	// this->pBuffer[2] = 0;
+	// this->pBuffer[3] = 0;
+	// this->pBuffer[4] = 0;
+	// this->pBuffer[5] = 0;
+	// this->pBuffer[6] = 0;
+	// this->pBuffer[7] = 0;
+	// return command(this->pBuffer);
+	if (getEncoderPosition() != 0)
+	{
+		//Calibration fail
+		return 1;
+	}
+	printf("RAW data:%i\t%i\t%i\n",this->ui16EncoderPositionRaw,this->ui16EncoderOffset,this->ui16EncoderPosition);
+	return 0;
+};
+
+int RMD_Motor::calibrate(uint16_t ui16RelativeOffset)
+{
+	uint16_t uiTmp1,uiTmp2,uiTmp3;
+	//Get postion
+	if (getEncoderPosition() != 0)
+	{
+		//Calibration fail
+		return 1;
+	}
+	printf("RAW data:%i\t%i\t%i\n",this->ui16EncoderPositionRaw,this->ui16EncoderOffset,this->ui16EncoderPosition);
+	
+	//We need to take the actual "position" and add/sub 180° to it, also consider possible motor turns
+	//If motor reads 0° we want to set it at 180°, we need to subtract this value then
+	//if motor reads 180 we want to set 360 that is 0
+	//if motor reads 270 we want the motor to be 180, we need to set the offset to 270-180
+	//i16CalibratePosition  = this->i16EncoderPositionRaw - 18000;
+	//Tranmsitted data is 16bit value for 1 turn 0-0xFFFF
+	//180 is 0x8000 = 32768
+	//can we simple subtract 180 ?
+	uiTmp1 = this->ui16EncoderPositionRaw - ui16RelativeOffset;
+	uiTmp2 = uiTmp1 + ui16RelativeOffset;
+	uiTmp3 = this->ui16EncoderPositionRaw - this->ui16EncoderOffset;
+	printf("MOD data:%i\t%i\t%i\n",uiTmp1,uiTmp2,uiTmp3);
+
+	// Set actual encoder position to 180
+	// First actualize motor position
+	this->pBuffer[0] = 0x91;
 	this->pBuffer[1] = 0;
 	this->pBuffer[2] = 0;
 	this->pBuffer[3] = 0;
 	this->pBuffer[4] = 0;
 	this->pBuffer[5] = 0;
-	this->pBuffer[6] = 0;
-	this->pBuffer[7] = 0;
+	this->pBuffer[6] = uiTmp1 & 0xFF;
+	this->pBuffer[7] = (uiTmp1>>8)&0xFF;
 	return command(this->pBuffer);
 };
+
 
 //Turn off the arm
 void RMD_Motor::cmdOff()
@@ -175,6 +249,12 @@ int initCanbus(int* pSocket)
 		perror("Bind");
 		return 1;
 	}
+	
+	//Set socket timeout intervall
+	timeval tv;
+	tv.tv_sec = 0;
+	tv.tv_usec = 10000;
+	setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
 	//Copy socket value
 	*pSocket = s;

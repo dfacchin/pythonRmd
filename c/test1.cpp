@@ -7,6 +7,10 @@ sudo ip link set up can0
 
 #include "RMD.h"
 
+//cin cout functions
+//#include <iostream>
+//using namespace std;
+
 int main()
 {
 	int s;
@@ -36,29 +40,46 @@ int main()
 	#endif
 	
 	
+	#if (1)	
+		if (motor1.calibrate(0x8000) != 0)
+			printf("Something Wrong in the calibration process\n");
+	#endif
+	#if (1)	
+		while(true)
+		{
+			if (motor1.calibrate() != 0)
+				printf("Something Wrong in the calibration process\n");
+		}
+	#endif
+		
+	
+	
 	//Get Motor Position
-	#if (1)
+	#if (0)
 		motor1.getPosition();
 		printf("Position: %li\n",motor1.i64Position);
 		printf("Position: %.2f\n",(float)motor1.i64Position/100);
 	#endif
 
 	//Set Max Acceleration
-	#if (1)
+	#if (0)
 		printf("Set Acceleration\n");
-		motor1.setAcceleration(3000);
+		motor1.setAcceleration(1000);
 	#endif
 
 	//Go to specific Position
-	#if(1)
+	#if(0)
 		//std::cout << "Enter Desired position\n";
-		int32_t i32DesiredPos = 0;
+		int32_t i32DesiredPos = -500000;
 		//std::cin >> i32DesiredPos;
-		motor1.goPosition(i32DesiredPos,6000);
+		motor1.goPosition(i32DesiredPos,2000);
 		do
 		{
-			motor1.getPosition();
-		} while (abs(i32DesiredPos - motor1.i64Position) < 100);
+			printf("Ret:%i\t",motor1.getPosition());
+			printf("Position: %li\n",motor1.i64Position);
+			printf("Position: %li\n",abs(i32DesiredPos - motor1.i64Position));
+		//} while (abs(i32DesiredPos - motor1.i64Position) > 100);
+		} while (true);
 	#endif
 	return 0;
 }
