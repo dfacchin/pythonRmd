@@ -174,7 +174,7 @@ class RMD:
     #write PIDs RAM
     def Fn31(self):
         data = [0x31,0x00]
-        data2 = struct.pack("BBBBBB",self.PidPosKp,self.PidPosKi,self.PidVelKp,self.PidVelKi,PidTrqKp,PidTrqKi)
+        data2 = struct.pack("BBBBBB",self.PidPosKp,self.PidPosKi,self.PidVelKp,self.PidVelKi,self.PidTrqKp,self.PidTrqKi)
         for el in data2:
             data.append(el)
         ret = self.wr(data)
@@ -195,16 +195,13 @@ class RMD:
         data = [0x33,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
         ret = self.wr(data)
         if (ret[0]) and (ret[1][0] == 0x33):
-            print("ACC READ",data,ret)
-            for el in ret[1]:
-                print(el)
             self.acceleration  = struct.unpack("<l",ret[1][4:8])[0]
         else:
             print("ERRORE",data)
             for el in ret[1]:
                 print(el)
 
-    #write PIDs RAM
+    #write Acceleration RAM
     def Fn34(self):
         data = [0x34,0x00,0x00,0x00]
         data2 = struct.pack("<l",self.acceleration)
