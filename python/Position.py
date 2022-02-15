@@ -76,6 +76,20 @@ while True:
 	motor_E.goG((angle_E+angle_S),vel)
 	time.sleep(t)
 	
+'''
+l1 = 500
+l2 = 500
+angle_S = theta1
+angle_E = theta2
+	
+def DK(theta1,theta2):
+	x = l1*math.cos(math.degrees(theta1))+l2*math.cos(math.degrees(theta1))*math.cos(math.degrees(theta2))
+	y = l1*math.sin(math.degrees(theta1))+l2*math.sin(math.degrees(theta1))*math.sin(math.degrees(theta2))
+	print('x:' + str(x), 'y:' + str(y))
+
+
+
+
 	# Right
 	angle_S = -30
 	angle_E = 30
@@ -90,16 +104,18 @@ while True:
 	motor_E.goG((angle_E+angle_S),vel)
 	time.sleep(t)
 
-'''
-	angle_E = int(input("Elbow's angle (degrees): "))
-	angle_S = int(input("Shoulder's angle (degrees): "))
-	motor_S.goG(angle_S,vel) # goG(Pos(degrees), velocity)
-	motor_E.goG((angle_E+angle_S),vel)
-	motor_E.Fn92()	# Read multi-turn angle (elbow)
-	motor_S.Fn92()  # Read multi-turn angle (shoulder)
-	motor_E.print()	
-	motor_S.print()
-	time.sleep(2)
+
+
+
+#	angle_E = int(input("Elbow's angle (degrees): "))
+#	angle_S = int(input("Shoulder's angle (degrees): "))
+#	motor_S.goG(angle_S,vel) # goG(Pos(degrees), velocity)
+#	motor_E.goG((angle_E+angle_S),vel)
+#	motor_E.Fn92()	# Read multi-turn angle (elbow)
+#	motor_S.Fn92()  # Read multi-turn angle (shoulder)
+#	motor_E.print()	
+#	motor_S.print()
+#	time.sleep(2)
 
 '''
 
