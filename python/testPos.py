@@ -47,11 +47,14 @@ motor2.Fn33()
 motor2.info()
 
 while True:
-	
-	motor2.goG(0,200)
-	motor1.goG(10,4000) #gradi. velocità
+	angle1 = int(input("Elbow"))
+	angle2 = int(input("Shoulder"))
+	motor2.goG(angle2,1000)
+	motor1.goG(angle1+angle2,1000) #gradi. velocità
+	motor1.Fn92()	
+	motor2.Fn92()
+	motor1.print()	
+	motor2.print()
 	time.sleep(2)
-	motor2.goG(0,200)
-	motor1.goG(-10,4000)
-	time.sleep(2)
+
 
