@@ -6,8 +6,9 @@ import time
 bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 
 # Variables:
-acc = 1000 # Motors acceleration
-vel = 1000 # Motors velocity
+acc = 2000 # Motors acceleration
+vel = 3000 # Motors velocity
+t = 4 # Waiting time
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
 motor_E = RMD.RMD(0x142,bus,ratio = 13) # Elbow
@@ -61,15 +62,44 @@ motor_S.info()
 
 # ---------- Commands ----------
 
+# Home:
+# S: 15
+# E: -5
+
+
 while True:
+
+	# Straight
+	angle_S = 15
+	angle_E = -5
+	motor_S.goG(angle_S,vel) # goG(Pos(degrees), velocity)
+	motor_E.goG((angle_E+angle_S),vel)
+	time.sleep(t)
+	
+	# Right
+	angle_S = -30
+	angle_E = 30
+	motor_S.goG(angle_S,vel)
+	motor_E.goG((angle_E+angle_S),vel)
+	time.sleep(t)
+	
+	# Left
+	angle_S = 60
+	angle_E = -40
+	motor_S.goG(angle_S,vel)
+	motor_E.goG((angle_E+angle_S),vel)
+	time.sleep(t)
+
+'''
 	angle_E = int(input("Elbow's angle (degrees): "))
 	angle_S = int(input("Shoulder's angle (degrees): "))
 	motor_S.goG(angle_S,vel) # goG(Pos(degrees), velocity)
-	motor_E.goG(angle_E+angle_S,vel)
-	motor_E.Fn92()	
-	motor_S.Fn92()
+	motor_E.goG((angle_E+angle_S),vel)
+	motor_E.Fn92()	# Read multi-turn angle (elbow)
+	motor_S.Fn92()  # Read multi-turn angle (shoulder)
 	motor_E.print()	
 	motor_S.print()
 	time.sleep(2)
 
+'''
 
