@@ -12,12 +12,13 @@ def IK(x,y,elbow=0):
 
 	# elbow=0 (left-arm) towards the trees
 	# elbow=1 (right-arm) towards the machine
-	if (elbow==1):
-		x = -x
+#	if (elbow==1):
+#		x = -x
 		
 	l = math.sqrt(x**2+y**2) # distance from shoulder joint to eef (Pitagora) [mm]
 	if (l > (l1+l2)):
 		l = (l1+l2)-0.001
+		
 	phi = math.atan2(y,x) # phi = alpha + theta1
 	alpha = math.acos((l**2+l1**2-l2**2)/(2*l1*l)) # Theorem of the cosine
 	theta1 = phi-alpha
@@ -30,7 +31,7 @@ def IK(x,y,elbow=0):
 	theta2 = math.degrees(theta2)
 	
 	if (elbow==1):
-		theta1 = -theta1
+		theta1 = theta1 + 90
 		theta2 = -theta2
 
 	theta1 = round(theta1,2) # round to 2 decimals
@@ -41,7 +42,7 @@ def IK(x,y,elbow=0):
 
 	return theta1, theta2
 
-inverse = IK(400,0,elbow=1)
+inverse = IK(705,2.12,elbow=1)
 print(inverse)
 
 '''
