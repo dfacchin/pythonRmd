@@ -11,7 +11,7 @@ def DK(theta1,theta2):
 	print('x:' + str(x), 'y:' + str(y))
 	return x, y
 	
-direct = DK(45,-90) # set desired values in degrees
+direct = DK(0,90) # set desired values in degrees
 
 print(direct)
 
