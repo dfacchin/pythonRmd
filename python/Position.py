@@ -66,7 +66,40 @@ motor_S.info()
 # S: 15
 # E: -5
 
+'''
+Procedure:
+-  Read current motor angles "multi-turn" (theta1_c, theta2_c) [deg]
+-  Calculate DK theta1_c,theta2_c --> x,y
+-  Set desired goal position (x_new,y_new)
+-  Calculate IK x_new,y_new --> theta1,theta2
+-  Use goG function to move the motors
+-  Implement a straight and smooth trajectory
+'''
 
+theta1_c = motor_S.Fn92() # Read current multi-turn angle (shoulder)
+theta2_c = motor_E.Fn92()	# Read current multi-turn angle (elbow)
+
+coord = DK(theta1_c,theta2_c) # get current x,y coordinates 
+print(coord)
+
+x_new = int(input("Enter desired x-coordinate: "))
+y_new = int(input("Enter desired y-coordinate: "))
+
+angles = IK(x_new, y_new, elbow=0) # get new joint angles
+print(angles)
+
+# now that we obtained theta1 and theta2 from the IK
+# we can move the motors:
+
+angle_S = theta1
+angle_E = theta2
+motor_S.goG(angle_S,vel) # goG(Pos(degrees), velocity)
+motor_E.goG((angle_E+angle_S),vel)
+time.sleep(t)
+
+
+
+'''
 while True:
 
 	# Straight
@@ -75,20 +108,6 @@ while True:
 	motor_S.goG(angle_S,vel) # goG(Pos(degrees), velocity)
 	motor_E.goG((angle_E+angle_S),vel)
 	time.sleep(t)
-	
-'''
-l1 = 500
-l2 = 500
-angle_S = theta1
-angle_E = theta2
-	
-def DK(theta1,theta2):
-	x = l1*math.cos(math.degrees(theta1))+l2*math.cos(math.degrees(theta1))*math.cos(math.degrees(theta2))
-	y = l1*math.sin(math.degrees(theta1))+l2*math.sin(math.degrees(theta1))*math.sin(math.degrees(theta2))
-	print('x:' + str(x), 'y:' + str(y))
-
-
-
 
 	# Right
 	angle_S = -30
@@ -103,8 +122,6 @@ def DK(theta1,theta2):
 	motor_S.goG(angle_S,vel)
 	motor_E.goG((angle_E+angle_S),vel)
 	time.sleep(t)
-
-
 
 
 #	angle_E = int(input("Elbow's angle (degrees): "))
