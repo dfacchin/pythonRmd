@@ -6,10 +6,10 @@ import time
 bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
-motor_E = RMD.RMD(0x142,bus,ratio = 13) # Elbow
+motor_E = RMD.RMD(0x142,bus,ratio = 13.5) # Elbow
 
 # ---------- RMD motor with ID 2 (Shoulder) ----------
-motor_S = RMD.RMD(0x141,bus,ratio = 13) # Shoulder
+motor_S = RMD.RMD(0x141,bus,ratio = 13.5) # Shoulder
 
 
 motor_E.Fn90()
@@ -28,6 +28,7 @@ while True:
 	motor_S.print()
 	motor_E.print()
 	motor_S.print()
-	input()
-	motor_E.Fn91(180)	
-	motor_S.Fn91(180)
+	shulder = int(input("MT shulder"))
+	elbow = int(input("MT elbow"))
+	motor_E.goG(elbow,10)
+	motor_S.goG(shulder,10)

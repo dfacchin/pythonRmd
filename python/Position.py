@@ -6,8 +6,8 @@ import time
 bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 
 # Variables:
-acc = 2000 # Motors acceleration
-vel = 3000 # Motors velocity
+acc = 500 # Motors acceleration
+vel = 500 # Motors velocity
 t = 4 # Waiting time
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
@@ -74,7 +74,7 @@ Procedure:
 -  Calculate IK x_new,y_new --> theta1,theta2
 -  Use goG function to move the motors
 -  Implement a straight and smooth trajectory
-'''
+
 
 theta1_c = motor_S.Fn92() # Read current multi-turn angle (shoulder)
 theta2_c = motor_E.Fn92()	# Read current multi-turn angle (elbow)
@@ -96,19 +96,21 @@ angle_E = theta2
 motor_S.goG(angle_S,vel) # goG(Pos(degrees), velocity)
 motor_E.goG((angle_E+angle_S),vel)
 time.sleep(t)
-
-
-
 '''
+
+
+
 while True:
 
 	# Straight
-	angle_S = 15
-	angle_E = -5
+	angle_S = int(180/13)
+	angle_E = int(180/13)
 	motor_S.goG(angle_S,vel) # goG(Pos(degrees), velocity)
 	motor_E.goG((angle_E+angle_S),vel)
 	time.sleep(t)
-
+	break
+	
+'''
 	# Right
 	angle_S = -30
 	angle_E = 30

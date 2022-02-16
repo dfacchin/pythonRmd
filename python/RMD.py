@@ -138,9 +138,11 @@ class RMD:
             for el in ret[1][1:]:
                 data.append(el)
             data.append(data[-1])
-            self.multiTurn  = struct.unpack("<q",bytes(data))[0]/100
-            self.multiTurn  += -180 
+            self.multiTurn  = struct.unpack("<q",bytes(data))[0]
+            self.multiTurn  += 18000
+            self.multiTurn  /= 100
             self.multiTurnG = self.multiTurn/self.ratio
+            self.multiTurnG = int(self.multiTurnG)
             #print(self.multiTurn)
         else:
             print("ERRORE",data)
@@ -154,6 +156,7 @@ class RMD:
         if (ret[0]) and (ret[1][0] == 0x94):
             self.singleTurn = struct.unpack("<H",ret[1][6:8])[0]/100
             self.singleTurnG = self.singleTurn/self.ratio            
+            self.singleTurnG = int(self.singleTurnG)
             #print(self.singleTurn)            
         else:
             print("ERRORE",data)
@@ -246,9 +249,9 @@ class RMD:
     #Position Velocity Cmd
     def FnA4(self,desiredPosition,maxSpeed):
         data = [0xA4,0x00]
-        self.desiredPosition = desiredPosition+180
+        self.desiredPosition = desiredPosition +18000
         self.maxSpeed = maxSpeed
-        data2 = struct.pack("<Hl",maxSpeed,desiredPosition)
+        data2 = struct.pack("<Hl",maxSpeed,self.desiredPosition)
         for el in data2:
             data.append(el)
         ret = self.wr(data)
@@ -272,7 +275,7 @@ class RMD:
     #go to a specific position and print actual position
     def goG(self,pos,speed):
         self.print()
-        self.FnA4(pos*100*self.ratio,speed*self.ratio)
+        self.FnA4(int(pos*100*self.ratio), int(speed*self.ratio))
         for a in range(1):
             #self.Fn90()
             self.Fn92()
