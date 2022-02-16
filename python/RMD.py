@@ -56,15 +56,21 @@ class RMD:
         print(stringa)
         print("\tAcceleration:")
         print("\t\t",self.acceleration)
-
-        
+    
     def print(self):
-        
         stringa = "#POSITION     RAW:" + str(self.encoderPosition) +"\t"
         stringa += "M" + "{:.2f}".format(self.multiTurn) +"\t"
         stringa += "S" + "{:.2f}".format(self.singleTurn) +"\t"
         stringa += "MG" + "{:.2f}".format(self.multiTurnG)+"\t"
         stringa += "SG" + "{:.2f}".format(self.singleTurnG)
+        print(stringa)
+
+        
+    def encoderInfo(self):
+        
+        stringa = "#POSITION\n\tRAW:" + str(self.encoderPosition)
+        stringa += "\n\t" + str(self.encoderOriginalPosition)
+        stringa += "\n\t" + str(self.encoderOffset)
         print(stringa)
         
         
@@ -102,6 +108,27 @@ class RMD:
             for el in ret[1]:
                 print(el)
 
+    #Calibrate offset to specific angle
+    def Fn91(self,angle = 180):
+        #Our offset is the actual original postion, shifted of 180degrees
+        #180degres for this encoder are 0x8000 in hex
+        #we can add the value and mod with 0x1000
+        value = self.encoderOriginalPosition + 0x8000
+        value = value%0x10000
+        data = [0x91,0x00,0x00,0x00,0x00,0x00]
+        data2 = struct.pack("<H",value)
+        for el in data2:
+            data.append(el)
+        ret = self.wr(data)
+        if (ret[0]) and (ret[1][0] == 0x91):
+            self.encoderOffset = struct.unpack("<H",ret[1][6:8])[0]
+            #print(self.encoderPosition, self.encoderOriginalPosition, self.encoderOffset)
+        else:
+            print("ERRORE",data)
+            for el in ret[1]:
+                print(el)
+
+
     #read multi run angle
     def Fn92(self):
         data = [0x92,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
@@ -112,6 +139,7 @@ class RMD:
                 data.append(el)
             data.append(data[-1])
             self.multiTurn  = struct.unpack("<q",bytes(data))[0]/100
+            self.multiTurn  += -180 
             self.multiTurnG = self.multiTurn/self.ratio
             #print(self.multiTurn)
         else:
@@ -218,7 +246,7 @@ class RMD:
     #Position Velocity Cmd
     def FnA4(self,desiredPosition,maxSpeed):
         data = [0xA4,0x00]
-        self.desiredPosition = desiredPosition
+        self.desiredPosition = desiredPosition+180
         self.maxSpeed = maxSpeed
         data2 = struct.pack("<Hl",maxSpeed,desiredPosition)
         for el in data2:
