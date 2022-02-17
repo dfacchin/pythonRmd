@@ -7,9 +7,9 @@ import time
 bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 
 # Variables:
-acc = 500 # Motors acceleration
-vel = 500 # Motors velocity
-t = 4 # Waiting time
+acc = 20 # Motors acceleration
+vel = 20 # Motors velocity
+t = 5 # Waiting time
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
 motor_E = RMD.RMD(0x142,bus,ratio = 13.5) # Elbow
@@ -54,6 +54,23 @@ motor_S.Fn34() # write acceleration to Ram
 
 # ---------- Commands ----------
 
+# DK
+theta1 = float(input("MT shulder [deg]: "))
+theta2 = float(input("MT elbow [deg]: "))
+
+motor_S.goG(theta1, v) # ################ maybe goG wants int values
+motor_E.goG(theta2, v)
+
+
+coord = Kinematics.DK(theta1,theta2)
+
+# IK
+x = float(input("x-axis [mm]: ")) # x is along the straight arm
+y = float(input("y-axis [mm]: ")) # y is perpendicular to the straight arm
+
+angles = Kinematics.IK(x,y,elbow=0)
+
+
 '''
 Procedure:
 -  Read current motor angles "multi-turn" (theta1_c, theta2_c) [deg]
@@ -63,7 +80,7 @@ Procedure:
 -  Use goG function to move the motors
 -  Implement a straight and smooth trajectory
 '''
-
+'''
 theta1_c = motor_S.Fn92() # Read current multi-turn angle (shoulder)
 theta2_c = motor_E.Fn92()	# Read current multi-turn angle (elbow)
 
@@ -84,5 +101,5 @@ angle_E = theta2
 motor_S.goG(angle_S,vel) # goG(Pos(degrees), velocity)
 motor_E.goG((angle_E+angle_S),vel)
 time.sleep(t)
-
+'''
 

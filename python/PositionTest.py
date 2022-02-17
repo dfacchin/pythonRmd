@@ -1,6 +1,9 @@
 
 import Kinematics
 
+# Shoulder: 1, S
+# Elbow: 2, E
+
 # ---------- Commands ----------
 # DK
 theta1 = float(input("MT shulder [deg]: "))
@@ -12,7 +15,7 @@ coord = Kinematics.DK(theta1,theta2)
 x = float(input("x-axis [mm]: ")) # x is along the straight arm
 y = float(input("y-axis [mm]: ")) # y is perpendicular to the straight arm
 
-angles = Kinematics.IK(x,y,elbow=1)
+angles = Kinematics.IK(x,y,elbow=0)
 
 '''
 Procedure:
