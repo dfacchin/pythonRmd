@@ -32,3 +32,41 @@ while True:
 	elbow = int(input("MT elbow"))
 	motor_E.goG(elbow,10)
 	motor_S.goG(shulder,10)
+	
+'''
+while True:
+
+	# Straight
+	angle_S = int(180/13)
+	angle_E = int(180/13)
+	motor_S.goG(angle_S,vel) # goG(Pos(degrees), velocity)
+	motor_E.goG((angle_E+angle_S),vel)
+	time.sleep(t)
+	break
+	
+
+	# Right
+	angle_S = -30
+	angle_E = 30
+	motor_S.goG(angle_S,vel)
+	motor_E.goG((angle_E+angle_S),vel)
+	time.sleep(t)
+	
+	# Left
+	angle_S = 60
+	angle_E = -40
+	motor_S.goG(angle_S,vel)
+	motor_E.goG((angle_E+angle_S),vel)
+	time.sleep(t)
+
+
+#	angle_E = int(input("Elbow's angle (degrees): "))
+#	angle_S = int(input("Shoulder's angle (degrees): "))
+#	motor_S.goG(angle_S,vel) # goG(Pos(degrees), velocity)
+#	motor_E.goG((angle_E+angle_S),vel)
+#	motor_E.Fn92()	# Read multi-turn angle (elbow)
+#	motor_S.Fn92()  # Read multi-turn angle (shoulder)
+#	motor_E.print()	
+#	motor_S.print()
+#	time.sleep(2)
+'''

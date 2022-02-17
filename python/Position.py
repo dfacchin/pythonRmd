@@ -1,4 +1,5 @@
 import RMD
+import Kinematics
 import can
 import time
 
@@ -11,7 +12,7 @@ vel = 500 # Motors velocity
 t = 4 # Waiting time
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
-motor_E = RMD.RMD(0x142,bus,ratio = 13) # Elbow
+motor_E = RMD.RMD(0x142,bus,ratio = 13.5) # Elbow
 
 motor_E.info() # 'info' prints Pid and Acceleration 
 
@@ -30,13 +31,9 @@ motor_E.Fn31() # write PID to Ram
 motor_E.acceleration = acc
 motor_E.Fn34() # write acceleration to Ram
 
-motor_E.Fn30() # read PID
-motor_E.Fn33() # read acceleration
-motor_E.info()
-
 
 # ---------- RMD motor with ID 2 (Shoulder) ----------
-motor_S = RMD.RMD(0x141,bus,ratio = 13) # Shoulder
+motor_S = RMD.RMD(0x141,bus,ratio = 13.5) # Shoulder
 
 motor_S.info()
 
@@ -55,16 +52,7 @@ motor_S.Fn31() # write PID to Ram
 motor_S.acceleration = acc
 motor_S.Fn34() # write acceleration to Ram
 
-motor_S.Fn30() # read PID
-motor_S.Fn33() # read acceleration
-motor_S.info()
-
-
 # ---------- Commands ----------
-
-# Home:
-# S: 15
-# E: -5
 
 '''
 Procedure:
@@ -74,7 +62,7 @@ Procedure:
 -  Calculate IK x_new,y_new --> theta1,theta2
 -  Use goG function to move the motors
 -  Implement a straight and smooth trajectory
-
+'''
 
 theta1_c = motor_S.Fn92() # Read current multi-turn angle (shoulder)
 theta2_c = motor_E.Fn92()	# Read current multi-turn angle (elbow)
@@ -96,45 +84,5 @@ angle_E = theta2
 motor_S.goG(angle_S,vel) # goG(Pos(degrees), velocity)
 motor_E.goG((angle_E+angle_S),vel)
 time.sleep(t)
-'''
 
-
-
-while True:
-
-	# Straight
-	angle_S = int(180/13)
-	angle_E = int(180/13)
-	motor_S.goG(angle_S,vel) # goG(Pos(degrees), velocity)
-	motor_E.goG((angle_E+angle_S),vel)
-	time.sleep(t)
-	break
-	
-'''
-	# Right
-	angle_S = -30
-	angle_E = 30
-	motor_S.goG(angle_S,vel)
-	motor_E.goG((angle_E+angle_S),vel)
-	time.sleep(t)
-	
-	# Left
-	angle_S = 60
-	angle_E = -40
-	motor_S.goG(angle_S,vel)
-	motor_E.goG((angle_E+angle_S),vel)
-	time.sleep(t)
-
-
-#	angle_E = int(input("Elbow's angle (degrees): "))
-#	angle_S = int(input("Shoulder's angle (degrees): "))
-#	motor_S.goG(angle_S,vel) # goG(Pos(degrees), velocity)
-#	motor_E.goG((angle_E+angle_S),vel)
-#	motor_E.Fn92()	# Read multi-turn angle (elbow)
-#	motor_S.Fn92()  # Read multi-turn angle (shoulder)
-#	motor_E.print()	
-#	motor_S.print()
-#	time.sleep(2)
-
-'''
 
