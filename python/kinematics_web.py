@@ -1,34 +1,14 @@
-#!/usr/bin/env python3
-
 import math
 import numpy as np
 
-#================================================================
-def DK(q, len1=497.0, len2=500.0):
-    """Compute the forward kinematics.  Returns the base-coordinate Cartesian
-    position of the elbow and endpoint for a given joint angle vector.  Optional
-    parameters l1 and l2 are the link lengths.  The base is assumed to be at the
-    origin.
 
-    :param q: two-element list or ndarray with [q1, q2] joint angles
-    :param len1: optional proximal link length
-    :param len2: optional distal link length
-    :return: tuple (elbow, end) of two-element ndarrays with [x,y] locations
-    """
-
-    elbow = np.array((len1 * math.sin(q[0]), len1 * math.cos(q[0])))
-    end   = elbow + np.array((len2 * math.sin(q[0]+q[1]), len2 * math.cos(q[0]+q[1])))
-    
-    return elbow, end
-
-#================================================================
-def IK(target, len1=497.0, len2=500.0):
+def IK(target, len1=497.0, len2=500.0, elbow=0):
     """Compute two inverse kinematics solutions for a target end position.  The
     target is a Cartesian position vector (two-element ndarray) in world
     coordinates, and the result vectors are joint angles as ndarrays [q0, q1].
     If the target is out of reach, returns the closest pose.
 
-    :param target: two-element list or ndarray with [x1, y] target position
+    :param target: two-element list or ndarray with [x, y] target position
     :param len1: optional proximal link length
     :param len2: optional distal link length
     :return: tuple (solution1, solution2) of two-element ndarrays with q1, q2 angles
@@ -73,14 +53,20 @@ def IK(target, len1=497.0, len2=500.0):
 #    soln1 = np.array((theta - alpha, math.pi - elbow_supplement))
 #    soln2 = np.array((theta + alpha, elbow_supplement - math.pi))
 
-    return soln1, soln2
+    if elbow==1:
+        return soln1
+    else:
+        return soln2
 
+'''
 ################################################################
 # When run as a script, try a sample problem:
 if __name__ == "__main__":
 
     # choose a sample target position to test IK
-    target = np.array((631.52, -109.02))
-    ik = IK(target)
-    print("The following solutions should reach endpoint position %s: %s" % (target, ik))
-
+	x = float(input("x-axis [mm]: "))
+	y = float(input("y-axis [mm]: "))
+	target = np.array((x, y))
+	ik = IK(target)
+	print("The following solutions should reach endpoint position %s: %s" % (target, ik))
+'''

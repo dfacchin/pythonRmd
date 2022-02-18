@@ -1,10 +1,28 @@
-
-import KinematicsDaniele
-
-# Shoulder: 1, S
-# Elbow: 2, E
+import numpy as np
+import kinematics_web
 
 # ---------- Commands ----------
+
+# choose a target position to compute the joint angles (IK)
+x = float(input("x-axis [mm]: ")) # x is along the straight arm (extiting the machine)
+y = float(input("y-axis [mm]: ")) # y is perpendicular to the straight arm (positive is towards the coffee machine)
+target = np.array((x, y))
+ik = kinematics_web.IK(target, elbow=1)
+print("The following solutions should reach endpoint position %s: %s" % (target, ik))
+
+#print(ik[0])
+#print(ik[1])
+
+# Variables:
+v = 20 # velocity
+a = 20 # acceleration
+t = 3 # time [sec]
+
+motor_S.goG(ik[0], v)
+motor_E.goG(ik[1], v)
+time.sleep(t)
+
+'''
 # DK
 theta1 = float(input("MT shulder [deg]: "))
 theta2 = float(input("MT elbow [deg]: "))
@@ -17,7 +35,7 @@ y = float(input("y-axis [mm]: ")) # y is perpendicular to the straight arm
 
 angles = KinematicsDaniele.IK(x,y,)
 
-'''
+
 Procedure:
 -  Read current motor angles "multi-turn" (theta1_c, theta2_c) [deg]
 -  Calculate DK theta1_c,theta2_c --> x,y
