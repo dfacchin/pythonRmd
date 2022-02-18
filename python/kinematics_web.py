@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
-"""two-link-ik.py: demonstration of forward and inverse kinematics for a two-link arm."""
 
-# Standard library modules.
 import math
-
-# Third-party library modules.
 import numpy as np
 
 #================================================================
-def two_link_forward_kinematics(q, len1=497.0, len2=500.0):
+def DK(q, len1=497.0, len2=500.0):
     """Compute the forward kinematics.  Returns the base-coordinate Cartesian
     position of the elbow and endpoint for a given joint angle vector.  Optional
     parameters l1 and l2 are the link lengths.  The base is assumed to be at the
@@ -22,24 +18,25 @@ def two_link_forward_kinematics(q, len1=497.0, len2=500.0):
 
     elbow = np.array((len1 * math.sin(q[0]), len1 * math.cos(q[0])))
     end   = elbow + np.array((len2 * math.sin(q[0]+q[1]), len2 * math.cos(q[0]+q[1])))
+    
     return elbow, end
 
 #================================================================
-def two_link_inverse_kinematics(target, len1=497.0, len2=500.0):
+def IK(target, len1=497.0, len2=500.0):
     """Compute two inverse kinematics solutions for a target end position.  The
     target is a Cartesian position vector (two-element ndarray) in world
     coordinates, and the result vectors are joint angles as ndarrays [q0, q1].
     If the target is out of reach, returns the closest pose.
 
-    :param target: two-element list or ndarray with [x, y] target position
+    :param target: two-element list or ndarray with [x1, y] target position
     :param len1: optional proximal link length
     :param len2: optional distal link length
     :return: tuple (solution1, solution2) of two-element ndarrays with q1, q2 angles
     """
 
     # find the position of the point in polar coordinates
-    radiussq = np.dot(target, target) # x,y
-    radius   = math.sqrt(radiussq) # r=sqrt(x**2+y**2)
+    radiussq = np.dot(target, target)
+    radius   = math.sqrt(radiussq)
 
     # theta is the angle of target point w.r.t. X axis, same origin as arm
     theta    = math.atan2(target[1], target[0]) 
@@ -60,8 +57,21 @@ def two_link_inverse_kinematics(target, len1=497.0, len2=500.0):
         alpha = 0.0
 
     #  compute the two solutions with opposite elbow sign
-    soln1 = np.array((theta - alpha, math.pi - elbow_supplement))
-    soln2 = np.array((theta + alpha, elbow_supplement - math.pi))
+    theta1_1 = np.rad2deg(theta - alpha)
+    theta2_1 = np.rad2deg(math.pi - elbow_supplement)
+    theta1_1 = round(theta1_1,2)
+    theta2_1 = round(theta2_1,2)
+    soln1 = np.array((theta1_1, theta2_1))
+    
+    theta1_2 = np.rad2deg(theta + alpha)
+    theta2_2 = np.rad2deg(elbow_supplement - math.pi)
+    theta1_2 = round(theta1_2,2)
+    theta2_2 = round(theta2_2,2)
+    soln2 = np.array((theta1_2, theta2_2))
+ 
+	# Solutions in rad:
+#    soln1 = np.array((theta - alpha, math.pi - elbow_supplement))
+#    soln2 = np.array((theta + alpha, elbow_supplement - math.pi))
 
     return soln1, soln2
 
@@ -70,14 +80,7 @@ def two_link_inverse_kinematics(target, len1=497.0, len2=500.0):
 if __name__ == "__main__":
 
     # choose a sample target position to test IK
-    target = np.array((497.0, 500.0))
-    ik = two_link_inverse_kinematics(target)
+    target = np.array((631.52, -109.02))
+    ik = IK(target)
     print("The following solutions should reach endpoint position %s: %s" % (target, ik))
 
-    # test the solutions:
-
-    p1 = two_link_forward_kinematics(ik[0])
-    p2 = two_link_forward_kinematics(ik[1])
-
-    print("Endpoint position for first solution :", p1[1])
-    print("Endpoint position for second solution:", p2[1])

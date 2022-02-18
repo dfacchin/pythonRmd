@@ -71,5 +71,5 @@ def IK(x,y,elbow=0):
 x = float(input("x-axis [mm]: ")) # x is along the straight arm
 y = float(input("y-axis [mm]: ")) # y is perpendicular to the straight arm
 
-angles = IK(x,y,elbow=0)
+angles = IK(x,y,elbow=1)
 
