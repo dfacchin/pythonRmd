@@ -1,14 +1,15 @@
 import RMD
-import Kinematics
 import can
 import time
+import numpy as np
+import kinematics_web
 
 # Using specific buses works similar:
 bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 
 # Variables:
-acc = 20 # Motors acceleration
-vel = 20 # Motors velocity
+a = 20 # Motors acceleration
+v = 20 # Motors velocity
 t = 5 # Waiting time
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
@@ -28,7 +29,7 @@ motor_E.PidTrqKp  = 30
 motor_E.PidTrqKp  = 5
 motor_E.Fn31() # write PID to Ram
 # Specify desired accelration
-motor_E.acceleration = acc
+motor_E.acceleration = a
 motor_E.Fn34() # write acceleration to Ram
 
 
@@ -49,57 +50,37 @@ motor_S.PidTrqKp  = 30
 motor_S.PidTrqKp  = 5
 motor_S.Fn31() # write PID to Ram
 # Specify desired accelration
-motor_S.acceleration = acc
+motor_S.acceleration = a
 motor_S.Fn34() # write acceleration to Ram
 
-# ---------- Commands ----------
+while True:
+	# choose a target position to compute the joint angles (IK)
+	x = float(input("x-axis [mm]: ")) # x is along the straight arm (extiting the machine)
+	y = float(input("y-axis [mm]: ")) # y is perpendicular to the straight arm (positive is towards the coffee machine)
+	target = np.array((x, y))
+	ik = kinematics_web.IK(target, elbow=0)
+	print("The following solutions should reach endpoint position %s: %s" % (target, ik))
 
-# DK
-theta1 = float(input("MT shulder [deg]: "))
-theta2 = float(input("MT elbow [deg]: "))
+	#print(ik[0]) #theta_shoulder
+	#print(ik[1]) #theta_elbow
 
-motor_S.goG(theta1, v) # ################ maybe goG wants int values
-motor_E.goG(theta2, v)
-
-
-coord = Kinematics.DK(theta1,theta2)
-
-# IK
-x = float(input("x-axis [mm]: ")) # x is along the straight arm
-y = float(input("y-axis [mm]: ")) # y is perpendicular to the straight arm
-
-angles = Kinematics.IK(x,y,elbow=0)
-
+	motor_S.goG(ik[0], v)
+	motor_E.goG(ik[1]+ik[0], v)
+	time.sleep(t)
 
 '''
-Procedure:
--  Read current motor angles "multi-turn" (theta1_c, theta2_c) [deg]
--  Calculate DK theta1_c,theta2_c --> x,y
--  Set desired goal position (x_new,y_new)
--  Calculate IK x_new,y_new --> theta1,theta2
--  Use goG function to move the motors
--  Implement a straight and smooth trajectory
+while True:
+	motor_E.Fn90()
+	motor_S.Fn90()
+	motor_E.Fn92()
+	motor_S.Fn92()
+
+	motor_E.print()
+	motor_S.print()
+
+	shoulder = int(input("MT shoulder [deg]: "))
+	elbow = int(input("MT elbow [deg]: "))
+	motor_E.goG(elbow+shoulder,v)
+	motor_S.goG(shoulder,v)
+	time.sleep(3)
 '''
-'''
-theta1_c = motor_S.Fn92() # Read current multi-turn angle (shoulder)
-theta2_c = motor_E.Fn92()	# Read current multi-turn angle (elbow)
-
-coord = DK(theta1_c,theta2_c) # get current x,y coordinates 
-print(coord)
-
-x_new = int(input("Enter desired x-coordinate: "))
-y_new = int(input("Enter desired y-coordinate: "))
-
-angles = IK(x_new, y_new, elbow=0) # get new joint angles
-print(angles)
-
-# now that we obtained theta1 and theta2 from the IK
-# we can move the motors:
-
-angle_S = theta1
-angle_E = theta2
-motor_S.goG(angle_S,vel) # goG(Pos(degrees), velocity)
-motor_E.goG((angle_E+angle_S),vel)
-time.sleep(t)
-'''
-
