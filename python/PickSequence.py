@@ -8,8 +8,8 @@ import kinematics_web
 bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 
 # Variables:
-a = 500 # Motors acceleration
-v = 500 # Motors velocity
+a = 1500 # Motors acceleration
+v = 1500 # Motors velocity
 t = 3 # Waiting time
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
@@ -55,7 +55,7 @@ motor_S.acceleration = a
 motor_S.Fn34() # write acceleration to Ram
 
 
-while True:
+while False:
 	# choose a target position to compute the joint angles (IK)
 	x = float(input("x-axis [mm]: ")) # x is along the straight arm (extiting the machine)
 	y = float(input("y-axis [mm]: ")) # y is perpendicular to the straight arm (positive is towards the coffee machine)
@@ -69,6 +69,24 @@ while True:
 	motor_S.goG(ik[0], v)
 	motor_E.goG(ik[1]+ik[0], v)
 	time.sleep(t)
+
+arrayEl = [[800,-500],[100,600],[900,30],[100,600],[800,600],[100,600]]
+while True:
+	for el in arrayEl:
+	
+		# choose a target position to compute the joint angles (IK)
+		x = float(el[0]) # x is along the straight arm (extiting the machine)
+		y = float(el[1]) # y is perpendicular to the straight arm (positive is towards the coffee machine)
+		target = np.array((x, y))
+		ik = kinematics_web.IK(target, elbow=1)
+		print("The following solutions should reach endpoint position %s: %s" % (target, ik))
+
+		#print(ik[0]) #theta_shoulder
+		#print(ik[1]) #theta_elbow
+
+		motor_S.goG(ik[0], v)
+		motor_E.goG(ik[1]+ik[0], v)
+		time.sleep(t)
 
 '''
 while True:
