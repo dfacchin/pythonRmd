@@ -16,8 +16,8 @@ def DK(theta1,theta2):
 # Inverse kinematics [IK] (transforms eef coordinates (x,y) in joint angles (theta1,theta2))
 def IK(x,y,elbow=0):
 
-	# elbow=0 (left-arm) towards the trees
-	# elbow=1 (right-arm) towards the machine
+	# elbow=0 (right-arm) elbow towards the wall
+	# elbow=1 (left-arm) elbow towards coffee machine
 		
 	l = np.sqrt(x**2+y**2) # distance from shoulder joint to eef (Pitagora) [mm]
 	if (l > (l1+l2)):

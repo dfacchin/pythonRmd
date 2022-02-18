@@ -23,33 +23,49 @@ coord = DK(theta1,theta2)
 
 # Inverse kinematics [IK] (transforms eef coordinates (x,y) in joint angles (theta1,theta2))
 def IK(x,y,elbow=0):
+
+	# elbow=0 (right-arm) elbow towards the wall
+	# elbow=1 (left-arm) elbow towards coffee machine
 	
 	l = np.sqrt(x**2+y**2) # distance from shoulder joint to eef (Pitagora) [mm]
 	
 	phi = np.arctan2(y,x) # phi = alpha + theta1
 	alpha = np.arccos((l**2+l1**2-l2**2)/(2*l1*l)) # Theorem of the cosine
 	
+	# Use this if both links of the arm have the same length
 	if alpha == 0.7853981633974484:
-		alpha = alpha - 0.00000000001
+		alpha = alpha - 1e-10
 	
 	print("phi: " + str(phi))
 	print("alpha: " + str(alpha))
 	
-	theta1 = phi-alpha
+#	theta1 = phi-alpha
+	
+	#-------------------------------------------
+	if elbow==0:
+		theta1 = phi-alpha
+	else:
+		theta1 = phi+alpha
+	
 	print("theta1: " + str(theta1))
+	#-------------------------------------------
 	
 	# Current frame (x_c,y_c)
 	y_c = l*np.sin(alpha) # and also: y_c = l2*sin(theta2)
 	
 	theta2 = np.arcsin(y_c/l2)
+	
+	if elbow==1:
+		theta2 = -theta2
+	
 	print("theta2: " + str(theta2))
 	
 	
 	gamma = np.arccos((l1**2+l2**2-l**2)/(2*l1*l2)) # Theorem of the cosine
-	if gamma < np.pi/2:
+	if elbow==0 and gamma < np.pi/2:
 		theta2 = np.pi - theta2
-#	elif elbow==1 and gamma < 90:
-#		theta2 = -180 - theta2
+	elif elbow==1 and gamma < np.pi/2:
+		theta2 = -np.pi - theta2
 
 #	if l1*np.cos(theta1) + l2*np.cos(theta1+theta2) != x:
 #		theta2 = 180 - theta2
@@ -69,5 +85,6 @@ def IK(x,y,elbow=0):
 x = float(input("x-axis [mm]: ")) # x is along the straight arm
 y = float(input("y-axis [mm]: ")) # y is perpendicular to the straight arm
 
-angles = IK(x,y)
+angles = IK(x,y,elbow=1)
+
 
