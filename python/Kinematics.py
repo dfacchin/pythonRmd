@@ -1,6 +1,6 @@
 import math
 import numpy as np
-l1 = 497 # [mm]  Humerus
+l1 = 500 # [mm]  Humerus
 l2 = 500 # [mm]  Forearm
 	
 

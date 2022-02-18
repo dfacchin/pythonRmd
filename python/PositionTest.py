@@ -1,5 +1,5 @@
 
-import Kinematics
+import KinematicsDaniele
 
 # Shoulder: 1, S
 # Elbow: 2, E
@@ -9,13 +9,13 @@ import Kinematics
 theta1 = float(input("MT shulder [deg]: "))
 theta2 = float(input("MT elbow [deg]: "))
 
-coord = Kinematics.DK(theta1,theta2)
+coord = KinematicsDaniele.DK(theta1,theta2)
 
 # IK
 x = float(input("x-axis [mm]: ")) # x is along the straight arm
 y = float(input("y-axis [mm]: ")) # y is perpendicular to the straight arm
 
-angles = Kinematics.IK(x,y,elbow=0)
+angles = KinematicsDaniele.IK(x,y,)
 
 '''
 Procedure:
