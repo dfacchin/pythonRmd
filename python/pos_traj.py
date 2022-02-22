@@ -9,7 +9,7 @@ bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 
 # Variables:
 a = 200  # Motors acceleration
-v = 200  # Motors velocity
+v = 500  # Motors velocity
 t = 3  # Waiting time
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
@@ -51,7 +51,50 @@ while True:
 	motor_S.print()
 	break
 
-while False:
+
+def update(mot):
+	mot.Fn92()
+	mot.Fn94()
+	mot.Fn90()
+
+while True:
+	update(motor_S)
+	angleS = float(input("S:"))
+	
+	motor_S.goG(angleS, v)
+	time.sleep(t)
+	print("PART ")
+
+	update(motor_S)
+	motor_S.encoderInfo()
+	theta1 = motor_S.multiTurnG
+	update(motor_S)
+	print(theta1)
+
+while True:
+	update(motor_S)
+	update(motor_E)
+	angleS = float(input("S:"))
+	angleE = float(input("E"))
+	
+	motor_S.goG(angleS, v)
+	motor_E.goG(angleE, v)
+	time.sleep(t)
+	print("PART ")
+
+	update(motor_S)
+	update(motor_E)
+	motor_S.encoderInfo()
+	theta1 = motor_S.multiTurnG
+	update(motor_S)
+	update(motor_E)
+	motor_E.encoderInfo()
+	theta2 = motor_E.multiTurnG
+	theta2 = theta2 - theta1
+	print(theta1,theta2)
+
+
+while True:
 	# choose a target position to compute the joint angles (IK)
 	# x is along the straight arm (extiting the machine)
 	x = float(input("x-axis [mm]: "))
@@ -66,13 +109,23 @@ while False:
 	time.sleep(t)
 
 
+	motor_S.Fn92()
+	motor_S.Fn90()
+	motor_S.encoderInfo()
+	theta1 = motor_S.multiTurnG
+	motor_E.Fn92()
+	motor_E.Fn90()
+	motor_E.encoderInfo()
+	theta2 = motor_E.multiTurnG
+	theta2 = theta2 - theta1
+	print(theta1,theta2)
+input()
 while False:
 	'''
 	Read motor multi-turn angles
 	and define them as two variables: theta1 and theta2
 	'''
-	theta1 = 0
-	theta2 = 90
+
 	# Compute the actual coordinates:
 	target = [theta1, theta2]
 	dk = kinematics.DK(target)

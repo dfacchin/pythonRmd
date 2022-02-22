@@ -164,7 +164,7 @@ class RMD:
             self.singleTurn = struct.unpack("<H",ret[1][6:8])[0]/100
             self.singleTurnG = self.singleTurn/self.ratio            
             self.singleTurnG = int(self.singleTurnG)
-            #print(self.singleTurn)            
+            print("FN94",self.singleTurn)            
         else:
             print("ERRORE",data)
             for el in ret[1]:
@@ -258,7 +258,9 @@ class RMD:
         data = [0xA4,0x00]
         self.desiredPosition = desiredPosition +18000
         self.maxSpeed = maxSpeed
+        print("GO TO",desiredPosition,self.desiredPosition)
         data2 = struct.pack("<Hl",maxSpeed,self.desiredPosition)
+        print("SPACCEHTTA",struct.unpack("<Hl",data2))
         for el in data2:
             data.append(el)
         ret = self.wr(data)
