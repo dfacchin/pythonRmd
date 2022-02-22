@@ -65,6 +65,13 @@ class RMD:
         stringa += "SG" + "{:.2f}".format(self.singleTurnG)
         print(stringa)
 
+    def get_current_theta(self):
+        stringa = "#POSITION     RAW:" + str(self.encoderPosition) +"\t"
+        stringa += "M" + "{:.2f}".format(self.multiTurn) +"\t"
+        stringa += "S" + "{:.2f}".format(self.singleTurn) +"\t"
+        stringa += "MG" + "{:.2f}".format(self.multiTurnG)+"\t"
+        stringa += "SG" + "{:.2f}".format(self.singleTurnG)
+        print(stringa)
         
     def encoderInfo(self):
         
