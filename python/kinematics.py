@@ -7,24 +7,23 @@ Direct kinematics [DK]:
 Transforms joint angles (theta1,theta2) in eef coordinates (x,y))
 '''
 
-
+    
 def DK(target, len1=497.0, len2=500.0):
-    # target = (theta1, theta2)
+    # target = [theta1, theta2]
     target[0] = np.deg2rad(target[0])
     target[1] = np.deg2rad(target[1])
     x = len1*np.cos(target[0]) + len2*np.cos(target[0]+target[1])
     y = len1*np.sin(target[0]) + len2*np.sin(target[0]+target[1])
     x = round(x, 2)  # round to 2 decimal numbers
     y = round(y, 2)
-    print("x: " + str(x), "y: " + str(y))
+    #print("x: " + str(x), "y: " + str(y))
     return x, y
 
-
-theta1 = float(input("MT shoulder [deg]: "))
-theta2 = float(input("MT elbow [deg]: "))
-target = np.array((theta1, theta2))
-dk = DK(target)
-print("The following x,y coord should return angles %s: %s" % (target, dk))
+#theta1 = float(input("MT shoulder [deg]: "))
+#theta2 = float(input("MT elbow [deg]: "))
+#target = np.array((theta1, theta2))
+#dk = DK(target)
+#print("The following x,y coord returns angles %s: %s" % (target, dk))
 
 
 '''
@@ -83,6 +82,41 @@ def IK(target, len1=497.0, len2=500.0, elbow=0):
         return soln1
     else:
         return soln2
+
+
+'''
+Path/trajectory planning:
+Calculates the vector passing through the 'start' and the 'end' point.
+Splits the vector in multiple points that define the path to follow.
+'''
+
+
+def path(x1,y1,x2,y2):
+	steps_x = np.linspace(x1, x2, 20, endpoint=True) #  (start, stop, steps)
+	steps_y = np.linspace(y1, y2, 20, endpoint=True)
+
+	if x1==x2:
+		for y in steps_y:
+			x = x1
+			x = round(x,2)
+			y = round(y,2)
+			return x, y
+			#print(x,y)
+	elif y1==y2:
+		for x in steps_x:
+			y = y1
+			x = round(x,2)
+			y = round(y,2)
+			return x, y
+			#print(x,y)
+	else:
+		for x in steps_x:
+			y = (((x-x1)/(x2-x1))*(y2-y1))+y1
+			x = round(x,2)
+			y = round(y,2)
+			return x, y
+			#print(x,y)
+
 
 
 '''
