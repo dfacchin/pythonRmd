@@ -114,6 +114,9 @@ elif dxl_error != 0:
 else:
     print("Dynamixel has been successfully connected")
 
+#Change velocity oof dyn
+dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_ID, 112, 30)
+
 
 def moveDyn(angle):
 	global packetHandler,portHandler,DXL_ID,ADDR_TORQUE_ENABLE,TORQUE_ENABLE
@@ -208,7 +211,9 @@ while True:
 	#Dynamixel
 	AngoloDyn = ik[1] - ik[0] #Dopo 1000 anni di ROS, angolo wrist è Angolo gomitino - spalluccia
 	print(AngoloDyn)
+	#dyn
 	moveDyn(AngoloDyn+270)
+	#Dunker goes from 0 to 1000000 in position
 	moveDunker(int(z))
 
 
