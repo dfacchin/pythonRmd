@@ -8,16 +8,16 @@ import kinematics
 import socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 host = "10.170.43.203"
-port = 8893
-def movDunker(pos):
+port = 8891
+def moveDunker(pos):
 	global sock
-	request = "G:" + str(pos) + ":" + str(velocity)
-    # send the message
-    data = bytes(str(request).encode("utf8"))
-    sock.sendto(data, (host, port))
+	request = "G:" + str(pos) + ":2000"
+	# send the message
+	data = bytes(str(request).encode("utf8"))
+	sock.sendto(data, (host, port))
 
-    # empty buffer
-    sock.recv(1024)
+	# empty buffer
+	sock.recv(1024)
 
 
 
@@ -144,8 +144,8 @@ def moveDyn(angle):
 bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 
 # Variables:
-a = 1500  # Motors acceleration
-v = 1500  # Motors velocity
+a = 500  # Motors acceleration
+v = 500  # Motors velocity
 t = 3  # Waiting time
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
@@ -199,7 +199,7 @@ while True:
 	y = float(input("y-axis [mm]: "))
 	z = float(input("z-axis [mm]: "))
 	target = np.array((x, y))
-	ik = kinematics.IK(target, elbow=1)
+	ik = kinematics.IK(target, elbow=0)
 	print("The following solutions should reach endpoint position %s: %s" % (target, ik))
 	#print(ik[0]) #theta_shoulder
 	#print(ik[1]) #theta_elbow
@@ -207,7 +207,8 @@ while True:
 	motor_E.goG(ik[1]+ik[0], v)
 	#Dynamixel
 	AngoloDyn = ik[1] - ik[0] #Dopo 1000 anni di ROS, angolo wrist è Angolo gomitino - spalluccia
-	moveDyn(AngoloDyn)
+	print(AngoloDyn)
+	moveDyn(AngoloDyn+270)
 	moveDunker(int(z))
 
 
