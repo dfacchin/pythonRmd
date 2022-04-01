@@ -134,7 +134,7 @@ bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 # Variables:
 a = 500  # Motors acceleration
 v = 500  # Motors velocity
-t = 3  # Waiting time
+t = 2  # Waiting time
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
 motor_E = RMD.RMD(0x142, bus, ratio=13.5)  # Elbow
@@ -211,8 +211,9 @@ while False:
 
 arrayEl = [[800,0,0],[700,-200,100000],[900,100,10000],[500,0,100000],[1000,0,0]] # [x, y, z]
 demoArray = [[700,0,500000],[700,80,260000],[750,-100,450000],[850,-250,300000],[200,0,0]] # [x, y, z]
-for el in demoArray:
+new = [[700,0,480000],[700,-200,350000],[880,-350, 300000],[850,-180,520000],[850,-180,730000],[150,0,200000]] # [x, y, z]
 
+for el in new:
 	# choose a target position to compute the joint angles (IK)
 	x = float(el[0]) # x is along the straight arm (extiting the machine)
 	y = float(el[1]) # y is perpendicular to the straight arm
