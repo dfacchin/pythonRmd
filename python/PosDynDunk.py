@@ -4,7 +4,7 @@ import time
 import numpy as np
 import kinematics
 
-############## DUNKER
+############## DUNKER ##################
 import socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 host = "10.170.43.203"
@@ -18,9 +18,9 @@ def moveDunker(pos):
 
 	# empty buffer
 	sock.recv(1024)
+############## DUNKER ##################
 
-
-
+############## DYNAMIXEL ##################
 import os
 
 if os.name == 'nt':
@@ -114,7 +114,7 @@ elif dxl_error != 0:
 else:
     print("Dynamixel has been successfully connected")
 
-#Change velocity oof dyn
+#Change velocity of dyn
 dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_ID, 112, 30)
 
 
@@ -124,25 +124,10 @@ def moveDyn(angle):
 	#4096 = 360 DEGREES
 	posReq = int((angle *4096 ) / 360)
 	dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_ID, ADDR_GOAL_POSITION, posReq)
+############## DYNAMIXEL ##################
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+############## GYEMS ##################
 # Using specific buses works similar:
 bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 
@@ -192,15 +177,19 @@ motor_S.Fn31()  # write PID to Ram
 # Specify desired accelration
 motor_S.acceleration = a
 motor_S.Fn34()  # write acceleration to Ram
+############## GYEMS ##################
 
 
+############## MOVEMENT ##################
 while True:
 	# choose a target position to compute the joint angles (IK)
 	# x is along the straight arm (extiting the machine)
 	x = float(input("x-axis [mm]: "))
 	# y is perpendicular to the straight arm (positive is towards the coffee machine)
 	y = float(input("y-axis [mm]: "))
+	# z is up and down of the veritcal rail
 	z = float(input("z-axis [mm]: "))
+
 	target = np.array((x, y))
 	ik = kinematics.IK(target, elbow=0)
 	print("The following solutions should reach endpoint position %s: %s" % (target, ik))
@@ -209,10 +198,13 @@ while True:
 	motor_S.goG(ik[0], v)
 	motor_E.goG(ik[1]+ik[0], v)
 	#Dynamixel
-	AngoloDyn = ik[1] - ik[0] #Dopo 1000 anni di ROS, angolo wrist è Angolo gomitino - spalluccia
-	print(AngoloDyn)
+	motor_W = -(ik[0] + ik[1]) #Dopo 1000 anni di ROS, angolo wrist è Angolo gomitino - spalluccia
+
+	print("Shouder angle: ", ik[0])
+	print("Elbow angle: ", ik[1])
+	print("Wrist angle: ", motor_W)
 	#dyn
-	moveDyn(AngoloDyn+270)
+	moveDyn(motor_W)
 	#Dunker goes from 0 to 1000000 in position
 	moveDunker(int(z))
 
