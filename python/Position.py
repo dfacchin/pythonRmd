@@ -8,8 +8,8 @@ import kinematics
 bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 
 # Variables:
-a = 1500  # Motors acceleration
-v = 1500  # Motors velocity
+a = 500  # Motors acceleration
+v = 500  # Motors velocity
 t = 3  # Waiting time
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
@@ -62,7 +62,7 @@ while True:
 	# y is perpendicular to the straight arm (positive is towards the coffee machine)
 	y = float(input("y-axis [mm]: "))
 	target = np.array((x, y))
-	ik = kinematics.IK(target, elbow=1)
+	ik = kinematics.IK(target, elbow=0)
 	print("The following solutions should reach endpoint position %s: %s" % (target, ik))
 
 	#print(ik[0]) #theta_shoulder

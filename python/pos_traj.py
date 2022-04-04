@@ -60,7 +60,7 @@ def update(mot):
 while True:
 	update(motor_S)
 	angleS = float(input("S:"))
-	
+
 	motor_S.goG(angleS, v)
 	time.sleep(t)
 	print("PART ")
@@ -76,7 +76,7 @@ while True:
 	update(motor_E)
 	angleS = float(input("S:"))
 	angleE = float(input("E"))
-	
+
 	motor_S.goG(angleS, v)
 	motor_E.goG(angleE, v)
 	time.sleep(t)
@@ -133,7 +133,7 @@ while False:
 	y1 = dk[1]
 	print(x1)
 	print(y1)
-	
+
 	'''
 	# choose a target position to compute the joint angles (IK)
 	# x is along the straight arm (extiting the machine)
@@ -147,18 +147,18 @@ while False:
 #	ik = kinematics.IK(target, elbow=1)
 #	print(ik[0]) # theta1
 #	print(ik[1]) # theta2
-	
-	
+
+
 	steps_x = np.linspace(x1, x2, 20, endpoint=True) #  (start, stop, steps)
 	steps_y = np.linspace(y1, y2, 20, endpoint=True)
-	
+
 	if x1==x2:
 		for y in steps_y:
 			x = x1
 			x = round(x,2)
 			y = round(y,2)
 			target = np.array((x, y))
-			ik = kinematics.IK(target, elbow=1)
+			ik = kinematics.IK(target, elbow=0)
 			#print(x,y)
 			print(ik)
 			motor_S.goG(ik[0], v)
@@ -170,7 +170,7 @@ while False:
 			x = round(x,2)
 			y = round(y,2)
 			target = np.array((x, y))
-			ik = kinematics.IK(target, elbow=1)
+			ik = kinematics.IK(target, elbow=0)
 			#print(x,y)
 			print(ik)
 			motor_S.goG(ik[0], v)
@@ -182,11 +182,9 @@ while False:
 			x = round(x,2)
 			y = round(y,2)
 			target = np.array((x, y))
-			ik = kinematics.IK(target, elbow=1)
+			ik = kinematics.IK(target, elbow=0)
 			print(ik)
 			motor_S.goG(ik[0], v)
 			motor_E.goG(ik[1]+ik[0], v)
 			time.sleep(t)
 	break
-
-
