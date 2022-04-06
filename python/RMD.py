@@ -28,7 +28,7 @@ class RMD:
         self.multiTurn = 0
         self.singleTurn = 0
         self.multiTurnG = 0
-        self.singleTurnG = 0 
+        self.singleTurnG = 0
         self.PidPosKp  = 0
         self.PidPosKi  = 0
         self.PidVelKp  = 0
@@ -37,16 +37,16 @@ class RMD:
         self.PidTrqKi  = 0
         self.acceleration  = 0
         #clear all can messages in queue
-        msg = self.bus.recv(0.2)       
-        msg = self.bus.recv(0.2)       
-        msg = self.bus.recv(0.2)       
-        msg = self.bus.recv(0.2)       
-        msg = self.bus.recv(0.2)       
-        msg = self.bus.recv(0.2)       
-        msg = self.bus.recv(0.2)       
-        msg = self.bus.recv(0.2)       
-        msg = self.bus.recv(0.2)       
-     
+        msg = self.bus.recv(0.2)
+        msg = self.bus.recv(0.2)
+        msg = self.bus.recv(0.2)
+        msg = self.bus.recv(0.2)
+        msg = self.bus.recv(0.2)
+        msg = self.bus.recv(0.2)
+        msg = self.bus.recv(0.2)
+        msg = self.bus.recv(0.2)
+        msg = self.bus.recv(0.2)
+
     def info(self):
         print("######### INFO ########")
         print("\tPID:")
@@ -56,9 +56,9 @@ class RMD:
         print(stringa)
         print("\tAcceleration:")
         print("\t\t",self.acceleration)
-    
+
     def print(self):
-        stringa = "#POSITION     RAW:" + str(self.encoderPosition) +"\t"
+        stringa = "#POSITION "+ str(self.nodeID) +"     RAW:" + str(self.encoderPosition) +"\t"
         stringa += "M" + "{:.2f}".format(self.multiTurn) +"\t"
         stringa += "S" + "{:.2f}".format(self.singleTurn) +"\t"
         stringa += "MG" + "{:.2f}".format(self.multiTurnG)+"\t"
@@ -72,15 +72,15 @@ class RMD:
         stringa += "MG" + "{:.2f}".format(self.multiTurnG)+"\t"
         stringa += "SG" + "{:.2f}".format(self.singleTurnG)
         print(stringa)
-        
+
     def encoderInfo(self):
-        
+
         stringa = "#POSITION\n\tRAW:" + str(self.encoderPosition)
         stringa += "\n\t" + str(self.encoderOriginalPosition)
         stringa += "\n\t" + str(self.encoderOffset)
         print(stringa)
-        
-        
+
+
       #write and receive RAW data
     def wr(self,data):
         msg = can.Message(arbitration_id=self.nodeID,
@@ -95,12 +95,12 @@ class RMD:
 
         #read the response, no timeout on this action without arguments in the recv function
         try:
-            msg = self.bus.recv(1.0)       
+            msg = self.bus.recv(1.0)
         except:
             print("Message NOT rev")
             return (False,[22,0,0,0,0,0,0,0])
         return (True,msg.data)
-     
+
     #read internal encoder position and off set
     def Fn90(self):
         data = [0x90,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
@@ -120,6 +120,16 @@ class RMD:
         #Our offset is the actual original postion, shifted of 180degrees
         #180degres for this encoder are 0x8000 in hex
         #we can add the value and mod with 0x1000
+        """
+        We run in a stupid problem from the driver
+        the offset is a unsigned value, and the output of the
+        RAW after offset is always a unsigned 16bit value
+        The problem raises when the multiturn is taking place
+        this is because the internal system works like this:
+        it "subtracts" the offset to the RAW sensor data
+        but then it's used in the signed positioning value
+        and it goes instead of 0 to 360
+        """
         value = self.encoderOriginalPosition + 0x8000
         value = value%0x10000
         data = [0x91,0x00,0x00,0x00,0x00,0x00]
@@ -130,6 +140,30 @@ class RMD:
         if (ret[0]) and (ret[1][0] == 0x91):
             self.encoderOffset = struct.unpack("<H",ret[1][6:8])[0]
             #print(self.encoderPosition, self.encoderOriginalPosition, self.encoderOffset)
+        else:
+            print("ERRORE",data)
+            for el in ret[1]:
+                print(el)
+
+    #Calibrate offset to specific angle
+    def Fn19(self):
+        #Our offset is the actual original postion, shifted of 180degrees
+        #180degres for this encoder are 0x8000 in hex
+        #we can add the value and mod with 0x1000
+        """
+        We run in a stupid problem from the driver
+        the offset is a unsigned value, and the output of the
+        RAW after offset is always a unsigned 16bit value
+        The problem raises when the multiturn is taking place
+        this is because the internal system works like this:
+        it "subtracts" the offset to the RAW sensor data
+        but then it's used in the signed positioning value
+        and it goes instead of 0 to 360
+        """
+        data = [0x19,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
+        ret = self.wr(data)
+        if (ret[0]) and (ret[1][0] == 0x19):
+            pass
         else:
             print("ERRORE",data)
             for el in ret[1]:
@@ -146,7 +180,9 @@ class RMD:
                 data.append(el)
             data.append(data[-1])
             self.multiTurn  = struct.unpack("<q",bytes(data))[0]
-            self.multiTurn  += 18000
+            #print("multiBeforeChange",self.nodeID,self.multiTurn)
+            #print(data)
+            #self.multiTurn  += 18000
             self.multiTurn  /= 100
             self.multiTurnG = self.multiTurn/self.ratio
             self.multiTurnG = int(self.multiTurnG)
@@ -162,9 +198,9 @@ class RMD:
         ret = self.wr(data)
         if (ret[0]) and (ret[1][0] == 0x94):
             self.singleTurn = struct.unpack("<H",ret[1][6:8])[0]/100
-            self.singleTurnG = self.singleTurn/self.ratio            
+            self.singleTurnG = self.singleTurn/self.ratio
             self.singleTurnG = int(self.singleTurnG)
-            print("FN94",self.singleTurn)            
+            print("FN94",self.singleTurn)
         else:
             print("ERRORE",data)
             for el in ret[1]:
@@ -191,7 +227,7 @@ class RMD:
             print("ERRORE",data)
             for el in ret[1]:
                 print(el)
-       
+
     #read PIDs
     def Fn30(self):
         data = [0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
@@ -256,7 +292,8 @@ class RMD:
     #Position Velocity Cmd
     def FnA4(self,desiredPosition,maxSpeed):
         data = [0xA4,0x00]
-        self.desiredPosition = desiredPosition +18000
+        #self.desiredPosition = desiredPosition +18000
+        self.desiredPosition = desiredPosition
         self.maxSpeed = maxSpeed
         print("GO TO",desiredPosition,self.desiredPosition)
         data2 = struct.pack("<Hl",maxSpeed,self.desiredPosition)
@@ -270,7 +307,7 @@ class RMD:
             print("ERRORE",data)
             for el in ret[1]:
                 print(el)
-    
+
     #go to a specific position and print actual position
     def go(self,pos,speed):
         self.print()
@@ -278,7 +315,7 @@ class RMD:
         for a in range(1000):
             self.Fn90()
             self.Fn92()
-            self.Fn94()            
+            self.Fn94()
             self.print()
 
     #go to a specific position and print actual position
@@ -288,6 +325,5 @@ class RMD:
         for a in range(1):
             #self.Fn90()
             self.Fn92()
-            #self.Fn94()            
-            self.print()            
-        
+            #self.Fn94()
+            self.print()

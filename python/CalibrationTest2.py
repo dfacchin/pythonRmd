@@ -23,11 +23,17 @@ while True:
 	motor_S.Fn90()
 	motor_E.Fn92()
 	motor_S.Fn92()
+	motor_E.Fn94()
+	motor_S.Fn94()
 
 	motor_E.print()
 	motor_S.print()
 	motor_E.print()
 	motor_S.print()
-	input()
-	motor_E.Fn19()	
-	motor_S.Fn19()
+	action = input("C_alibrate Z_ero")
+	if (action == "C"):
+		motor_E.Fn91(180)
+		motor_S.Fn91(180)
+	elif action == "Z":
+		motor_E.Fn19()
+		motor_S.Fn19()
