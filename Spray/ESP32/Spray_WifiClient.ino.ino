@@ -101,6 +101,8 @@ void UDPCallBack(AsyncUDPPacket packet)
   packet.printf(tBuffer); 
 }
 
+void(* resetFunc) (void) = 0; //declare reset function @ address 0
+
 void setup()
 {
    
@@ -118,6 +120,8 @@ void setup()
     if (WiFi.waitForConnectResult() != WL_CONNECTED) {
         Serial.println("WiFi Failed");
         while(1) {
+            delay(10000);
+            resetFunc();  //call reset
             delay(1000);
         }
     }
