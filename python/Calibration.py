@@ -28,6 +28,6 @@ while True:
 	motor_S.print()
 	motor_E.print()
 	motor_S.print()
-	input()
+	input(print('Press "Enter" to complete the calibration.'))
 	motor_E.Fn19()	
 	motor_S.Fn19()
