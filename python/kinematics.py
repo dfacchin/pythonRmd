@@ -9,21 +9,15 @@ Transforms joint angles (theta1,theta2) in eef coordinates (x,y))
 
 
 def DK(target, len1=497.0, len2=500.0):
-    # target = [theta1, theta2]
+    # target = [theta1, theta2] or
+    # target = np.array((theta1, theta2))
     target[0] = np.deg2rad(target[0])
     target[1] = np.deg2rad(target[1])
     x = len1*np.cos(target[0]) + len2*np.cos(target[0]+target[1])
     y = len1*np.sin(target[0]) + len2*np.sin(target[0]+target[1])
     x = round(x, 2)  # round to 2 decimal numbers
     y = round(y, 2)
-    #print("x: " + str(x), "y: " + str(y))
     return x, y
-
-#theta1 = float(input("MT shoulder [deg]: "))
-#theta2 = float(input("MT elbow [deg]: "))
-#target = np.array((theta1, theta2))
-#dk = DK(target)
-#print("The following x,y coord returns angles %s: %s" % (target, dk))
 
 
 '''
@@ -32,11 +26,10 @@ Transforms eef coordinates (x,y) in joint angles (theta1,theta2)
 '''
 
 
-def IK(target, len1=497.0, len2=500.0, elbow=0):
+def IK(target, len1=497.0, len2=500.0, elbow=0, elbow_limit=40):
 
-    # find the position of the point in polar coordinates
+    # radius = distance from the origin to the eef    
     radiussq = np.dot(target, target)
-    # radius = distance from the origin to the eef
     radius = math.sqrt(radiussq)
 
     # theta is the angle of target point w.r.t. X axis
@@ -53,6 +46,13 @@ def IK(target, len1=497.0, len2=500.0, elbow=0):
         beta = 0.0
     else:
         beta = math.acos(cos_beta)
+
+    # Limit the beta value to set elbow joint constraints
+    elbow_limit = np.deg2rad(elbow_limit)
+    if beta < elbow_limit:
+        beta = elbow_limit
+        # compute the new radius
+        radius = math.sqrt(len1**2 + len2**2 - 2*len1*len2*math.cos(beta))
 
     # use the law of sines to compute the angle alpha
     #  radius / sin(beta)  = l2 / sin(alpha)
@@ -73,10 +73,6 @@ def IK(target, len1=497.0, len2=500.0, elbow=0):
     theta1_2 = round(theta1_2, 2)
     theta2_2 = round(theta2_2, 2)
     soln2 = np.array((theta1_2, theta2_2))
-
-# Solutions in rad:
-#    soln1 = np.array((theta - alpha, math.pi - beta))
-#    soln2 = np.array((theta + alpha, beta - math.pi))
 
     if elbow == 1:
         return soln1
@@ -123,14 +119,19 @@ def path(x1,y1,x2,y2,steps=20):
 
 
 '''
-################################################################
+########################### For debugging #############################
 # When run as a script, try a sample problem:
 if __name__ == "__main__":
-
     # choose a sample target position to test IK
 	x = float(input("x-axis [mm]: "))
 	y = float(input("y-axis [mm]: "))
 	target = np.array((x, y))
 	ik = IK(target)
 	print("The following solutions should reach endpoint position %s: %s" % (target, ik))
+    # choose sample joint angles to test DK
+    theta1 = float(input("MT shoulder [deg]: "))
+    theta2 = float(input("MT elbow [deg]: "))
+    target = np.array((theta1, theta2))
+    dk = DK(target)
+    print("The following x,y coord returns angles %s: %s" % (target, dk))
 '''
