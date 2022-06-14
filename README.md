@@ -9,6 +9,8 @@ Python Control for RMD X Motor series
 ## Scripts
 - `Position.py` asks for (x,y) coordinates and the arm reaches them using the inverse kinematics.
 
-- `kinematics_web.py` contains the function of the inverse kinematics.
+- `PosDynDunk.py` executes a picking procedure with all the motors (Gyems, Dynam, Dunker).
 
-- `PickSequence.py` executes a picking procedure.
+- `kinematics.py` contains the function of the inverse kinematics.
+
+- `Calibration.py` Place the robot arm straight and run this code to calibrate it.
