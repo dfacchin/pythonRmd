@@ -26,7 +26,7 @@ Transforms eef coordinates (x,y) in joint angles (theta1,theta2)
 '''
 
 
-def IK(target, len1=497.0, len2=500.0, elbow=0, elbow_limit=40):
+def IK(target, len1=497.0, len2=500.0, elbow=0, elbow_limit=30):
 
     # radius = distance from the origin to the eef    
     radiussq = np.dot(target, target)
