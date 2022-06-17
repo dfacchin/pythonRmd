@@ -15,4 +15,4 @@ Python Control for RMD X Motor series
 
 - `calibration.py` Place the robot arm straight and run this code to calibrate it.
 
-- `stress_test.py` exetutes repetitive movements to (stress) test the robot mechanics.
+- `stress_test.py` executes repetitive movements to (stress) test the robot mechanics.
