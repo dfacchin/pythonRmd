@@ -13,6 +13,6 @@ Python Control for RMD X Motor series
 
 - `kinematics.py` contains the function of the inverse kinematics.
 
-- `calibration.py` Place the robot arm straight and run this code to calibrate it.
+- `calibration.py` place the robot arm straight and run this code to calibrate it.
 
 - `stress_test.py` executes repetitive movements to (stress) test the robot mechanics.
