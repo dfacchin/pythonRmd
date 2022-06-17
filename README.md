@@ -9,7 +9,7 @@ Python Control for RMD X Motor series
 ## Scripts
 - `position.py` asks for (x,y) coordinates and the arm reaches them using the inverse kinematics.
 
-- `Gyems_dyn_dunk.py` executes a picking procedure with all the motors (Gyems, Dynam, Dunker).
+- `gyems_dyn_dunk.py` executes a picking procedure with all the motors (Gyems, Dynam, Dunker).
 
 - `kinematics.py` contains the function of the inverse kinematics.
 
