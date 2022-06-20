@@ -31,3 +31,4 @@ while True:
 	input(print('Press "Enter" to complete the calibration.'))
 	motor_E.Fn19()	
 	motor_S.Fn19()
+	
