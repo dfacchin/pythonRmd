@@ -10,9 +10,9 @@ d = dot (derivative)
 # Variables
 
 # time
-dt = 1 # [s] time step
+t_step = 4 # [s] time step
 tEnd = 4 # [s] time in which we want the motion to be executed
-t = np.linspace(0, dt, tEnd) # [s]
+t = np.linspace(0, tEnd, t_step) # [s]
 
 # Known conditions
 # Use the IK (xi,yi) (xf,yf) to get --> (theta_i_S,theta_i_E) (theta_f_S,theta_f_E)
@@ -61,12 +61,18 @@ print("c1: " + str(c1_E))
 print("c2: " + str(c2_E))
 print("c3: " + str(c3_E))
 
+print("time steps: " + str(t))
+
 # Cubic Polinomial [Trajectory of angular displacement]
 
 # Shoulder
 theta_S = c0_S + (c1_S*t) +(c2_S*t**2) + (c3_S*t**3)
 # Elbow
 theta_E = c0_E + (c1_E*t) +(c2_E*t**2) + (c3_E*t**3)
+
+print("theta_S: " + str(theta_S))
+print("theta_E: " + str(theta_E))
+
 
 # Cubic Polinomial [Trajectory of angular velocity]
 
@@ -75,7 +81,6 @@ theta_d_S = c1_S + (2*c2_S*t) +(3*c3_S*t**2)
 # Elbow
 theta_d_E = c1_E + (2*c2_E*t) +(3*c3_E*t**2)
 
-print("theta_S: " + str(theta_S))
-print("theta_E: " + str(theta_E))
-print("theta_d_S: " + str(theta_d_S))
-print("theta_d_E: " + str(theta_d_E))
+
+#print("theta_d_S: " + str(theta_d_S))
+#print("theta_d_E: " + str(theta_d_E))
