@@ -28,7 +28,7 @@ Transforms eef coordinates (x,y) in joint angles (theta1,theta2)
 
 def IK(target, len1=497.0, len2=500.0, elbow=0, elbow_limit=30):
 
-    # radius = distance from the origin to the eef    
+    # radius = distance from the origin to the eef
     radiussq = np.dot(target, target)
     radius = math.sqrt(radiussq)
 
@@ -87,34 +87,80 @@ Splits the vector in multiple points that define the path to follow.
 '''
 
 
-def path(x1,y1,x2,y2,steps=20):
-	steps_x = np.linspace(x1, x2, steps, endpoint=True) #  (start, stop, steps)
-	steps_y = np.linspace(y1, y2, steps, endpoint=True)
+def path(x1, y1, x2, y2, steps=20):
+    steps_x = np.linspace(x1, x2, steps, endpoint=True)  # (start, stop, steps)
+    steps_y = np.linspace(y1, y2, steps, endpoint=True)
 
-	solt = []
+    solt = []
 
-	if x1==x2:
-		for y in steps_y:
-			x = x1
-			x = round(x,2)
-			y = round(y,2)
-			soln = np.array((x,y))
-			solt.append(soln)
-	elif y1==y2:
-		for x in steps_x:
-			y = y1
-			x = round(x,2)
-			y = round(y,2)
-			soln = np.array((x,y))
-			solt.append(soln)
-	else:
-		for x in steps_x:
-			y = (((x-x1)/(x2-x1))*(y2-y1))+y1
-			x = round(x,2)
-			y = round(y,2)
-			soln = np.array((x,y))
-			solt.append(soln)
-	return solt
+    if x1 == x2:
+        for y in steps_y:
+            x = x1
+            x = round(x, 2)
+            y = round(y, 2)
+            soln = np.array((x, y))
+            solt.append(soln)
+    elif y1 == y2:
+        for x in steps_x:
+            y = y1
+            x = round(x, 2)
+            y = round(y, 2)
+            soln = np.array((x, y))
+            solt.append(soln)
+    else:
+        for x in steps_x:
+            y = (((x-x1)/(x2-x1))*(y2-y1))+y1
+            x = round(x, 2)
+            y = round(y, 2)
+            soln = np.array((x, y))
+            solt.append(soln)
+    return solt
+
+
+'''
+Trajectory Planning:
+Ensure a smooth variation of the joint angles while following a desired path
+using the (Cubic) Polinomial Trajectory Function
+'''
+
+
+def trajectory(pos_target_i, pos_target_f, vel_target_i, vel_target_f, tEnd, steps):
+    # pos_target = [theta_S, theta_E] or np.array((theta_S,theta_E))
+
+    # Time
+    t = np.linspace(0, tEnd, steps) # [s]
+
+    # Delta values (Shoulder)
+    delta_theta_S = pos_target_f[0] - pos_target_i[0]
+    theta_d_sum_S = vel_target_f[0] + vel_target_i[0]
+    # Delta values (Elbow)
+    delta_theta_E = pos_target_f[1] - pos_target_i[1]
+    theta_d_sum_E = vel_target_f[1] + vel_target_i[1]
+
+    # c-coefficients
+    # Shoulder
+    c0_S = pos_target_i[0]
+    c1_S = vel_target_i[0]
+    c2_S = ((3*delta_theta_S)/tEnd**2) - ((2*vel_target_i[0])/tEnd) - (vel_target_f[0]/tEnd)
+    c3_S = (-(2*delta_theta_S)/tEnd**3) + (theta_d_sum_S/tEnd**2)
+    # Elbow
+    c0_E = pos_target_i[1]
+    c1_E = vel_target_i[1]
+    c2_E = ((3*delta_theta_E)/tEnd**2) - ((2*vel_target_i[1])/tEnd) - (vel_target_f[1]/tEnd)
+    c3_E = (-(2*delta_theta_E)/tEnd**3) + (theta_d_sum_E/tEnd**2)
+
+    # Cubic Polinomial [Trajectory of angular displacement]
+    theta_S = c0_S + (c1_S*t) +(c2_S*t**2) + (c3_S*t**3) # [deg] Shoulder
+    theta_E = c0_E + (c1_E*t) +(c2_E*t**2) + (c3_E*t**3) # [deg] Elbow
+
+    # Cubic Polinomial [Trajectory of angular velocity]
+    theta_d_S = c1_S + (2*c2_S*t) +(3*c3_S*t**2) # [deg/s] Shoulder
+    theta_d_E = c1_E + (2*c2_E*t) +(3*c3_E*t**2) # [deg/s] Elbow
+
+    # Note: the variables that this function returns are of type "list"
+    return theta_S, theta_E
+    return theta_d_S, theta_d_E
+
 
 
 
