@@ -150,18 +150,28 @@ def trajectory(pos_target_i, pos_target_f, vel_target_i, vel_target_f, tEnd, ste
     c3_E = (-(2*delta_theta_E)/tEnd**3) + (theta_d_sum_E/tEnd**2)
 
     # Cubic Polinomial [Trajectory of angular displacement]
-    theta_S = c0_S + (c1_S*t) +(c2_S*t**2) + (c3_S*t**3) # [deg] Shoulder
-    theta_E = c0_E + (c1_E*t) +(c2_E*t**2) + (c3_E*t**3) # [deg] Elbow
+    theta_S = c0_S + (c1_S*t) + (c2_S*t**2) + (c3_S*t**3) # [deg] Shoulder
+    theta_E = c0_E + (c1_E*t) + (c2_E*t**2) + (c3_E*t**3) # [deg] Elbow
 
     # Cubic Polinomial [Trajectory of angular velocity]
-    theta_d_S = c1_S + (2*c2_S*t) +(3*c3_S*t**2) # [deg/s] Shoulder
-    theta_d_E = c1_E + (2*c2_E*t) +(3*c3_E*t**2) # [deg/s] Elbow
+    theta_d_S = c1_S + (2*c2_S*t) + (3*c3_S*t**2) # [deg/s] Shoulder
+    theta_d_E = c1_E + (2*c2_E*t) + (3*c3_E*t**2) # [deg/s] Elbow
 
-    # Note: the variables that this function returns are of type "list"
-    return theta_S, theta_E
-    return theta_d_S, theta_d_E
+    # Note: the variables that this function returns are arrays
+    return theta_S, theta_E, theta_d_S, theta_d_E
 
+'''
+if __name__ == "__main__":
+    pos_target_i = [20, 80]
+    pos_target_f = [90, 30]
+    vel_target_i = [15, 30]
+    vel_target_f = [30, 20]
+    tEnd = 5
+    steps = 3
 
+    traj = trajectory(pos_target_i, pos_target_f, vel_target_i, vel_target_f, tEnd, steps)
+    print(traj)
+'''
 
 
 '''
