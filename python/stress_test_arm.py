@@ -8,9 +8,9 @@ import kinematics
 bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 
 # Variables:
-a = 400  # Motors acceleration
+a = 1000  # Motors acceleration
 v = 1500  # Motors velocity
-t = 2  # Waiting time
+t = 4  # Waiting time
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
 motor_E = RMD.RMD(0x142, bus, ratio=13.5)  # Elbow
