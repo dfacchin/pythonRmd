@@ -81,7 +81,7 @@ def IK(target, len1=497.0, len2=500.0, elbow=0, elbow_limit=30):
 
 
 '''
-Path/trajectory planning:
+Linear Path Planning:
 Calculates the vector passing through the 'start' and the 'end' point.
 Splits the vector in multiple points that define the path to follow.
 '''
@@ -124,11 +124,12 @@ using the (Cubic) Polinomial Trajectory Function
 '''
 
 
-def trajectory(pos_target_i, pos_target_f, vel_target_i, vel_target_f, tEnd, steps):
+def cubic_trajectory(pos_target_i, pos_target_f, vel_target_i, vel_target_f, ti, tf, steps):
     # pos_target = [theta_S, theta_E] or np.array((theta_S,theta_E))
+    # vel_target = [theta_d_S, theta_d_E] or np.array((theta_d_S,theta_d_E))
 
     # Time
-    t = np.linspace(0, tEnd, steps) # [s]
+    t = np.linspace(ti, tf, steps) # [s]
 
     # Delta values (Shoulder)
     delta_theta_S = pos_target_f[0] - pos_target_i[0]
@@ -141,35 +142,62 @@ def trajectory(pos_target_i, pos_target_f, vel_target_i, vel_target_f, tEnd, ste
     # Shoulder
     c0_S = pos_target_i[0]
     c1_S = vel_target_i[0]
-    c2_S = ((3*delta_theta_S)/tEnd**2) - ((2*vel_target_i[0])/tEnd) - (vel_target_f[0]/tEnd)
-    c3_S = (-(2*delta_theta_S)/tEnd**3) + (theta_d_sum_S/tEnd**2)
+    c2_S = ((3*delta_theta_S)/(tf-ti)**2) - ((2*vel_target_i[0])/(tf-ti)) - (vel_target_f[0]/(tf-ti))
+    c3_S = (-(2*delta_theta_S)/(tf-ti)**3) + (theta_d_sum_S/(tf-ti)**2)
     # Elbow
     c0_E = pos_target_i[1]
     c1_E = vel_target_i[1]
-    c2_E = ((3*delta_theta_E)/tEnd**2) - ((2*vel_target_i[1])/tEnd) - (vel_target_f[1]/tEnd)
-    c3_E = (-(2*delta_theta_E)/tEnd**3) + (theta_d_sum_E/tEnd**2)
+    c2_E = ((3*delta_theta_E)/(tf-ti)**2) - ((2*vel_target_i[1])/(tf-ti)) - (vel_target_f[1]/(tf-ti))
+    c3_E = (-(2*delta_theta_E)/(tf-ti)**3) + (theta_d_sum_E/(tf-ti)**2)
 
     # Cubic Polinomial [Trajectory of angular displacement]
-    theta_S = c0_S + (c1_S*t) + (c2_S*t**2) + (c3_S*t**3) # [deg] Shoulder
-    theta_E = c0_E + (c1_E*t) + (c2_E*t**2) + (c3_E*t**3) # [deg] Elbow
+    theta_S = c0_S + (c1_S*(t-ti)) + (c2_S*(t-ti)**2) + (c3_S*(t-ti)**3) # [deg] Shoulder
+    theta_E = c0_E + (c1_E*(t-ti)) + (c2_E*(t-ti)**2) + (c3_E*(t-ti)**3) # [deg] Elbow
 
     # Cubic Polinomial [Trajectory of angular velocity]
-    theta_d_S = c1_S + (2*c2_S*t) + (3*c3_S*t**2) # [deg/s] Shoulder
-    theta_d_E = c1_E + (2*c2_E*t) + (3*c3_E*t**2) # [deg/s] Elbow
+    theta_d_S = c1_S + (2*c2_S*(t-ti)) + (3*c3_S*(t-ti)**2) # [deg/s] Shoulder
+    theta_d_E = c1_E + (2*c2_E*(t-ti)) + (3*c3_E*(t-ti)**2) # [deg/s] Elbow
 
     # Note: the variables that this function returns are arrays
     return theta_S, theta_E, theta_d_S, theta_d_E
 
+
 '''
+Trajectory Planning:
+Follow the desired path in a linear manner. Parabolic blends are used to
+smoothen the direction changes at each defined path point (via point).
+The Linear Trajectory Function with Parabolic Blends is used.
+'''
+
+def linear_trajectory(pos_target_i, pos_target_f, vel_target_i, vel_target_f, accel, ti, tf, steps):
+    # pos_target = [theta_S, theta_E] or np.array((theta_S,theta_E))
+    # vel_target = [theta_d_S, theta_d_E] or np.array((theta_d_S,theta_d_E))
+    # accel = [theta_dd_S, theta_dd_E] or np.array((theta_dd_S,theta_dd_E))
+
+    # Time
+    t = np.linspace(ti, tf, steps) # [s]
+
+    # Variables:
+    # Blend time (tb_i = tb_f)
+    tb = (t/2)- (np.sqrt()/(2*accel[0]))
+    # Joint angles at the end of the blend region
+    theta_b_S = pos_target_i[0] + (0.5*accel[0]*tb)
+
+
+    pass
+
+'''
+# Test the cubic trajectory function:
 if __name__ == "__main__":
     pos_target_i = [20, 80]
     pos_target_f = [90, 30]
     vel_target_i = [15, 30]
     vel_target_f = [30, 20]
-    tEnd = 5
+    ti = 0
+    tf = 5
     steps = 3
 
-    traj = trajectory(pos_target_i, pos_target_f, vel_target_i, vel_target_f, tEnd, steps)
+    traj = cubic_trajectory(pos_target_i, pos_target_f, vel_target_i, vel_target_f, tf, steps)
     print(traj)
 '''
 
