@@ -10,7 +10,7 @@ bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 # Variables:
 a = 400  # Motors acceleration
 v = 1500  # Motors velocity
-t = 4  # Waiting time
+t = 3  # Waiting time
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
 motor_E = RMD.RMD(0x142, bus, ratio=13.5)  # Elbow
@@ -18,11 +18,11 @@ motor_E = RMD.RMD(0x142, bus, ratio=13.5)  # Elbow
 motor_E.Fn30()  # read PID
 motor_E.Fn33()  # read acceleration
 # Specify desired PID
-motor_E.PidPosKp = 30
+motor_E.PidPosKp = 50
 motor_E.PidPosKi = 0
-motor_E.PidVelKp = 30
+motor_E.PidVelKp = 50
 motor_E.PidVelKi = 5
-motor_E.PidTrqKp = 30
+motor_E.PidTrqKp = 50
 motor_E.PidTrqKp = 5
 motor_E.Fn31()  # write PID to Ram
 # Specify desired accelration
@@ -36,11 +36,11 @@ motor_S = RMD.RMD(0x141, bus, ratio=13.5)  # Shoulder
 motor_S.Fn30()  # read PID
 motor_S.Fn33()  # read acceleration
 # Specify desired PID
-motor_S.PidPosKp = 30
+motor_S.PidPosKp = 50
 motor_S.PidPosKi = 0
-motor_S.PidVelKp = 30
+motor_S.PidVelKp = 50
 motor_S.PidVelKi = 5
-motor_S.PidTrqKp = 30
+motor_S.PidTrqKp = 50
 motor_S.PidTrqKp = 5
 motor_S.Fn31()  # write PID to Ram
 # Specify desired accelration
