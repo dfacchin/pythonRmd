@@ -18,9 +18,9 @@ motor_E = RMD.RMD(0x142, bus, ratio=13.5)  # Elbow
 motor_E.Fn30()  # read PID
 motor_E.Fn33()  # read acceleration
 # Specify desired PID
-motor_E.PidPosKp = 60
+motor_E.PidPosKp = 100
 motor_E.PidPosKi = 0
-motor_E.PidVelKp = 60
+motor_E.PidVelKp = 100
 motor_E.PidVelKi = 5
 motor_E.PidTrqKp = 60
 motor_E.PidTrqKp = 5
