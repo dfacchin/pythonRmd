@@ -47,7 +47,7 @@ motor_S.Fn31()  # write PID to Ram
 motor_S.acceleration = a
 motor_S.Fn34()  # write acceleration to Ram
 
-coords = [[1000,0],[400,0],[1000,0],[700,0],[800,0],[1000,0],[500,-500],[500,500],[1000,0],[500,-300],[800,0]]
+coords = [[1000,0],[400,0],[1000,0],[700,0],[800,0],[1000,0],[500,-500],[1000,0],[500,-300],[800,0]]
 
 while True:
 	for coord in coords:
