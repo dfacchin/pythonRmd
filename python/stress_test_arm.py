@@ -8,7 +8,7 @@ import kinematics
 bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 
 # Variables:
-a = 1000  # Motors acceleration
+a = 400  # Motors acceleration
 v = 1500  # Motors velocity
 t = 3  # Waiting time
 
