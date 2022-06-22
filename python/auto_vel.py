@@ -13,9 +13,9 @@ steps
 
 # Initial Conditions (i.c.):
 # Define (time,pose,vel) for each path point
-t = [0, 2, 4, 8, 10]
-theta = [10, 20, 0, 30, 40]
-theta_d = [0]
+t = [0, 2, 4, 8, 10] # [s]
+theta = [10, 20, 0, 30, 40] # [deg]
+theta_d = [0] # [deg/s]
 
 # Velocity in each segment
 v = [] # create an empty list
@@ -31,11 +31,6 @@ for index, elem in enumerate(v):
         elif np.sign(v[index]) != np.sign(v[index+1]):
             theta_d.append(0)
 theta_d.append(0) # this represents the endpoint-velocity (i.c.)
-
-
-
-
-print("theta_d: " + str(theta_d))
 
 
 
