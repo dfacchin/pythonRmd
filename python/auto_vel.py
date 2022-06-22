@@ -23,12 +23,18 @@ for index, (elem_t,elem_theta) in enumerate(zip(t,theta)):
     if (index+1 < len(t)): # compute only until the second to last value
         v.append((theta[index+1]-theta[index])/(t[index+1]-t[index]))
 
-for elem in range(len(t)-2): # -2 since we already know initial and final velocities
-    vel = enumerate(v)
+# Velocity at each path point
+for index, elem in enumerate(v):
+    if (index+1 < len(v)):
+        if np.sign(v[index]) == np.sign(v[index+1]):
+            theta_d.append((v[index]+v[index+1])/2)
+        elif np.sign(v[index]) != np.sign(v[index+1]):
+            theta_d.append(0)
+theta_d.append(0) # this represents the endpoint-velocity (i.c.)
 
-    if v
 
-theta_d.append(0)
+
+
 print("theta_d: " + str(theta_d))
 
 
