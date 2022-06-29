@@ -124,7 +124,7 @@ using the (Cubic) Polinomial Trajectory Function
 '''
 
 
-def cubic_trajectory(time, theta, theta_d, steps):
+def cubic_trajectory(time, theta, theta_d, steps=6):
 
     # Velocity in each segment
     v = []
