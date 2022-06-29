@@ -124,45 +124,58 @@ using the (Cubic) Polinomial Trajectory Function
 '''
 
 
-def cubic_trajectory(pos_target_i, pos_target_f, vel_target_i, vel_target_f, ti, tf, steps):
-    # pos_target = [theta_S, theta_E] or np.array((theta_S,theta_E))
-    # vel_target = [theta_d_S, theta_d_E] or np.array((theta_d_S,theta_d_E))
+def cubic_trajectory(time, theta, theta_d, steps):
 
-    # Time
-    t = np.linspace(ti, tf, steps) # [s]
+    # Velocity in each segment
+    v = []
+    for index, (elem_t,elem_theta) in enumerate(zip(time,theta)):
+        if (index+1 < len(time)): # compute only until the second to last value
+            v.append((theta[index+1]-theta[index])/(time[index+1]-time[index]))
+    print("v: " + str(v))
 
-    # Delta values (Shoulder)
-    delta_theta_S = pos_target_f[0] - pos_target_i[0]
-    theta_d_sum_S = vel_target_f[0] + vel_target_i[0]
-    # Delta values (Elbow)
-    delta_theta_E = pos_target_f[1] - pos_target_i[1]
-    theta_d_sum_E = vel_target_f[1] + vel_target_i[1]
+    # Velocity at each path point
+    for index, elem in enumerate(v):
+        if (index+1 < len(v)):
+            if np.sign(v[index]) == np.sign(v[index+1]):
+                theta_d.append((v[index]+v[index+1])/2)
+            elif np.sign(v[index]) != np.sign(v[index+1]):
+                theta_d.append(0)
+    theta_d.append(0) # this represents the endpoint-velocity (i.c.)
+    print("theta_d: " + str(theta_d))
 
-    # c-coefficients
-    # Shoulder
-    c0_S = pos_target_i[0]
-    c1_S = vel_target_i[0]
-    c2_S = ((3*delta_theta_S)/(tf-ti)**2) - ((2*vel_target_i[0])/(tf-ti)) - (vel_target_f[0]/(tf-ti))
-    c3_S = (-(2*delta_theta_S)/(tf-ti)**3) + (theta_d_sum_S/(tf-ti)**2)
-    # Elbow
-    c0_E = pos_target_i[1]
-    c1_E = vel_target_i[1]
-    c2_E = ((3*delta_theta_E)/(tf-ti)**2) - ((2*vel_target_i[1])/(tf-ti)) - (vel_target_f[1]/(tf-ti))
-    c3_E = (-(2*delta_theta_E)/(tf-ti)**3) + (theta_d_sum_E/(tf-ti)**2)
+    # Solve the Cubic Polinomial for each step
+    for index, (el_time,el_theta,el_theta_d) in enumerate(zip(time,theta,theta_d)):
+        if (index+1 < len(theta)):
+            t = np.linspace(time[index], time[index+1], steps) # [s] Time
 
-    # Cubic Polinomial [Trajectory of angular displacement]
-    theta_S = c0_S + (c1_S*(t-ti)) + (c2_S*(t-ti)**2) + (c3_S*(t-ti)**3) # [deg] Shoulder
-    theta_E = c0_E + (c1_E*(t-ti)) + (c2_E*(t-ti)**2) + (c3_E*(t-ti)**3) # [deg] Elbow
+            print("theta[index]: " + str(theta[index]))
+            print("theta[index+1]: " + str(theta[index+1]))
+            print("theta_d[index]: " + str(theta_d[index]))
+            print("theta_d[index+1]: " + str(theta_d[index+1]))
 
-    # Cubic Polinomial [Trajectory of angular velocity]
-    theta_d_S = c1_S + (2*c2_S*(t-ti)) + (3*c3_S*(t-ti)**2) # [deg/s] Shoulder
-    theta_d_E = c1_E + (2*c2_E*(t-ti)) + (3*c3_E*(t-ti)**2) # [deg/s] Elbow
+            # c-coefficients
+            c0_S = theta[index]
+            c1_S = theta_d[index]
+            c2_S = ((-3*(theta[index]-theta[index+1])) - (2*theta_d[index] + theta_d[index+1]) * (time[index+1]-time[index])) / (time[index+1]-time[index])**2
+            c3_S = ((2*(theta[index]-theta[index+1])) + (theta_d[index] + theta_d[index+1]) * (time[index+1]-time[index])) / (time[index+1]-time[index])**3
 
-    # Note: the variables that this function returns are arrays
-    return theta_S, theta_E, theta_d_S, theta_d_E
+            print("c0_S: " + str(c0_S))
+            print("c1_S: " + str(c1_S))
+            print("c2_S: " + str(c2_S))
+            print("c3_S: " + str(c3_S))
+            # Cubic Polinomial [Trajectory of angular displacement]
+            theta_S = c0_S + (c1_S*(t-time[index])) + (c2_S*(t-time[index])**2) + (c3_S*(t-time[index])**3) # [deg] Shoulder
+            # Cubic Polinomial [Trajectory of angular velocity]
+            theta_d_S = c1_S + (2*c2_S*(t-time[index])) + (3*c3_S*(t-time[index])**2) # [deg/s] Shoulder
+
+            print("theta_S: " + str(theta_S))
+            print("theta_d_S: " + str(theta_d_S))
+
+            # Note: the variables that this function returns are arrays
+            #return theta_S, theta_d_S
 
 
-def cubic_trajectory_auto_vel(pos_target_i, pos_target_f, vel_target_i, vel_target_f, ti, tf, steps):
+def cubic_trajectory_old(pos_target_i, pos_target_f, vel_target_i, vel_target_f, ti, tf, steps):
     # pos_target = [theta_S, theta_E] or np.array((theta_S,theta_E))
     # vel_target = [theta_d_S, theta_d_E] or np.array((theta_d_S,theta_d_E))
 
@@ -221,23 +234,7 @@ def linear_trajectory(pos_target_i, pos_target_f, vel_target_i, vel_target_f, ac
     # Joint angles at the end of the blend region
     theta_b_S = pos_target_i[0] + (0.5*accel[0]*tb)
 
-
     pass
-
-'''
-# Test the cubic trajectory function:
-if __name__ == "__main__":
-    pos_target_i = [20, 80]
-    pos_target_f = [90, 30]
-    vel_target_i = [15, 30]
-    vel_target_f = [30, 20]
-    ti = 0
-    tf = 5
-    steps = 3
-
-    traj = cubic_trajectory(pos_target_i, pos_target_f, vel_target_i, vel_target_f, tf, steps)
-    print(traj)
-'''
 
 
 '''
