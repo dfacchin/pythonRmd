@@ -4,6 +4,7 @@ class Joint:
 
     # Class variables
     time = [0, 2, 4, 8, 10] # [s]
+    #time = [0, 1, 2]
     fn = 5 # [Hz]
 
     def __init__(self, theta, theta_d, v, theta_t, theta_d_t):

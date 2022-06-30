@@ -1,13 +1,5 @@
-import kinematics
-from traj_class import Joint
+from trajectory_planner import Joint
 
-'''
-time = [0, 1, 2] # [s]
-theta_S = [0, 45, 0] # [deg]
-theta_S_d = [0] # [deg/s]
-theta_E = [0, 90, 0] # [deg]
-theta_E_d = [0] # [deg/s]
-'''
 
 # Initial Conditions (i.c.):
 # Define (pose,vel) for each path point
