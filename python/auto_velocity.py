@@ -30,8 +30,6 @@ steps = 6
 for index, (el_time,el_theta,el_theta_d) in enumerate(zip(time,theta,theta_d)):
     if (index+1 < len(theta)):
         t = np.linspace(time[index], time[index+1], steps) # [s] Time
-        delta_theta_S = theta[index] - theta[index+1] # Delta value
-        sum_theta_d_S = theta_d[index] + theta_d[index+1] # Sum
 
         print("theta[index]: " + str(theta[index]))
         print("theta[index+1]: " + str(theta[index+1]))

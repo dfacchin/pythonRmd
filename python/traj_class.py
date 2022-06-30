@@ -12,14 +12,12 @@ class Joint:
         self.theta_d = theta_d
         self.v = v
 
-
     # Velocity in each segment
     def velocity(self):
         for index, (el_time,el_theta) in enumerate(zip(self.time,self.theta)):
             if (index+1 < len(self.time)): # compute only until the second to last value
                 self.v.append((self.theta[index+1]-self.theta[index])/(self.time[index+1]-self.time[index]))
         return self.v
-
 
     # Velocity at each (pp) path point
     def theta_d_pp(self):
@@ -31,7 +29,6 @@ class Joint:
                     self.theta_d.append(0)
         self.theta_d.append(0) # this represents the endpoint-velocity (i.c.)
         return self.theta_d
-
 
     # Angular displacement and velocity along each trajectory segment (they are a function of time)
     def trajectory(self):
@@ -51,27 +48,6 @@ class Joint:
                 theta_d_t = c1 + (2*c2*(t-self.time[index])) + (3*c3*(t-self.time[index])**2) # [deg/s]
 
                 # Note: the variables that this function returns are arrays
-                #return theta_t, theta_d_t
-
-                print("theta_t: " + str(theta_t))
-                print("theta_d_t: " + str(theta_d_t))
-
-
-# Initial Conditions (i.c.):
-# Define (pose,vel) for each path point
-theta_S = [10, 20, 0, 30, 40] # [deg]
-theta_d_S = [0] # [deg/s]
-theta_E = [10, 20, 0, 30, 40] # [deg]
-theta_d_E = [0] # [deg/s]
-v_S = [] # [deg/s]
-v_E = [] # [deg/s]
-
-shoulder = Joint(theta_S, theta_d_S, v_S)
-elbow = Joint(theta_E, theta_d_E, v_E)
-
-print(shoulder.velocity())
-print(elbow.velocity())
-print(shoulder.theta_d_pp())
-print(elbow.theta_d_pp())
-print(shoulder.trajectory())
-print(elbow.trajectory())
+                return theta_t, theta_d_t
+                # print("theta_t: " + str(theta_t))
+                # print("theta_d_t: " + str(theta_d_t))
