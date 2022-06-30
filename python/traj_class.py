@@ -4,7 +4,7 @@ class Joint:
 
     # Class variables
     time = [0, 2, 4, 8, 10] # [s]
-    steps = 6
+    fn = 5 # [Hz]
 
     def __init__(self, theta, theta_d, v, theta_t, theta_d_t):
         # Define instance variables (unique to each instance)
@@ -36,7 +36,9 @@ class Joint:
     def trajectory(self):
         for index, (el_time,el_theta,el_theta_d) in enumerate(zip(self.time,self.theta,self.theta_d)):
             if (index+1 < len(self.theta)):
-                t = np.linspace(self.time[index], self.time[index+1], self.steps) # [s] Time
+                dt = self.time[index+1] - self.time[index] # delta time
+                steps = self.fn * dt # intermediate steps between pp
+                t = np.linspace(self.time[index], self.time[index+1], steps) # [s] Time
 
                 # c-coefficients
                 c0 = self.theta[index]
