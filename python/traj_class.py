@@ -6,11 +6,13 @@ class Joint:
     time = [0, 2, 4, 8, 10] # [s]
     steps = 6
 
-    def __init__(self, theta, theta_d, v):
+    def __init__(self, theta, theta_d, v, theta_t, theta_d_t):
         # Define instance variables (unique to each instance)
         self.theta = theta
         self.theta_d = theta_d
         self.v = v
+        self.theta_t = theta_t
+        self.theta_d_t = theta_d_t
 
     # Velocity in each segment
     def velocity(self):
@@ -43,11 +45,11 @@ class Joint:
                 c3 = ((2*(self.theta[index]-self.theta[index+1])) + (self.theta_d[index] + self.theta_d[index+1]) * (self.time[index+1]-self.time[index])) / (self.time[index+1]-self.time[index])**3
 
                 # Cubic Polinomial [Trajectory of angular displacement]
-                theta_t = c0 + (c1*(t-self.time[index])) + (c2*(t-self.time[index])**2) + (c3*(t-self.time[index])**3) # [deg]
+                self.theta_t.append(c0 + (c1*(t-self.time[index])) + (c2*(t-self.time[index])**2) + (c3*(t-self.time[index])**3)) # [deg]
                 # Cubic Polinomial [Trajectory of angular velocity]
-                theta_d_t = c1 + (2*c2*(t-self.time[index])) + (3*c3*(t-self.time[index])**2) # [deg/s]
+                self.theta_d_t.append(c1 + (2*c2*(t-self.time[index])) + (3*c3*(t-self.time[index])**2)) # [deg/s]
 
                 # Note: the variables that this function returns are arrays
-                return theta_t, theta_d_t
-                # print("theta_t: " + str(theta_t))
-                # print("theta_d_t: " + str(theta_d_t))
+                #return self.theta_t, self.theta_d_t
+                print("theta_t: " + str(self.theta_t))
+                print("theta_d_t: " + str(self.theta_d_t))
