@@ -10,11 +10,11 @@ class Joint:
 
     def __init__(self, theta, theta_d, v, time, fn):
         # Define instance variables (unique to each instance)
-        self.theta = theta
-        self.theta_d = theta_d
-        self.v = v
-        self.time = time
-        self.fn = fn
+        self.theta = theta # [deg]
+        self.theta_d = theta_d # [deg/s]
+        self.v = v # [deg/s]
+        self.time = time # [s]
+        self.fn = fn # [Hz]
 
     # Velocity in each segment
     def velocity(self):
@@ -35,8 +35,8 @@ class Joint:
         return self.theta_d
 
     # Angular displacement and velocity along each trajectory segment (they are a function of time)
-    def trajectory(self):
-        arr_time = np.array([]) # theta_array (position)
+    def trajectory(self, joint_name):
+        arr_time = np.array([]) # time_array
         arr_t = np.array([]) # theta_array (position)
         arr_d_t = np.array([]) # theta_d_array (velocity)
         for index, (el_time,el_theta,el_theta_d) in enumerate(zip(self.time,self.theta,self.theta_d)):
@@ -68,12 +68,31 @@ class Joint:
                     arr_d_t = np.concatenate([arr_d_t,theta_d_t])
                 else:
                     arr_d_t = np.concatenate([arr_d_t,theta_d_t[1::]]) # removing redundant values
-        
+
+        # Plots
+        plt.style.use('seaborn-dark')
+        if (joint_name=="shoulder"):
+            plt.suptitle("SHOULDER", fontweight='bold', fontsize=15)
+        elif (joint_name=="elbow"):
+            plt.suptitle("ELBOW", fontweight='bold', fontsize=15)
+        else:
+            print('Wrong joint name! Specify either "shoulder" or "elbow"')
+
         # Position Plot
+        plt.subplot(1,2,1) # (row, column, plot)
         plt.title("Position")
         plt.xlabel("time [s]")
         plt.ylabel("theta [deg]")
         plt.plot(arr_time, arr_t, marker='.')
+        plt.grid(True)
+
+        # Velocity Plot
+        plt.subplot(1,2,2) # (row, column, plot)
+        plt.title("Velocity")
+        plt.xlabel("time [s]")
+        plt.ylabel("theta_d [deg/s]")
+        plt.plot(arr_time, arr_t, color='y', marker='.')
+        plt.grid(True)
 
         plt.tight_layout() # avoid text overlapping
         plt.show()

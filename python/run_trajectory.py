@@ -26,34 +26,9 @@ elbow.velocity()
 shoulder.theta_d_pp()
 elbow.theta_d_pp()
 
+# Make sure to speciy the joint_name: shoulder and elbow
+angle_S = shoulder.trajectory(joint_name="shoulder")
+angle_E = elbow.trajectory(joint_name="elbow")
 # Print "theta" and "theta_d" arrays
-angle_S = shoulder.trajectory()
-angle_E = elbow.trajectory()
-
 print(angle_S)
 print(angle_E)
-
-
-# # Plots
-
-# plt.style.use('seaborn-dark')
-
-# # Position Plot
-# plt.subplot(1,2,1) # (row, column, plot)
-# plt.title("Position")
-# plt.xlabel("time [s]")
-# plt.ylabel("theta [deg]")
-# plt.plot(time, angle_S[0], marker='.')
-# plt.grid(True)
-
-# # Velocity Plot
-# plt.subplot(1,2,2) # (row, column, plot)
-# plt.title("Velocity")
-# plt.xlabel("time [s]")
-# plt.ylabel("theta_d [deg/s]")
-# plt.plot(time, angle_S[1], color='y', marker='.')
-# plt.grid(True)
-
-
-# plt.tight_layout() # avoid text overlapping
-# plt.show()
