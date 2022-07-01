@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 from trajectory_planner import Joint
 
 
@@ -10,18 +11,17 @@ theta_d_E = [0] # [deg/s]
 # Velocity in each segment
 v_S = [] # [deg/s]
 v_E = [] # [deg/s]
-# Joint angles and velocities describing the trajectory (in time)
-theta_S_t = [] # [deg]
-theta_d_S_t = [] # [deg/s]
-theta_E_t = [] # [deg]
-theta_d_E_t = [] # [deg/s]
 
-shoulder = Joint(theta_S, theta_d_S, v_S, theta_S_t, theta_d_S_t)
-elbow = Joint(theta_E, theta_d_E, v_E, theta_E_t, theta_d_E_t)
 
-print(shoulder.velocity())
-print(elbow.velocity())
-print(shoulder.theta_d_pp())
-print(elbow.theta_d_pp())
+shoulder = Joint(theta_S, theta_d_S, v_S)
+elbow = Joint(theta_E, theta_d_E, v_E)
+
+# Compute velocities
+shoulder.velocity()
+elbow.velocity()
+shoulder.theta_d_pp()
+elbow.theta_d_pp()
+
+# Print "theta" and "theta_d" arrays
 print(shoulder.trajectory())
 print(elbow.trajectory())
