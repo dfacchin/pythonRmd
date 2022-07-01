@@ -5,7 +5,7 @@ from trajectory_planner import Joint
 # Initial Conditions (i.c.):
 pp = [[1000,0],[500,-500],[1000,0]] # [mm] path points (x,y)
 time = np.array([0, 1, 2]) # [s]
-fn = 5 # [Hz]
+fn = 50 # [Hz]
 
 # Define (pose,vel) for each path point
 theta_S = [] # [deg]

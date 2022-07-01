@@ -91,7 +91,7 @@ class Joint:
         plt.title("Velocity")
         plt.xlabel("time [s]")
         plt.ylabel("theta_d [deg/s]")
-        plt.plot(arr_time, arr_t, color='y', marker='.')
+        plt.plot(arr_time, arr_d_t, color='y', marker='.')
         plt.grid(True)
 
         plt.tight_layout() # avoid text overlapping
