@@ -5,7 +5,7 @@ from trajectory_planner import Joint
 # Initial Conditions (i.c.):
 pp = [[1000,0],[500,-500],[1000,0]] # [mm] path points (x,y)
 time = np.array([0, 1, 2]) # [s]
-fn = 50 # [Hz]
+fn = 5 # [Hz]
 
 # Define (pose,vel) for each path point
 theta_S = [] # [deg]
@@ -21,7 +21,7 @@ for coord in pp:
     y = float(coord[1])
     target = np.array((x,y))
     theta = kinematics.IK(target, elbow=1)
-    theta_S.append(-theta[0]) # - sign, since the motor is up-side-down
+    theta_S.append(theta[0]) # - sign, since the motor is up-side-down
     theta_E.append(theta[1]+theta[0]) # sum of angles since we use belts
 
 shoulder = Joint(theta_S, theta_d_S, v_S, time, fn)
@@ -98,10 +98,11 @@ motor_S.Fn34()  # write acceleration to Ram
 
 idx = 1
 
-while idx < len(angle_S):
-    ik = [angle_S[idx],angle_E[idx]]
+while idx < len(angle_S[0]):
+    ik = [angle_S[0][idx],angle_E[0][idx]]
     idx += 1
+    print("Pos:",ik)
     motor_S.goG(-ik[0], v)
-	#motor_E.goG(ik[1]+ik[0], v)
+    #motor_E.goG(ik[1]+ik[0], v)
     time.sleep(1/fn)
-    input("go to nexxt point")
+    #input("go to nexxt point")
