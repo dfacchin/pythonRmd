@@ -5,6 +5,8 @@ from trajectory_planner import Joint
 pp = [[1000,0],[500,-500],[1000,0]] # path points
 
 # Initial Conditions (i.c.):
+time = np.array([0, 1, 2]) # [s]
+fn = 5 # [Hz]
 # Define (pose,vel) for each path point
 theta_S = [] # [deg]
 theta_d_S = [0] # [deg/s]
@@ -13,11 +15,6 @@ theta_d_E = [0] # [deg/s]
 # Velocity in each segment
 v_S = [] # [deg/s]
 v_E = [] # [deg/s]
-# Joint angles and velocities describing the trajectory (in time)
-theta_S_t = [] # [deg]
-theta_d_S_t = [] # [deg/s]
-theta_E_t = [] # [deg]
-theta_d_E_t = [] # [deg/s]
 
 for coord in pp:
     x = float(coord[0])
@@ -27,12 +24,16 @@ for coord in pp:
     theta_S.append(theta[0])
     theta_E.append(theta[1])
 
-shoulder = Joint(theta_S, theta_d_S, v_S, theta_S_t, theta_d_S_t)
-elbow = Joint(theta_E, theta_d_E, v_E, theta_E_t, theta_d_E_t)
+shoulder = Joint(theta_S, theta_d_S, v_S, time, fn)
+elbow = Joint(theta_E, theta_d_E, v_E, time, fn)
 
 shoulder.velocity()
 elbow.velocity()
 shoulder.theta_d_pp()
 elbow.theta_d_pp()
-print(shoulder.trajectory())
-print(elbow.trajectory())
+
+angle_S = shoulder.trajectory()
+angle_E = elbow.trajectory()
+# Print "theta" and "theta_d" arrays
+print(angle_S)
+print(angle_E)

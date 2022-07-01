@@ -1,17 +1,20 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 class Joint:
 
-    # Class variables
-    time = [0, 2, 4, 8, 10] # [s]
-    #time = [0, 1, 2]
-    fn = 5 # [Hz]
+    # TODO
+    # Create Class variables that can be defined in other files:
+    # time = [0, 2, 4, 8, 10] # [s]
+    # fn = 5 # [Hz]
 
-    def __init__(self, theta, theta_d, v):
+    def __init__(self, theta, theta_d, v, time, fn):
         # Define instance variables (unique to each instance)
         self.theta = theta
         self.theta_d = theta_d
         self.v = v
+        self.time = time
+        self.fn = fn
 
     # Velocity in each segment
     def velocity(self):
@@ -33,6 +36,7 @@ class Joint:
 
     # Angular displacement and velocity along each trajectory segment (they are a function of time)
     def trajectory(self):
+        arr_time = np.array([]) # theta_array (position)
         arr_t = np.array([]) # theta_array (position)
         arr_d_t = np.array([]) # theta_d_array (velocity)
         for index, (el_time,el_theta,el_theta_d) in enumerate(zip(self.time,self.theta,self.theta_d)):
@@ -40,6 +44,10 @@ class Joint:
                 dt = self.time[index+1] - self.time[index] # delta time
                 steps = self.fn * dt # intermediate steps between pp
                 t = np.linspace(self.time[index], self.time[index+1], steps) # [s] Time
+                if (len(arr_time)==0):
+                    arr_time = np.concatenate([arr_time, t])
+                else:
+                    arr_time = np.concatenate([arr_time, t[1::]]) # removing redundant values
 
                 # c-coefficients
                 c0 = self.theta[index]
@@ -60,6 +68,16 @@ class Joint:
                     arr_d_t = np.concatenate([arr_d_t,theta_d_t])
                 else:
                     arr_d_t = np.concatenate([arr_d_t,theta_d_t[1::]]) # removing redundant values
+        
+        # Position Plot
+        plt.title("Position")
+        plt.xlabel("time [s]")
+        plt.ylabel("theta [deg]")
+        plt.plot(arr_time, arr_t, marker='.')
+
+        plt.tight_layout() # avoid text overlapping
+        plt.show()
+
         return (arr_t,arr_d_t)
 
 
