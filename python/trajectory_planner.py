@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 class Joint:
 
@@ -69,33 +69,33 @@ class Joint:
                 else:
                     arr_d_t = np.concatenate([arr_d_t,theta_d_t[1::]]) # removing redundant values
 
-        # Plots
-        plt.style.use('seaborn-dark')
-        if (joint_name=="shoulder"):
-            plt.suptitle("SHOULDER", fontweight='bold', fontsize=15)
-        elif (joint_name=="elbow"):
-            plt.suptitle("ELBOW", fontweight='bold', fontsize=15)
-        else:
-            print('Wrong joint name! Specify either "shoulder" or "elbow"')
+        # # Plots
+        # plt.style.use('seaborn-dark')
+        # if (joint_name=="shoulder"):
+        #     plt.suptitle("SHOULDER", fontweight='bold', fontsize=15)
+        # elif (joint_name=="elbow"):
+        #     plt.suptitle("ELBOW", fontweight='bold', fontsize=15)
+        # else:
+        #     print('Wrong joint name! Specify either "shoulder" or "elbow"')
 
-        # Position Plot
-        plt.subplot(1,2,1) # (row, column, plot)
-        plt.title("Position")
-        plt.xlabel("time [s]")
-        plt.ylabel("theta [deg]")
-        plt.plot(arr_time, arr_t, marker='.')
-        plt.grid(True)
+        # # Position Plot
+        # plt.subplot(1,2,1) # (row, column, plot)
+        # plt.title("Position")
+        # plt.xlabel("time [s]")
+        # plt.ylabel("theta [deg]")
+        # plt.plot(arr_time, arr_t, marker='.')
+        # plt.grid(True)
 
-        # Velocity Plot
-        plt.subplot(1,2,2) # (row, column, plot)
-        plt.title("Velocity")
-        plt.xlabel("time [s]")
-        plt.ylabel("theta_d [deg/s]")
-        plt.plot(arr_time, arr_d_t, color='y', marker='.')
-        plt.grid(True)
+        # # Velocity Plot
+        # plt.subplot(1,2,2) # (row, column, plot)
+        # plt.title("Velocity")
+        # plt.xlabel("time [s]")
+        # plt.ylabel("theta_d [deg/s]")
+        # plt.plot(arr_time, arr_d_t, color='y', marker='.')
+        # plt.grid(True)
 
-        plt.tight_layout() # avoid text overlapping
-        plt.show()
+        # plt.tight_layout() # avoid text overlapping
+        # plt.show()
 
         return (arr_t,arr_d_t)
 
