@@ -163,7 +163,7 @@ class aig_cart:
             while (self.apples.findLowest() != None):
                 el = self.apples.popLowest()
                 #picking movement is elaborated in the scara low level
-                def pick(self,el):
+                self.pickAndDrop(self,el):
             self.goIdle()
             self.state = "IDLE"
 
@@ -182,6 +182,21 @@ class aig_cart:
         self.scara.goWait(posZIntermediate)
 
     def scan(self):
+        #Get the real vertical Position
+        #Get the Frame RGB/DEPTH
+        #GET BBOX
+        #Clear BBOX
+        #GET APPLE Position
+        #For each APPLE
+        ##x,y,z Position
+        ##uuid
+        ##camera pixel coordinate of bbox center RGB
+        ##grade of confidance
+        ##e BBox
+        #Save apples info
+        #SAVE RGB image
+        #SAVE DEPTH frame
+        #push to apple data array
         pass
 
     def filterScan(self):
@@ -192,4 +207,21 @@ class aig_cart:
         # vertical center)
 
         #1 Remove all the element that are not pickable
+        pass
+
+    def self.pickAndDrop(self,el):
+        #Ask the scara system to pick the apple at the desired coordinate
+        pass
+
+    def self.pickAndDropControlled(self,el):
+        #Reach front of apples
+        #ask for pick or not
+        #if not save info of UUID and not pick for Color/size
+        #else
+        #pick apple
+        #move to picture position
+        #take picture
+        #save pciture RGB
+        #Ask if picciolo / pick
+        #in case drop to convorybelt
         pass
