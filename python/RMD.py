@@ -295,9 +295,9 @@ class RMD:
         #self.desiredPosition = desiredPosition +18000
         self.desiredPosition = desiredPosition
         self.maxSpeed = maxSpeed
-        print("GO TO",desiredPosition,self.desiredPosition)
+        #print("GO TO",desiredPosition,self.desiredPosition)
         data2 = struct.pack("<Hl",maxSpeed,self.desiredPosition)
-        print("SPACCEHTTA",struct.unpack("<Hl",data2))
+        #print("SPACCEHTTA",struct.unpack("<Hl",data2))
         for el in data2:
             data.append(el)
         ret = self.wr(data)
@@ -320,10 +320,10 @@ class RMD:
 
     #go to a specific position and print actual position
     def goG(self,pos,speed):
-        self.print()
+        #self.print()
         self.FnA4(int(pos*100*self.ratio), int(speed*self.ratio))
-        for a in range(1):
-            #self.Fn90()
-            self.Fn92()
-            #self.Fn94()
-            self.print()
+        #for a in range(1):
+        #    #self.Fn90()
+        #    self.Fn92()
+        #    #self.Fn94()
+        #    self.print()
