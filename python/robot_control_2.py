@@ -13,7 +13,6 @@ bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 # Variables
 v = 500  # Motors velocity
 a = 1000  # Motors acceleration
-t = 3  # Waiting time
 
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
@@ -52,7 +51,7 @@ motor_S.Fn34()  # write acceleration to Ram
 
 # Initial Conditions (i.c.):
 pp = [[1000,0],[500,-500],[1000,0]] # [mm] path points (x,y)
-time = np.array([0, 1, 2]) # [s]
+t = np.array([0, 1, 2]) # [s]
 fn = 5 # [Hz]
 
 # Define (pose,vel) for each path point
@@ -72,8 +71,8 @@ for coord in pp:
     theta_S.append(theta[0])
     theta_E.append(theta[1])
 
-shoulder = Joint(theta_S, theta_d_S, v_S, time, fn)
-elbow = Joint(theta_E, theta_d_E, v_E, time, fn)
+shoulder = Joint(theta_S, theta_d_S, v_S, t, fn)
+elbow = Joint(theta_E, theta_d_E, v_E, t, fn)
 
 # Compute velocities
 shoulder.velocity()
