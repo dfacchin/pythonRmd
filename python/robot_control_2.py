@@ -11,8 +11,8 @@ from trajectory_planner import Joint
 bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 
 # Variables
-v = 500  # Motors velocity
-a = 1000  # Motors acceleration
+v = 400  # Motors velocity
+a = 800  # Motors acceleration
 
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
@@ -27,7 +27,7 @@ motor_E.PidVelKi = 5
 motor_E.PidTrqKp = 100
 motor_E.PidTrqKp = 5
 motor_E.Fn31()  # write PID to Ram
-# Specify desired accelration
+# Specify desired acceleration
 motor_E.acceleration = a
 motor_E.Fn34()  # write acceleration to Ram
 
@@ -50,9 +50,9 @@ motor_S.Fn34()  # write acceleration to Ram
 
 
 # Initial Conditions (i.c.):
-pp = [[1000,0],[500,-500],[1000,0]] # [mm] path points (x,y)
-t = np.array([0, 1, 2]) # [s]
-fn = 5 # [Hz]
+pp = [[1000,0],[750,200],[300,350],[0,500],[300,350],[750,200],[1000,0]] # [mm] path points (x,y)
+t = np.array([0, 1, 2, 3, 4, 5, 6]) # [s]
+fn = 10 # [Hz]
 
 # Define (pose,vel) for each path point
 theta_S = [] # [deg]
@@ -97,4 +97,4 @@ while idx < len(angle_S[0]):
     motor_S.goG(-ik[0], v) # - sign, since the motor is up-side-down
     motor_E.goG(ik[1]+ik[0], v) # sum of angles since we use belts
     time.sleep(1/fn)
-    input("Hit 'Enter' and go to the next point")
+   # input("Hit 'Enter' and go to the next point")
