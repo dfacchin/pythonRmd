@@ -1,5 +1,4 @@
 import numpy as np
-#import matplotlib.pyplot as plt
 
 class Joint:
 
@@ -38,7 +37,7 @@ class Joint:
     def trajectory(self, joint_name):
         arr_time = np.array([]) # time_array
         arr_t = np.array([]) # theta_array (position)
-        arr_d_t = np.array([]) # theta_d_array (velocity)
+        arr_t_d = np.array([]) # theta_d_array (velocity)
         for index, (el_time,el_theta,el_theta_d) in enumerate(zip(self.time,self.theta,self.theta_d)):
             if (index+1 < len(self.theta)):
                 dt = self.time[index+1] - self.time[index] # delta time
@@ -64,40 +63,11 @@ class Joint:
 
                 # Cubic Polinomial [Trajectory of angular velocity]
                 theta_d_t = c1 + (2*c2*(t-self.time[index])) + (3*c3*(t-self.time[index])**2)
-                if (len(arr_d_t)==0):
-                    arr_d_t = np.concatenate([arr_d_t,theta_d_t])
+                if (len(arr_t_d)==0):
+                    arr_t_d = np.concatenate([arr_t_d,theta_d_t])
                 else:
-                    arr_d_t = np.concatenate([arr_d_t,theta_d_t[1::]]) # removing redundant values
-
-        # # Plots
-        # plt.style.use('seaborn-dark')
-        # if (joint_name=="shoulder"):
-        #     plt.suptitle("SHOULDER", fontweight='bold', fontsize=15)
-        # elif (joint_name=="elbow"):
-        #     plt.suptitle("ELBOW", fontweight='bold', fontsize=15)
-        # else:
-        #     print('Wrong joint name! Specify either "shoulder" or "elbow"')
-
-        # # Position Plot
-        # plt.subplot(1,2,1) # (row, column, plot)
-        # plt.title("Position")
-        # plt.xlabel("time [s]")
-        # plt.ylabel("theta [deg]")
-        # plt.plot(arr_time, arr_t, marker='.')
-        # plt.grid(True)
-
-        # # Velocity Plot
-        # plt.subplot(1,2,2) # (row, column, plot)
-        # plt.title("Velocity")
-        # plt.xlabel("time [s]")
-        # plt.ylabel("theta_d [deg/s]")
-        # plt.plot(arr_time, arr_d_t, color='y', marker='.')
-        # plt.grid(True)
-
-        # plt.tight_layout() # avoid text overlapping
-        # plt.show()
-
-        return (arr_t,arr_d_t)
+                    arr_t_d = np.concatenate([arr_t_d,theta_d_t[1::]]) # removing redundant values
+        return (arr_t,arr_t_d)
 
 
 '''

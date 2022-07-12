@@ -1,6 +1,6 @@
 import numpy as np
 
-from trajectory_planner import Joint
+from trajectory_planner_plot import Joint
 
 
 # Initial Conditions (i.c.):
@@ -26,8 +26,14 @@ shoulder.theta_d_pp()
 elbow.theta_d_pp()
 
 # Make sure to speciy the joint_name: shoulder and elbow
-angle_S = shoulder.trajectory(joint_name="shoulder")
-angle_E = elbow.trajectory(joint_name="elbow")
+angle_S = shoulder.trajectory()
+angle_E = elbow.trajectory()
 # Print "theta" and "theta_d" arrays
 print(angle_S)
 print(angle_E)
+
+# Plot
+plot_S = shoulder.plot("shoulder", angle_S[0], angle_S[1], angle_S[2])
+plot_E = elbow.plot("elbow", angle_E[0], angle_E[1], angle_E[2])
+print(plot_S)
+print(plot_E)
