@@ -91,11 +91,11 @@ print(angle_E)
 for i in range(3):
 	idx = 1
 	while idx < len(angle_S[0]):
-	    ik = [angle_S[0][idx],angle_E[0][idx]]
-	    idx += 1
-	    print("Pos:",ik)
-	    motor_S.goG(-ik[0], v) # - sign, since the motor is up-side-down
-	    motor_E.goG(ik[1]+ik[0], v) # sum of angles since we use belts
-	    time.sleep(1/fn)
-	   # input("Hit 'Enter' and go to the next point")
+		ik = [angle_S[0][idx],angle_E[0][idx]]
+		idx += 1
+		print("Pos:",ik)
+		motor_S.goG(-ik[0], v) # - sign, since the motor is up-side-down
+		motor_E.goG(ik[1]+ik[0], v) # sum of angles since we use belts
+		time.sleep(1/fn)
+		# input("Hit 'Enter' and go to the next point")
 	#time.sleep(2)
