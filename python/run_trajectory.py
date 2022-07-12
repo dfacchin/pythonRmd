@@ -1,6 +1,6 @@
 import numpy as np
 
-from trajectory_planner_plot import Joint
+from trajectory_planner import Joint
 
 
 # Initial Conditions (i.c.):
