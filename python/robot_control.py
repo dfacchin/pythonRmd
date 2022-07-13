@@ -101,7 +101,8 @@ while idx < len(angle_S[0]):
 
 	if idx == 3 or idx > 3:
 		# Read multiTurnG value
-		motor_S.Fn92()
+		actual_angle_S = motor_S.get_actual_angle()
+		print("Actual angle: ", -actual_angle_S)
 
 	motor_S.goG(-ik[0], v) # - sign, since the motor is up-side-down
 	motor_E.goG(ik[1]+ik[0], v) # sum of angles since we use belts
