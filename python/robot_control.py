@@ -88,6 +88,10 @@ angle_E = elbow.trajectory()
 print(angle_S)
 print(angle_E)
 
+# Define actual angle arrays
+actual_angle_S = np.array([])
+actual_angle_E = np.array([])
+
 #for i in range(3):
 idx = 1
 while idx < len(angle_S[0]):
@@ -99,10 +103,13 @@ while idx < len(angle_S[0]):
 	print("Desired angle: ", ik)
 	#print("Vel: ",v)
 
-	if idx == 3 or idx > 3:
-		# Read multiTurnG value
-		actual_angle_S = motor_S.get_actual_angle()
-		print("Actual angle: ", -actual_angle_S)
+	# Read actual multiTurnGeared motor angle
+	read_angle_S = motor_S.get_actual_angle()
+	read_angle_E = motor_E.get_actual_angle()
+
+	actual_angle_S = np.concatenate([actual_angle_S, -read_angle_S])
+	actual_angle_E = np.concatenate([actual_angle_E, read_angle_E])
+
 
 	motor_S.goG(-ik[0], v) # - sign, since the motor is up-side-down
 	motor_E.goG(ik[1]+ik[0], v) # sum of angles since we use belts
@@ -110,3 +117,5 @@ while idx < len(angle_S[0]):
 
 	input("Hit 'Enter' and go to the next point")
 	#time.sleep(2)
+print("actual S: ", actual_angle_S)
+print("actual E: ", actual_angle_E)
