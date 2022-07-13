@@ -117,7 +117,7 @@ while idx < len(angle_S[0]):
 	motor_E.goG(ik[1]+ik[0], v) # sum of angles since we use belts
 	time.sleep(1/fn)
 
-	input("Hit 'Enter' and go to the next point")
+	#input("Hit 'Enter' and go to the next point")
 	#time.sleep(2)
 
 read_angle_S = motor_S.get_actual_angle()
