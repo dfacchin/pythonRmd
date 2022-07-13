@@ -192,7 +192,7 @@ class RMD:
             for el in ret[1]:
                 print(el)
 
-    #read multi run angle (Retunt the actual motor output angle)
+    #read multi run angle (Return the actual motor output angle)
     def get_actual_angle(self):
         data = [0x92,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
         ret = self.wr(data)
@@ -204,7 +204,7 @@ class RMD:
             self.multiTurn  = struct.unpack("<q",bytes(data))[0]
             self.multiTurn  /= 100
             self.multiTurnG = self.multiTurn/self.ratio
-            self.multiTurnG = int(self.multiTurnG)
+            self.multiTurnG = float(self.multiTurnG)
         else:
             print("ERRORE",data)
             for el in ret[1]:
