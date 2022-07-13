@@ -106,11 +106,6 @@ while idx < len(angle_S[0]):
 	print("Desired angle: ", ik)
 	#print("Vel: ",v)
 
-
-	motor_S.goG(-ik[0], v) # - sign, since the motor is up-side-down
-	motor_E.goG(ik[1]+ik[0], v) # sum of angles since we use belts
-	time.sleep(1/fn)
-
 	# Read actual multiTurnGeared motor angle
 	read_angle_S = motor_S.get_actual_angle()
 	read_angle_E = motor_E.get_actual_angle()
@@ -118,7 +113,18 @@ while idx < len(angle_S[0]):
 	actual_angle_S.append(-read_angle_S)
 	actual_angle_E.append(read_angle_E+read_angle_S)
 
+	motor_S.goG(-ik[0], v) # - sign, since the motor is up-side-down
+	motor_E.goG(ik[1]+ik[0], v) # sum of angles since we use belts
+	time.sleep(1/fn)
+
 	input("Hit 'Enter' and go to the next point")
 	#time.sleep(2)
+
+read_angle_S = motor_S.get_actual_angle()
+read_angle_E = motor_E.get_actual_angle()
+
+actual_angle_S.append(-read_angle_S)
+actual_angle_E.append(read_angle_E+read_angle_S)
+
 print("actual S: ", actual_angle_S)
 print("actual E: ", actual_angle_E)
