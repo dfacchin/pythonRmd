@@ -99,7 +99,7 @@ while idx < len(angle_S[0]):
 	print("Desired angle: ", ik)
 	#print("Vel: ",v)
 
-	if idx == 2 or idx > 2:
+	if idx == 3 or idx > 3:
 		# Read multiTurnG value
 		motor_S.Fn92()
 
