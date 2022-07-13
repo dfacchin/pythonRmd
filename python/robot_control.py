@@ -110,8 +110,8 @@ while idx < len(angle_S[0]):
 	read_angle_S = motor_S.get_actual_angle()
 	read_angle_E = motor_E.get_actual_angle()
 
-	actual_angle_S.append(read_angle_S)
-	actual_angle_E.append(read_angle_E)
+	actual_angle_S.append(-read_angle_S)
+	actual_angle_E.append(read_angle_E+read_angle_S)
 
 
 	motor_S.goG(-ik[0], v) # - sign, since the motor is up-side-down
