@@ -96,11 +96,12 @@ while idx < len(angle_S[0]):
 	idx += 1
 
 	# Print desired pose
-	print("Pos: ",ik)
+	print("Desired angle: ", ik)
 	#print("Vel: ",v)
 
-	# Read multiTurnG value
-	motor_S.Fn92()
+	if idx == 2 or idx > 2:
+		# Read multiTurnG value
+		motor_S.Fn92()
 
 	motor_S.goG(-ik[0], v) # - sign, since the motor is up-side-down
 	motor_E.goG(ik[1]+ik[0], v) # sum of angles since we use belts
