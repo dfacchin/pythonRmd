@@ -11,7 +11,7 @@ from trajectory_planner import Joint
 bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 
 # Variables
-v = 1000  # Motors velocity
+#v = 1000  # Motors velocity
 a = 1000  # Motors acceleration
 
 
@@ -91,11 +91,13 @@ print(angle_E)
 #for i in range(3):
 idx = 1
 while idx < len(angle_S[0]):
-	ik = [angle_S[0][idx],angle_E[0][idx]]
+	ik = [angle_S[0][idx],angle_E[0][idx]] # joint angles
+	v = [angle_S[1][idx],angle_E[1][idx]] # joint velocities
 	idx += 1
-	print("Pos:",ik)
-	motor_S.goG(-ik[0], v) # - sign, since the motor is up-side-down
-	motor_E.goG(ik[1]+ik[0], v) # sum of angles since we use belts
+	print("Pos: ",ik)
+	print("Vel: ",v)
+	motor_S.goG(-ik[0], v[0]) # - sign, since the motor is up-side-down
+	motor_E.goG(ik[1]+ik[0], v[1]) # sum of angles since we use belts
 	time.sleep(1/fn)
-	#input("Hit 'Enter' and go to the next point")
+	input("Hit 'Enter' and go to the next point")
 	#time.sleep(2)
