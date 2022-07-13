@@ -1,7 +1,9 @@
 import numpy as np
+import tkinter
 import matplotlib
 matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
+
 
 class Joint:
 
