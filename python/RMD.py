@@ -186,7 +186,7 @@ class RMD:
             self.multiTurn  /= 100
             self.multiTurnG = self.multiTurn/self.ratio
             self.multiTurnG = int(self.multiTurnG)
-            #print(self.multiTurn)
+            print(self.multiTurn)
         else:
             print("ERRORE",data)
             for el in ret[1]:
