@@ -95,7 +95,7 @@ while idx < len(angle_S[0]):
 	#v = [angle_S[1][idx],angle_E[1][idx]] # joint velocities
 	idx += 1
 	print("Pos: ",ik)
-	print("Vel: ",v)
+	#print("Vel: ",v)
 	motor_S.goG(-ik[0], v) # - sign, since the motor is up-side-down
 	motor_E.goG(ik[1]+ik[0], v) # sum of angles since we use belts
 	time.sleep(1/fn)
