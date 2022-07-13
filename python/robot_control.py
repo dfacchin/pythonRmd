@@ -11,8 +11,8 @@ from trajectory_planner import Joint
 bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 
 # Variables
-v = 1500  # Motors velocity
-a = 1500  # Motors acceleration
+v = 1000  # Motors velocity
+a = 1000  # Motors acceleration
 
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
@@ -51,9 +51,9 @@ motor_S.Fn34()  # write acceleration to Ram
 
 # Initial Conditions (i.c.):
 #pp = [[1000,0],[750,200],[300,350],[0,500],[300,350],[750,200],[1000,0]] # [mm] path points (x,y)
-pp = [[1000,0],[500,300],[1000,0]]
+pp = [[1000,0],[400,0],[1000,0]]
 t = np.array([0, 1, 2]) # [s]
-fn = 10 # [Hz]
+fn = 5 # [Hz]
 
 # Define (pose,vel) for each path point
 theta_S = [] # [deg]
@@ -88,14 +88,14 @@ angle_E = elbow.trajectory()
 print(angle_S)
 print(angle_E)
 
-for i in range(3):
-	idx = 1
-	while idx < len(angle_S[0]):
-		ik = [angle_S[0][idx],angle_E[0][idx]]
-		idx += 1
-		print("Pos:",ik)
-		motor_S.goG(-ik[0], v) # - sign, since the motor is up-side-down
-		motor_E.goG(ik[1]+ik[0], v) # sum of angles since we use belts
-		time.sleep(1/fn)
-		input("Hit 'Enter' and go to the next point")
+#for i in range(3):
+idx = 1
+while idx < len(angle_S[0]):
+	ik = [angle_S[0][idx],angle_E[0][idx]]
+	idx += 1
+	print("Pos:",ik)
+	motor_S.goG(-ik[0], v) # - sign, since the motor is up-side-down
+	motor_E.goG(ik[1]+ik[0], v) # sum of angles since we use belts
+	time.sleep(1/fn)
+	#input("Hit 'Enter' and go to the next point")
 	#time.sleep(2)
