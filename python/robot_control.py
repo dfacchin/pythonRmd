@@ -99,7 +99,9 @@ while idx < len(angle_S[0]):
 	motor_S.goG(-ik[0], v) # - sign, since the motor is up-side-down
 	motor_E.goG(ik[1]+ik[0], v) # sum of angles since we use belts
 	time.sleep(1/fn)
-	real_angle_S = motor_S.goG.pos
-	print(real_angle_S)
+
+	# Read multiTurnG value
+	motor_S.get_current_theta()
+
 	input("Hit 'Enter' and go to the next point")
 	#time.sleep(2)
