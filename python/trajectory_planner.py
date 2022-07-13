@@ -1,5 +1,9 @@
 import numpy as np
-import tkinter
+import sys
+if sys.version_info[0] == 3:
+    import tkinter as tk
+else:
+    import Tkinter as tk
 import matplotlib
 matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
