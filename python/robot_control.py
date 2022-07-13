@@ -101,7 +101,7 @@ while idx < len(angle_S[0]):
 	time.sleep(1/fn)
 
 	# Read multiTurnG value
-	motor_S.get_current_theta()
+	motor_S.Fn92()
 
 	input("Hit 'Enter' and go to the next point")
 	#time.sleep(2)
