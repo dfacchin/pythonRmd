@@ -80,7 +80,7 @@ class Joint:
 
 
     # Plots
-    def plot(self, joint_name, desired_theta, desired_theta_d, array_time, actual_theta):
+    def plot(self, joint_name, desired_theta, desired_theta_d, array_time, actual_theta=None):
         plt.style.use('seaborn-dark')
         if (joint_name=="shoulder"):
             plt.suptitle("SHOULDER", fontweight='bold', fontsize=15)
@@ -95,7 +95,8 @@ class Joint:
         plt.xlabel("time [s]")
         plt.ylabel("theta [deg]")
         plt.plot(array_time, desired_theta, marker='.', label="Desired theta")
-        plt.plot(array_time, actual_theta, marker='.', label="Actual theta")
+        if actual_theta != None:
+            plt.plot(array_time, actual_theta, marker='.', label="Actual theta")
         plt.legend()
         plt.grid(True)
 
