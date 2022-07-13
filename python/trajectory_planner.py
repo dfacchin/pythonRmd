@@ -72,7 +72,7 @@ class Joint:
 
 
     # Plots
-    def plot(self, joint_name, array_theta, array_theta_d, array_time):
+    def plot(self, joint_name, desired_theta, desired_theta_d, array_time, actual_theta):
         plt.style.use('seaborn-dark')
         if (joint_name=="shoulder"):
             plt.suptitle("SHOULDER", fontweight='bold', fontsize=15)
@@ -86,7 +86,9 @@ class Joint:
         plt.title("Position")
         plt.xlabel("time [s]")
         plt.ylabel("theta [deg]")
-        plt.plot(array_time, array_theta, marker='.')
+        plt.plot(array_time, desired_theta, marker='.', label="Desired theta")
+        plt.plot(array_time, actual_theta, marker='.', label="Actual theta")
+        plt.legend()
         plt.grid(True)
 
         # Velocity Plot
@@ -94,7 +96,7 @@ class Joint:
         plt.title("Velocity")
         plt.xlabel("time [s]")
         plt.ylabel("theta_d [deg/s]")
-        plt.plot(array_time, array_theta_d, color='y', marker='.')
+        plt.plot(array_time, desired_theta_d, color='y', marker='.')
         plt.grid(True)
 
         plt.tight_layout() # avoid text overlapping

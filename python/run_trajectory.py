@@ -25,7 +25,7 @@ elbow.velocity()
 shoulder.theta_d_pp()
 elbow.theta_d_pp()
 
-# Make sure to speciy the joint_name: shoulder and elbow
+# Compute trajectory
 angle_S = shoulder.trajectory()
 angle_E = elbow.trajectory()
 # Print "theta" and "theta_d" arrays

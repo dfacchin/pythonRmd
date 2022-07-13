@@ -88,10 +88,7 @@ angle_E = elbow.trajectory()
 print(angle_S)
 print(angle_E)
 
-# Define actual angle arrays
-# actual_angle_S = np.array([])
-# actual_angle_E = np.array([])
-
+# Define lists of actual joint angles
 actual_angle_S = []
 actual_angle_E = []
 
@@ -128,3 +125,9 @@ actual_angle_E.append(read_angle_E+read_angle_S)
 
 print("actual S: ", actual_angle_S)
 print("actual E: ", actual_angle_E)
+
+# Plot
+plot_S = shoulder.plot("shoulder", angle_S[0], angle_S[1], angle_S[2], actual_angle_S)
+plot_E = elbow.plot("elbow", angle_E[0], angle_E[1], angle_E[2], actual_angle_E)
+print(plot_S)
+print(plot_E)
