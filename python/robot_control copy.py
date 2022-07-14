@@ -52,7 +52,7 @@ motor_S.Fn34()  # write acceleration to Ram
 # Initial Conditions (i.c.):
 #pp = [[1000,0],[750,200],[300,350],[0,500],[300,350],[750,200],[1000,0]] # [mm] path points (x,y)
 pp = [[1000,0],[400,0],[1000,0]]
-t = np.array([0, 5, 10]) # [s]
+t = np.array([0, 2, 4]) # [s]
 fn = 5 # [Hz]
 
 # Define (pose,vel) for each path point
@@ -92,12 +92,7 @@ print(angle_E)
 actual_angle_S = []
 actual_angle_E = []
 
-# Define lists of actual joint velocities
-actual_vel_S = []
-actual_vel_E = []
-
 #for i in range(3):
-act_vel = []
 idx = 1
 while idx < len(angle_S[0]):
 	ik = [angle_S[0][idx],angle_E[0][idx]] # joint angles
@@ -117,16 +112,10 @@ while idx < len(angle_S[0]):
 
 	motor_S.goG(-ik[0], abs(v[0])) # - sign, since the motor is up-side-down
 	motor_E.goG(ik[1]+ik[0], abs(v[1])) # sum of angles since we use belts
-
-	actual_vel_S.append(motor_S.actualVelocity/13.5)
-	actual_vel_E.append(motor_E.actualVelocity/13.5)
-
 	time.sleep(1/fn)
 
 	#input("Hit 'Enter' and go to the next point")
 	#time.sleep(2)
-
-#print("act_vel: ", act_vel)
 
 read_angle_S = motor_S.get_actual_angle()
 read_angle_E = motor_E.get_actual_angle()
@@ -134,14 +123,11 @@ read_angle_E = motor_E.get_actual_angle()
 actual_angle_S.append(-read_angle_S)
 actual_angle_E.append(read_angle_E+read_angle_S)
 
-actual_vel_S.append(motor_S.actualVelocity/13.5)
-actual_vel_E.append(motor_E.actualVelocity/13.5)
-
 print("Actual angle S: ", actual_angle_S)
 print("Actual angle E: ", actual_angle_E)
 
 # Plot
-plot_S = shoulder.plot("shoulder", angle_S[0], angle_S[1], angle_S[2], actual_angle_S, actual_vel_S)
-plot_E = elbow.plot("elbow", angle_E[0], angle_E[1], angle_E[2], actual_angle_E, actual_vel_E)
+plot_S = shoulder.plot("shoulder", angle_S[0], angle_S[1], angle_S[2], actual_angle_S)
+plot_E = elbow.plot("elbow", angle_E[0], angle_E[1], angle_E[2], actual_angle_E)
 print(plot_S)
 print(plot_E)

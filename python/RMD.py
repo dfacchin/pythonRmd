@@ -36,6 +36,7 @@ class RMD:
         self.PidTrqKp  = 0
         self.PidTrqKi  = 0
         self.acceleration  = 0
+        self.actualVelocity = 0
         #clear all can messages in queue
         msg = self.bus.recv(0.2)
         msg = self.bus.recv(0.2)
@@ -186,11 +187,30 @@ class RMD:
             self.multiTurn  /= 100
             self.multiTurnG = self.multiTurn/self.ratio
             self.multiTurnG = int(self.multiTurnG)
-            #print(self.multiTurn)
+            print("Actual angle: ", self.multiTurnG)
         else:
             print("ERRORE",data)
             for el in ret[1]:
                 print(el)
+
+    #read multi run angle (Return the actual motor output angle)
+    def get_actual_angle(self):
+        data = [0x92,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
+        ret = self.wr(data)
+        if (ret[0]) and (ret[1][0] == 0x92):
+            data = []
+            for el in ret[1][1:]:
+                data.append(el)
+            data.append(data[-1])
+            self.multiTurn  = struct.unpack("<q",bytes(data))[0]
+            self.multiTurn  /= 100
+            self.multiTurnG = self.multiTurn/self.ratio
+            self.multiTurnG = float(self.multiTurnG)
+        else:
+            print("ERRORE",data)
+            for el in ret[1]:
+                print(el)
+        return self.multiTurnG
 
     #read single turn angle
     def Fn94(self):
@@ -295,14 +315,15 @@ class RMD:
         #self.desiredPosition = desiredPosition +18000
         self.desiredPosition = desiredPosition
         self.maxSpeed = maxSpeed
-        print("GO TO",desiredPosition,self.desiredPosition)
+        #print("GO TO",desiredPosition,self.desiredPosition)
         data2 = struct.pack("<Hl",maxSpeed,self.desiredPosition)
-        print("SPACCEHTTA",struct.unpack("<Hl",data2))
+        #print("SPACCEHTTA",struct.unpack("<Hl",data2))
         for el in data2:
             data.append(el)
         ret = self.wr(data)
         if (ret[0]) and (ret[1][0] == 0xA4):
-            pass
+            # We can read and update the response info of the motor
+            self.actualVelocity  = struct.unpack("<h",ret[1][4:6])[0]
         else:
             print("ERRORE",data)
             for el in ret[1]:
@@ -320,10 +341,10 @@ class RMD:
 
     #go to a specific position and print actual position
     def goG(self,pos,speed):
-        self.print()
+        #self.print()
         self.FnA4(int(pos*100*self.ratio), int(speed*self.ratio))
-        for a in range(1):
-            #self.Fn90()
-            self.Fn92()
-            #self.Fn94()
-            self.print()
+        #for a in range(1):
+        #    #self.Fn90()
+        #    self.Fn92()
+        #    #self.Fn94()
+        #    self.print()

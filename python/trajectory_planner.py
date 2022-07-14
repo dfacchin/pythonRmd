@@ -1,5 +1,13 @@
 import numpy as np
-#import matplotlib.pyplot as plt
+import sys
+if sys.version_info[0] == 3:
+    import tkinter as tk
+else:
+    import Tkinter as tk
+import matplotlib
+matplotlib.use('tkagg')
+import matplotlib.pyplot as plt
+
 
 class Joint:
 
@@ -35,10 +43,10 @@ class Joint:
         return self.theta_d
 
     # Angular displacement and velocity along each trajectory segment (they are a function of time)
-    def trajectory(self, joint_name):
+    def trajectory(self):
         arr_time = np.array([]) # time_array
         arr_t = np.array([]) # theta_array (position)
-        arr_d_t = np.array([]) # theta_d_array (velocity)
+        arr_t_d = np.array([]) # theta_d_array (velocity)
         for index, (el_time,el_theta,el_theta_d) in enumerate(zip(self.time,self.theta,self.theta_d)):
             if (index+1 < len(self.theta)):
                 dt = self.time[index+1] - self.time[index] # delta time
@@ -64,41 +72,47 @@ class Joint:
 
                 # Cubic Polinomial [Trajectory of angular velocity]
                 theta_d_t = c1 + (2*c2*(t-self.time[index])) + (3*c3*(t-self.time[index])**2)
-                if (len(arr_d_t)==0):
-                    arr_d_t = np.concatenate([arr_d_t,theta_d_t])
+                if (len(arr_t_d)==0):
+                    arr_t_d = np.concatenate([arr_t_d,theta_d_t])
                 else:
-                    arr_d_t = np.concatenate([arr_d_t,theta_d_t[1::]]) # removing redundant values
+                    arr_t_d = np.concatenate([arr_t_d,theta_d_t[1::]]) # removing redundant values
+        return (arr_t, arr_t_d, arr_time)
 
-        # # Plots
-        # plt.style.use('seaborn-dark')
-        # if (joint_name=="shoulder"):
-        #     plt.suptitle("SHOULDER", fontweight='bold', fontsize=15)
-        # elif (joint_name=="elbow"):
-        #     plt.suptitle("ELBOW", fontweight='bold', fontsize=15)
-        # else:
-        #     print('Wrong joint name! Specify either "shoulder" or "elbow"')
 
-        # # Position Plot
-        # plt.subplot(1,2,1) # (row, column, plot)
-        # plt.title("Position")
-        # plt.xlabel("time [s]")
-        # plt.ylabel("theta [deg]")
-        # plt.plot(arr_time, arr_t, marker='.')
-        # plt.grid(True)
+    # Plots
+    def plot(self, joint_name, desired_theta, desired_theta_d, array_time, actual_theta=None, actual_theta_d=None):
+        plt.style.use('seaborn-dark')
+        if (joint_name=="shoulder"):
+            plt.suptitle("SHOULDER", fontweight='bold', fontsize=15)
+        elif (joint_name=="elbow"):
+            plt.suptitle("ELBOW", fontweight='bold', fontsize=15)
+        else:
+            print('Wrong joint name! Specify either "shoulder" or "elbow"')
 
-        # # Velocity Plot
-        # plt.subplot(1,2,2) # (row, column, plot)
-        # plt.title("Velocity")
-        # plt.xlabel("time [s]")
-        # plt.ylabel("theta_d [deg/s]")
-        # plt.plot(arr_time, arr_d_t, color='y', marker='.')
-        # plt.grid(True)
+        # Position Plot
+        plt.subplot(1,2,1) # (row, column, plot)
+        plt.title("Position")
+        plt.xlabel("time [s]")
+        plt.ylabel("theta [deg]")
+        plt.plot(array_time, desired_theta, marker='.', label="Desired theta")
+        if actual_theta != None:
+            plt.plot(array_time, actual_theta, marker='.', label="Actual theta")
+        plt.legend()
+        plt.grid(True)
 
-        # plt.tight_layout() # avoid text overlapping
-        # plt.show()
+        # Velocity Plot
+        plt.subplot(1,2,2) # (row, column, plot)
+        plt.title("Velocity")
+        plt.xlabel("time [s]")
+        plt.ylabel("theta_d [deg/s]")
+        plt.plot(array_time, desired_theta_d, color='y', marker='.', label="Desired theta_d")
+        if actual_theta_d != None:
+            plt.plot(array_time, actual_theta_d, marker='.', label="Actual theta_d")
+        plt.legend()
+        plt.grid(True)
 
-        return (arr_t,arr_d_t)
-
+        plt.tight_layout() # avoid text overlapping
+        plt.show()
 
 '''
 a = classe.trajectory()
