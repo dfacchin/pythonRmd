@@ -134,6 +134,9 @@ read_angle_E = motor_E.get_actual_angle()
 actual_angle_S.append(-read_angle_S)
 actual_angle_E.append(read_angle_E+read_angle_S)
 
+actual_vel_S.append(motor_S.actualVelocity)
+actual_vel_E.append(motor_E.actualVelocity)
+
 print("Actual angle S: ", actual_angle_S)
 print("Actual angle E: ", actual_angle_E)
 
