@@ -321,11 +321,13 @@ class RMD:
             data.append(el)
         ret = self.wr(data)
         if (ret[0]) and (ret[1][0] == 0xA4):
-            pass
+            # We can read and update the response info of the motor
+            self.actualVelocity  = struct.unpack("<h",ret[1][4:6])[0]
         else:
             print("ERRORE",data)
             for el in ret[1]:
                 print(el)
+        return self.actualVelocity
 
     #go to a specific position and print actual position
     def go(self,pos,speed):
