@@ -36,6 +36,7 @@ class RMD:
         self.PidTrqKp  = 0
         self.PidTrqKi  = 0
         self.acceleration  = 0
+        self.actualVelocity = 0
         #clear all can messages in queue
         msg = self.bus.recv(0.2)
         msg = self.bus.recv(0.2)
@@ -328,7 +329,6 @@ class RMD:
             print("ERRORE",data)
             for el in ret[1]:
                 print(el)
-        return self.actualVelocity
 
     #go to a specific position and print actual position
     def go(self,pos,speed):
