@@ -114,7 +114,7 @@ while idx < len(angle_S[0]):
 	motor_S.goG(-ik[0], abs(v[0])) # - sign, since the motor is up-side-down
 	motor_E.goG(ik[1]+ik[0], abs(v[1])) # sum of angles since we use belts
 
-	print("vel S: ", motor_S.goG.actualVelocity)
+	print("vel S: ", motor_S.actualVelocity)
 
 	time.sleep(1/fn)
 
