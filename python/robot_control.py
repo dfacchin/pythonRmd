@@ -13,7 +13,13 @@ bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 # Variables
 ratio = 13.5 # Gear ratio
 #v = 1000  # Motors velocity
-a = 1000  # Motors acceleration
+a = 2500  # Motors acceleration
+
+# Initial Conditions (i.c.):
+#pp = [[1000,0],[750,200],[300,350],[0,500],[300,350],[750,200],[1000,0]] # [mm] path points (x,y)
+pp = [[1000,0],[400,0],[1000,0]]
+t = np.array([0, 2, 4]) # [s]
+fn = 25 # [Hz]
 
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
@@ -48,12 +54,6 @@ motor_S.Fn31()  # write PID to Ram
 motor_S.acceleration = a
 motor_S.Fn34()  # write acceleration to Ram
 
-
-# Initial Conditions (i.c.):
-#pp = [[1000,0],[750,200],[300,350],[0,500],[300,350],[750,200],[1000,0]] # [mm] path points (x,y)
-pp = [[1000,0],[400,0],[1000,0]]
-t = np.array([0, 1, 2]) # [s]
-fn = 5 # [Hz]
 
 # Define (pose,vel) for each path point
 theta_S = [] # [deg]
@@ -115,19 +115,21 @@ while idx < len(angle_S[0]):
 	actual_angle_S.append(-read_angle_S)
 	actual_angle_E.append(read_angle_E+read_angle_S)
 
-	motor_S.goG(-ik[0], abs(v[0])) # - sign, since the motor is up-side-down
-	motor_E.goG(ik[1]+ik[0], abs(v[1])) # sum of angles since we use belts
+	#motor_S.goG(-ik[0], 2500) # - sign, since the motor is up-side-down
+	motor_S.goG(-ik[0], 3*abs(v[0])) # - sign, since the motor is up-side-down
+	#motor_E.goG(ik[1]+ik[0], 2500) # sum of angles since we use belts
+	motor_E.goG(ik[1]+ik[0], 3*abs(v[1]+v[0])) # sum of angles since we use belts
 
 	actual_vel_S.append(-motor_S.actualVelocity/ratio)
-	actual_vel_E.append(motor_E.actualVelocity/ratio)
-	
+	actual_vel_E.append(motor_E.actualVelocity/ratio+motor_S.actualVelocity/ratio)
+
 	#compensate delay of functions
-	deltaT = time.time() - timestamp
+	deltaTime = time.time() - timestamp
 	desiredTime = 1/fn
 	#if elapsed time is too long we go straight to next point
 	#else we subtract the evaluation time from the desired time
-	if deltaTime < desireTime:
-		time.sleep(desireTime-deltaT)
+	if deltaTime < desiredTime:
+		time.sleep(desiredTime-deltaTime)
 
 
 	#input("Hit 'Enter' and go to the next point")
