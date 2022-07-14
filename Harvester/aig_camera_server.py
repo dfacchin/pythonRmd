@@ -1,10 +1,21 @@
 import aig_tcp_server
 import pickle
 
-def example_on_receive_callback(client, address, data):
+name = "lele"
+
+def example_on_receive_callback(client, address, data):    
+    global name
+
+    #Get realsense camera frame
+    #Align camera frame
+    #deep copy frames
+
     resp = {"response":"RgbDepth"}
-    resp["Rgb"] = [0]*1024*1024*2
-    resp["Depth"]= [0]*1024*1024*2
+    resp["name"] = name
+    resp["Rgb"] = "RGB DATA"
+    resp["Depth"] = 1280
+    resp["Height"] = 1024
+
     data = pickle.dumps(resp)
     print(len(data))
     client.send(data)
@@ -17,11 +28,14 @@ def example_on_disconnected_callback(client, address):
     return
 
 if __name__ == "__main__":
+
+    #Start Realsense Camera
     
     print("Start server")
     for a in range(10):
         print(a)
 
+    name = name +" 2"
     aig_tcp_server.TCPThreadedServer(
         '127.0.0.1',
         8009,
@@ -33,4 +47,6 @@ if __name__ == "__main__":
         debug=True,
         debug_data=True
     ).start()    
+    name = name +" 3"
     print("end")
+
