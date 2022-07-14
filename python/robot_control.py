@@ -32,8 +32,16 @@ motor_E.Fn31()  # write PID to Ram
 motor_E.acceleration = a
 motor_E.Fn34()  # write acceleration to Ram
 
-
-# ---------- RMtKp = 100
+# ---------- RMD motor with ID 2 (Shoulder) ----------
+motor_S = RMD.RMD(0x141, bus, ratio=13.5)  # Shoulder
+motor_S.Fn30()  # read PID
+motor_S.Fn33()  # read acceleration
+# Specify desired PID
+motor_S.PidPosKp = 100
+motor_S.PidPosKi = 0
+motor_S.PidVelKp = 100
+motor_S.PidVelKi = 5
+motor_S.PidTrqKp = 100
 motor_S.PidTrqKp = 5
 motor_S.Fn31()  # write PID to Ram
 # Specify desired accelration
