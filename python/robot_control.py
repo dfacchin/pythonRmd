@@ -33,16 +33,7 @@ motor_E.acceleration = a
 motor_E.Fn34()  # write acceleration to Ram
 
 
-# ---------- RMD motor with ID 2 (Shoulder) ----------
-motor_S = RMD.RMD(0x141, bus, ratio=13.5)  # Shoulder
-motor_S.Fn30()  # read PID
-motor_S.Fn33()  # read acceleration
-# Specify desired PID
-motor_S.PidPosKp = 100
-motor_S.PidPosKi = 0
-motor_S.PidVelKp = 100
-motor_S.PidVelKi = 5
-motor_S.PidTrqKp = 100
+# ---------- RMtKp = 100
 motor_S.PidTrqKp = 5
 motor_S.Fn31()  # write PID to Ram
 # Specify desired accelration
@@ -53,7 +44,7 @@ motor_S.Fn34()  # write acceleration to Ram
 # Initial Conditions (i.c.):
 #pp = [[1000,0],[750,200],[300,350],[0,500],[300,350],[750,200],[1000,0]] # [mm] path points (x,y)
 pp = [[1000,0],[400,0],[1000,0]]
-t = np.array([0, 0.5, 1]) # [s]
+t = np.array([0, 1, 2]) # [s]
 fn = 5 # [Hz]
 
 # Define (pose,vel) for each path point
@@ -100,6 +91,7 @@ actual_vel_E = []
 #for i in range(3):
 idx = 1
 while idx < len(angle_S[0]):
+	timestamp = time.time()
 	ik = [angle_S[0][idx],angle_E[0][idx]] # joint angles
 	v = [angle_S[1][idx],angle_E[1][idx]] # joint velocities
 	idx += 1
@@ -120,8 +112,15 @@ while idx < len(angle_S[0]):
 
 	actual_vel_S.append(-motor_S.actualVelocity/ratio)
 	actual_vel_E.append(motor_E.actualVelocity/ratio)
+	
+	#compensate delay of functions
+	deltaT = time.time() - timestamp
+	desiredTime = 1/fn
+	#if elapsed time is too long we go straight to next point
+	#else we subtract the evaluation time from the desired time
+	if deltaTime < desireTime:
+		time.sleep(desireTime-deltaT)
 
-	time.sleep(1/fn)
 
 	#input("Hit 'Enter' and go to the next point")
 	#time.sleep(2)
