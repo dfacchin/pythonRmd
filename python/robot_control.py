@@ -110,8 +110,15 @@ while idx < len(angle_S[0]):
 	actual_angle_S.append(-read_angle_S)
 	actual_angle_E.append(read_angle_E+read_angle_S)
 
-	motor_S.goG(-ik[0], abs(v[0])) # - sign, since the motor is up-side-down
-	motor_E.goG(ik[1]+ik[0], abs(v[1])) # sum of angles since we use belts
+	act_vel = []
+
+	s = motor_S.goG(-ik[0], abs(v[0])) # - sign, since the motor is up-side-down
+	e = motor_E.goG(ik[1]+ik[0], abs(v[1])) # sum of angles since we use belts
+	act_vel.append(s)
+	print("act_vel: " act_vel)
+	s
+	e
+	
 	time.sleep(1/fn)
 
 	#input("Hit 'Enter' and go to the next point")
