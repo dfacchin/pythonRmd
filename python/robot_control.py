@@ -92,6 +92,10 @@ print(angle_E)
 actual_angle_S = []
 actual_angle_E = []
 
+# Define lists of actual joint velocities
+actual_vel_S = []
+actual_vel_E = []
+
 #for i in range(3):
 act_vel = []
 idx = 1
@@ -114,7 +118,8 @@ while idx < len(angle_S[0]):
 	motor_S.goG(-ik[0], abs(v[0])) # - sign, since the motor is up-side-down
 	motor_E.goG(ik[1]+ik[0], abs(v[1])) # sum of angles since we use belts
 
-	print("vel S: ", motor_S.actualVelocity)
+	actual_vel_S.append(motor_S.actualVelocity)
+	actual_vel_E.append(motor_E.actualVelocity)
 
 	time.sleep(1/fn)
 
@@ -133,7 +138,7 @@ print("Actual angle S: ", actual_angle_S)
 print("Actual angle E: ", actual_angle_E)
 
 # Plot
-plot_S = shoulder.plot("shoulder", angle_S[0], angle_S[1], angle_S[2], actual_angle_S)
-plot_E = elbow.plot("elbow", angle_E[0], angle_E[1], angle_E[2], actual_angle_E)
+plot_S = shoulder.plot("shoulder", angle_S[0], angle_S[1], angle_S[2], actual_angle_S, actual_vel_S)
+plot_E = elbow.plot("elbow", angle_E[0], angle_E[1], angle_E[2], actual_angle_E, actual_vel_E)
 print(plot_S)
 print(plot_E)
