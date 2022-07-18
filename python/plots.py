@@ -10,7 +10,10 @@ def path_plot(theta_S, theta_E, actual_theta_S=None, actual_theta_E=None):
         xy_coord = kinematics.DK(target)
         x.append(xy_coord[0])
         y.append(xy_coord[1])
-                
+
+    print("x: ", x)
+    print("y: ", y)
+                    
     plt.title("Path of the end-effector")
     plt.xlabel("x-values")
     plt.ylabel("y-values")
