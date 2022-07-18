@@ -21,8 +21,8 @@ def path_plot(theta_S, theta_E, actual_theta_S=None, actual_theta_E=None):
     if actual_theta_S != None and actual_theta_E != None:
         plt.plot(actual_theta_S, actual_theta_E, marker='.', label="Actual path")
 
-    plt.xticks(list(range(0,1000,10)))
-    plt.yticks(list(range(-500,500,10)))
+    plt.xticks(list(range(0,1100,50)))
+    plt.yticks(list(range(-600,600,50)))
 
     plt.legend()
     plt.grid(True)
