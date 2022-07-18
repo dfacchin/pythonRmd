@@ -158,5 +158,5 @@ plot_S = shoulder.plot("shoulder", angle_S[0], angle_S[1], angle_S[2], actual_an
 plot_E = elbow.plot("elbow", angle_E[0], angle_E[1], angle_E[2], actual_angle_E, actual_vel_E)
 print(plot_S)
 print(plot_E)
-path_points = plots.path_plot(angle_S[0], angle_E[0])
+path_points = plots.path_plot(angle_S[0], angle_E[0], actual_angle_S, actual_angle_E)
 print(path_points)
