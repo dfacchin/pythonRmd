@@ -8,8 +8,6 @@ import matplotlib
 matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
 
-import kinematics
-
 
 class Joint:
 

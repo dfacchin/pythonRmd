@@ -1,6 +1,7 @@
 import numpy as np
 
 from trajectory_planner import Joint
+import plots
 
 
 # Initial Conditions (i.c.):
@@ -37,3 +38,6 @@ plot_S = shoulder.plot("shoulder", angle_S[0], angle_S[1], angle_S[2])
 plot_E = elbow.plot("elbow", angle_E[0], angle_E[1], angle_E[2])
 print(plot_S)
 print(plot_E)
+
+path_points = plots.path_plot(theta_S, theta_E)
+print(path_points)
