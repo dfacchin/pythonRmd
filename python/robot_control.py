@@ -121,7 +121,7 @@ while idx < len(angle_S[0]):
 	motor_E.goG(ik[1]+ik[0], 3*abs(v[1]+v[0])) # sum of angles since we use belts
 
 	actual_vel_S.append(-motor_S.actualVelocity/ratio)
-	actual_vel_E.append(motor_E.actualVelocity/ratio+motor_S.actualVelocity/ratio)
+	actual_vel_E.append(motor_E.actualVelocity/ratio + motor_S.actualVelocity/ratio)
 
 	#compensate delay of functions
 	deltaTime = time.time() - timestamp
@@ -143,8 +143,8 @@ read_angle_E = motor_E.get_actual_angle()
 actual_angle_S.append(-read_angle_S)
 actual_angle_E.append(read_angle_E+read_angle_S)
 
-actual_vel_S.append(-motor_S.actualVelocity/13.5)
-actual_vel_E.append(motor_E.actualVelocity/13.5)
+actual_vel_S.append(-motor_S.actualVelocity/ratio)
+actual_vel_E.append(motor_E.actualVelocity/ratio)
 
 print("Actual angle S: ", actual_angle_S)
 print("Actual angle E: ", actual_angle_E)
