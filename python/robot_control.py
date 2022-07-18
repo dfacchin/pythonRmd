@@ -14,26 +14,40 @@ bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 # Variables
 ratio = 13.5 # Gear ratio
 #v = 1000  # Motors velocity
-a = 3000  # Motors acceleration
+a = 4500  # Motors acceleration
 
 # Initial Conditions (i.c.):
 #pp = [[1000,0],[750,200],[300,350],[0,500],[300,350],[750,200],[1000,0]] # [mm] path points (x,y)
 pp = [[1000,0],[400,0],[1000,0]]
-t = np.array([0, 2.5, 4.5]) # [s]
+t = np.array([0, 2, 4]) # [s]
 fn = 25 # [Hz]
 
+# pid
+_pp = 200
+_pi = 5
+_vp = 200
+_vi = 5
+_tp = 5
+_ti = 5
+
+_pps = 200
+_pis = 5
+_vps = 200
+_vis = 5
+_tps = 10
+_tis = 5
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
 motor_E = RMD.RMD(0x142, bus, ratio=13.5)  # Elbow
 motor_E.Fn30()  # read PID
 motor_E.Fn33()  # read acceleration
 # Specify desired PID
-motor_E.PidPosKp = 100
-motor_E.PidPosKi = 0
-motor_E.PidVelKp = 100
-motor_E.PidVelKi = 5
-motor_E.PidTrqKp = 100
-motor_E.PidTrqKp = 5
+motor_E.PidPosKp = _pp
+motor_E.PidPosKi = _pi
+motor_E.PidVelKp = _vp
+motor_E.PidVelKi = _vi
+motor_E.PidTrqKp = _tp
+motor_E.PidTrqKi = _vi
 motor_E.Fn31()  # write PID to Ram
 # Specify desired acceleration
 motor_E.acceleration = a
@@ -44,12 +58,12 @@ motor_S = RMD.RMD(0x141, bus, ratio=13.5)  # Shoulder
 motor_S.Fn30()  # read PID
 motor_S.Fn33()  # read acceleration
 # Specify desired PID
-motor_S.PidPosKp = 100
-motor_S.PidPosKi = 0
-motor_S.PidVelKp = 100
-motor_S.PidVelKi = 5
-motor_S.PidTrqKp = 100
-motor_S.PidTrqKp = 5
+motor_S.PidPosKp = _pps
+motor_S.PidPosKi = _pis
+motor_S.PidVelKp = _vps
+motor_S.PidVelKi = _vis
+motor_S.PidTrqKp = _tps
+motor_S.PidTrqKi = _tis
 motor_S.Fn31()  # write PID to Ram
 # Specify desired accelration
 motor_S.acceleration = a
