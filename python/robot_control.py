@@ -19,7 +19,7 @@ a = 3000  # Motors acceleration
 # Initial Conditions (i.c.):
 #pp = [[1000,0],[750,200],[300,350],[0,500],[300,350],[750,200],[1000,0]] # [mm] path points (x,y)
 pp = [[1000,0],[400,0],[1000,0]]
-t = np.array([0, 2, 4]) # [s]
+t = np.array([0, 2.5, 4.5]) # [s]
 fn = 25 # [Hz]
 
 

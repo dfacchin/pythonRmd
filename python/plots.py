@@ -2,24 +2,30 @@ import matplotlib.pyplot as plt
 import kinematics
 
 def path_plot(theta_S, theta_E, actual_theta_S=None, actual_theta_E=None):
-    x = []
-    y = []
+    desired_x = []
+    desired_y = []
+    actual_x = []
+    actual_y = []
 
     for idx in range(len(theta_S)):
         target = [theta_S[idx], theta_E[idx]] # [theta_S, theta_E]
         xy_coord = kinematics.DK(target)
-        x.append(xy_coord[0])
-        y.append(xy_coord[1])
+        desired_x.append(xy_coord[0])
+        desired_y.append(xy_coord[1])
 
-    print("x: ", x)
-    print("y: ", y)
+    if actual_theta_S != None and actual_theta_E != None:
+        for idx in range(len(actual_theta_S)):
+            target = [actual_theta_S[idx], actual_theta_E[idx]] # [theta_S, theta_E]
+            xy_coord = kinematics.DK(target)
+            actual_x.append(xy_coord[0])
+            actual_y.append(xy_coord[1])
 
     plt.title("Path of the end-effector")
     plt.xlabel("x-values")
     plt.ylabel("y-values")
-    plt.plot(x, y, color='y', marker='.', label="Desired path")
+    plt.plot(desired_x, desired_y, color='y', marker='.', label="Desired path")
     if actual_theta_S != None and actual_theta_E != None:
-        plt.plot(actual_theta_S, actual_theta_E, marker='.', label="Actual path")
+        plt.plot(actual_x, actual_y, marker='.', label="Actual path")
 
     plt.xticks(list(range(0,1100,50)))
     plt.yticks(list(range(-600,600,50)))
