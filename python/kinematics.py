@@ -15,8 +15,8 @@ def DK(target, len1=497.0, len2=500.0):
     target[1] = np.deg2rad(target[1])
     x = len1*np.cos(target[0]) + len2*np.cos(target[0]+target[1])
     y = len1*np.sin(target[0]) + len2*np.sin(target[0]+target[1])
-    x = round(x, 2)  # round to 2 decimal numbers
-    y = round(y, 2)
+    #x = round(x, 2)  # round to 2 decimal numbers
+    #y = round(y, 2)
     return x, y
 
 
