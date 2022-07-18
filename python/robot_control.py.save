@@ -13,13 +13,13 @@ bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 # Variables
 ratio = 13.5 # Gear ratio
 #v = 1000  # Motors velocity
-a = 3000  # Motors acceleration
+a = 1000  # Motors acceleration
 
 # Initial Conditions (i.c.):
 #pp = [[1000,0],[750,200],[300,350],[0,500],[300,350],[750,200],[1000,0]] # [mm] path points (x,y)
 pp = [[1000,0],[400,0],[1000,0]]
 t = np.array([0, 2, 4]) # [s]
-fn = 25 # [Hz]
+fn = 5 # [Hz]
 
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
@@ -115,14 +115,12 @@ while idx < len(angle_S[0]):
 	actual_angle_S.append(-read_angle_S)
 	actual_angle_E.append(read_angle_E+read_angle_S)
 
-	#motor_S.goG(-ik[0], 2500) # - sign, since the motor is up-side-down
-	motor_S.goG(-ik[0], 4*abs(v[0])) # - sign, since the motor is up-side-down
-	#motor_E.goG(ik[1]+ik[0], 2500) # sum of angles since we use belts
-	motor_E.goG(ik[1]+ik[0], 4*abs(v[1]+v[0])) # sum of angles since we use belts
+	motor_S.goG(-ik[0], abs(v[0])) # - sign, since the motor is up-side-down
+	#motor_E.goG(ik[1]+ik[0], abs(v[1])) # sum of angles since we use belts
 
 	actual_vel_S.append(-motor_S.actualVelocity/ratio)
-	actual_vel_E.append(motor_E.actualVelocity/ratio + motor_S.actualVelocity/ratio)
-
+	actual_vel_E.append(motor_E.actualVelocity/ratio)
+	
 	#compensate delay of functions
 	deltaTime = time.time() - timestamp
 	desiredTime = 1/fn
@@ -140,11 +138,11 @@ while idx < len(angle_S[0]):
 read_angle_S = motor_S.get_actual_angle()
 read_angle_E = motor_E.get_actual_angle()
 
-actual_angle_S.append(-read_angle_S)
+#actual_angle_S.append(-read_angle_S)
 actual_angle_E.append(read_angle_E+read_angle_S)
 
-actual_vel_S.append(-motor_S.actualVelocity/ratio)
-actual_vel_E.append(motor_E.actualVelocity/ratio)
+actual_vel_S.append(-motor_S.actualVelocity/13.5)
+actual_vel_E.append(motor_E.actualVelocity/13.5)
 
 print("Actual angle S: ", actual_angle_S)
 print("Actual angle E: ", actual_angle_E)
