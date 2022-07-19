@@ -20,8 +20,8 @@ a = 1000  # Motors acceleration
 
 # ---------- RMD motor with ID 1 ----------
 motor_E = RMD.RMD(0x142, bus, ratio)
-motor_E.Fn30()  # read PID
-#motor_E.Fn33()  # read acceleration
+#motor_E.Fn30()  # read PID
+motor_E.Fn33()  # read acceleration
 # Specify desired PID
 # motor_E.PidPosKp = 30
 # motor_E.PidPosKi = 5
