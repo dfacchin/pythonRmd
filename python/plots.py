@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import kinematics
 
-def path_plot(theta_S, theta_E, actual_theta_S=None, actual_theta_E=None):
+def path_plot(theta_S, theta_E, pp, actual_theta_S=None, actual_theta_E=None):
     desired_x = []
     desired_y = []
     actual_x = []
@@ -27,11 +27,19 @@ def path_plot(theta_S, theta_E, actual_theta_S=None, actual_theta_E=None):
     if actual_theta_S != None and actual_theta_E != None:
         plt.plot(actual_x, actual_y, marker='.', label="Actual path")
 
+    # Plot desired path points (pp)
+    x_pp = []
+    y_pp = []
+
+    for i in pp:
+        x_pp.append(i[0])
+        y_pp.append(i[1])
+    plt.plot(x_pp, y_pp, color='r', marker='o')
+
     plt.xticks(list(range(0,1100,50)))
     plt.yticks(list(range(-600,600,50)))
 
     # Invert y-axis
-
     ax = plt.gca() # get current axis
     ax.invert_yaxis() # revert y-axis
 
