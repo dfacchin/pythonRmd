@@ -3,6 +3,7 @@ import can
 import time
 
 import RMD
+import RMD_V3
 import kinematics
 from trajectory_planner import Joint
 import plots
@@ -38,7 +39,7 @@ fn = 15 #25 # [Hz]
 #_tis = 5
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
-motor_E = RMD.RMD(0x142, bus, ratio)  # Elbow
+motor_E = RMD_V3.RMDV3(0x140, bus, 9)  # Elbow
 motor_E.Fn30()  # read PID
 motor_E.Fn33()  # read acceleration
 # Specify desired PID

@@ -15,7 +15,7 @@ import can
 import struct
 import time
 
-class RMD:
+class RMDV3:
 
 
     #init the Motor
@@ -108,47 +108,11 @@ class RMD:
 
     #read internal encoder position and off set
     def Fn90(self):
-        data = [0x90,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
-        ret = self.wr(data)
-        if (ret[0]) and (ret[1][0] == 0x90):
-            self.encoderPosition  = struct.unpack("<H",ret[1][2:4])[0]
-            self.encoderOriginalPosition = struct.unpack("<H",ret[1][4:6])[0]
-            self.encoderOffset = struct.unpack("<H",ret[1][6:8])[0]
-            #print(self.encoderPosition, self.encoderOriginalPosition, self.encoderOffset)
-        else:
-            print("ERRORE",data)
-            for el in ret[1]:
-                print(el)
+        pass
 
     #Calibrate offset to specific angle
     def Fn91(self,angle = 180):
-        #Our offset is the actual original postion, shifted of 180degrees
-        #180degres for this encoder are 0x8000 in hex
-        #we can add the value and mod with 0x1000
-        """
-        We run in a stupid problem from the driver
-        the offset is a unsigned value, and the output of the
-        RAW after offset is always a unsigned 16bit value
-        The problem raises when the multiturn is taking place
-        this is because the internal system works like this:
-        it "subtracts" the offset to the RAW sensor data
-        but then it's used in the signed positioning value
-        and it goes instead of 0 to 360
-        """
-        value = self.encoderOriginalPosition + 0x8000
-        value = value%0x10000
-        data = [0x91,0x00,0x00,0x00,0x00,0x00]
-        data2 = struct.pack("<H",value)
-        for el in data2:
-            data.append(el)
-        ret = self.wr(data)
-        if (ret[0]) and (ret[1][0] == 0x91):
-            self.encoderOffset = struct.unpack("<H",ret[1][6:8])[0]
-            #print(self.encoderPosition, self.encoderOriginalPosition, self.encoderOffset)
-        else:
-            print("ERRORE",data)
-            for el in ret[1]:
-                print(el)
+        pass 
 
     #Calibrate offset to specific angle
     def Fn19(self):
@@ -165,14 +129,17 @@ class RMD:
         but then it's used in the signed positioning value
         and it goes instead of 0 to 360
         """
-        data = [0x19,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
+        data = [0x64,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
         ret = self.wr(data)
-        if (ret[0]) and (ret[1][0] == 0x19):
+        if (ret[0]) and (ret[1][0] == 0x64):
             pass
         else:
             print("ERRORE",data)
             for el in ret[1]:
                 print(el)
+    
+    def Fn64(self):
+        self.Fn19()
 
 
     #read multi run angle
@@ -184,7 +151,7 @@ class RMD:
             for el in ret[1][1:]:
                 data.append(el)
             data.append(data[-1])
-            self.multiTurn  = struct.unpack("<q",bytes(data))[0]
+            self.multiTurn  = struct.unpack("<l",ret[1][4:8])[0]
             #print("multiBeforeChange",self.nodeID,self.multiTurn)
             #print(data)
             #self.multiTurn  += 18000
@@ -206,7 +173,7 @@ class RMD:
             for el in ret[1][1:]:
                 data.append(el)
             data.append(data[-1])
-            self.multiTurn  = struct.unpack("<q",bytes(data))[0]
+            self.multiTurn  = struct.unpack("<l",ret[1][4:8])[0]
             self.multiTurn  /= 100
             self.multiTurnG = self.multiTurn/self.ratio
             self.multiTurnG = float(self.multiTurnG)
@@ -262,12 +229,12 @@ class RMD:
         print("ret: ", ret)
         if (ret[0]) and (ret[1][0] == 0x30):
             print("Decode Pids")
-            self.PidPosKp  = struct.unpack("B",ret[1][2:3])[0]
-            self.PidPosKi  = struct.unpack("B",ret[1][3:4])[0]
+            self.PidTrqKp  = struct.unpack("B",ret[1][2:3])[0]
+            self.PidTrqKi  = struct.unpack("B",ret[1][3:4])[0]
             self.PidVelKp  = struct.unpack("B",ret[1][4:5])[0]
             self.PidVelKi  = struct.unpack("B",ret[1][5:6])[0]
-            self.PidTrqKp  = struct.unpack("B",ret[1][6:7])[0]
-            self.PidTrqKi  = struct.unpack("B",ret[1][7:8])[0]
+            self.PidPosKp  = struct.unpack("B",ret[1][6:7])[0]
+            self.PidPosKi  = struct.unpack("B",ret[1][7:8])[0]
         else:
             print("ERRORE",data)
             for el in ret[1]:
@@ -276,17 +243,17 @@ class RMD:
     #write PIDs RAM
     def Fn31(self):
         data = [0x31,0x00]
-        data2 = struct.pack("BBBBBB",self.PidPosKp,self.PidPosKi,self.PidVelKp,self.PidVelKi,self.PidTrqKp,self.PidTrqKi)
+        data2 = struct.pack("BBBBBB",self.PidTrqKp,self.PidTrqKi,self.PidVelKp,self.PidVelKi,self.PidPosKp,self.PidPosKi)
         for el in data2:
             data.append(el)
         ret = self.wr(data)
         if (ret[0]) and (ret[1][0] == 0x31):
-            self.PidPosKp  = struct.unpack("B",ret[1][2:3])[0]
-            self.PidPosKi  = struct.unpack("B",ret[1][3:4])[0]
+            self.PidTrqKp  = struct.unpack("B",ret[1][2:3])[0]
+            self.PidTrqKi  = struct.unpack("B",ret[1][3:4])[0]
             self.PidVelKp  = struct.unpack("B",ret[1][4:5])[0]
             self.PidVelKi  = struct.unpack("B",ret[1][5:6])[0]
-            self.PidTrqKp  = struct.unpack("B",ret[1][6:7])[0]
-            self.PidTrqKi  = struct.unpack("B",ret[1][7:8])[0]
+            self.PidPosKp  = struct.unpack("B",ret[1][6:7])[0]
+            self.PidPosKi  = struct.unpack("B",ret[1][7:8])[0]
         else:
             print("ERRORE",data)
             for el in ret[1]:
