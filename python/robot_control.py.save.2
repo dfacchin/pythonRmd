@@ -18,34 +18,23 @@ a = 4500  # Motors acceleration
 
 # Initial Conditions (i.c.):
 #pp = [[1000,0],[750,200],[300,350],[0,500],[300,350],[750,200],[1000,0]] # [mm] path points (x,y)
-pp = [[1000,0],[700,300],[400,0],[700,300],[1000,0]]
-t = np.array([0, 2, 4, 6, 8]) # [s]
-fn = 15 #25 # [Hz]
+pp = [[1000,0],[400,0],[1000,0]]
+t = np.array([0, 2, 4]) # [s]
+fn = 25 # [Hz]
 
 # pid
-#_pp = 200
-#_pi = 5
-#_vp = 200
-#_vi = 5
-#_tp = 5
-#_ti = 5
-
-#_pps = 200
-#_pis = 5
-#_vps = 200
-#_vis = 5
-#_tps = 10
-#_tis = 5
+p = 200
+i = 3
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
-motor_E = RMD.RMD(0x142, bus, ratio)  # Elbow
+motor_E = RMD.RMD(0x142, bus, ratio=13.5)  # Elbow
 motor_E.Fn30()  # read PID
 motor_E.Fn33()  # read acceleration
 # Specify desired PID
-motor_E.PidPosKp = 100
-motor_E.PidPosKi = 5
-motor_E.PidVelKp = 100
-motor_E.PidVelKi = 5
+motor_E.PidPosKp = p
+motor_E.PidPosKi = i
+motor_E.PidVelKp = p
+motor_E.PidVelKi = i
 motor_E.PidTrqKp = 5
 motor_E.PidTrqKi = 5
 motor_E.Fn31()  # write PID to Ram
@@ -54,15 +43,15 @@ motor_E.acceleration = a
 motor_E.Fn34()  # write acceleration to Ram
 
 # ---------- RMD motor with ID 2 (Shoulder) ----------
-motor_S = RMD.RMD(0x141, bus, ratio)  # Shoulder
+motor_S = RMD.RMD(0x141, bus, ratio=13.5)  # Shoulder
 motor_S.Fn30()  # read PID
 motor_S.Fn33()  # read acceleration
 # Specify desired PID
-motor_S.PidPosKp = 100
-motor_S.PidPosKi = 5
-motor_S.PidVelKp = 100
-motor_S.PidVelKi = 5
-motor_S.PidTrqKp = 10
+motor_S.PidPosKp = p
+motor_S.PidPosKi = i
+motor_S.PidVelKp = p
+motor_S.PidVelKi = i
+motor_S.PidTrqKp = 5
 motor_S.PidTrqKi = 5
 motor_S.Fn31()  # write PID to Ram
 # Specify desired accelration
