@@ -286,9 +286,9 @@ class RMD:
 
     #read Acceleration
     def Fn33(self):
-        data = [0x42,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
+        data = [0x33,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
         ret = self.wr(data)
-        if (ret[0]) and (ret[1][0] == 0x42):
+        if (ret[0]) and (ret[1][0] == 0x33):
             self.acceleration  = struct.unpack("<l",ret[1][4:8])[0]
         else:
             print("ERRORE",data)
@@ -297,12 +297,12 @@ class RMD:
 
     #write Acceleration RAM
     def Fn34(self):
-        data = [0x43,0x00,0x00,0x00]
+        data = [0x34,0x00,0x00,0x00]
         data2 = struct.pack("<l",self.acceleration)
         for el in data2:
             data.append(el)
         ret = self.wr(data)
-        if (ret[0]) and (ret[1][0] == 0x43):
+        if (ret[0]) and (ret[1][0] == 0x34):
             self.acceleration  = struct.unpack("<l",ret[1][4:8])[0]
         else:
             print("ERRORE",data)
