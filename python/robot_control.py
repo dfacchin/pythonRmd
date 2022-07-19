@@ -12,7 +12,7 @@ import plots
 bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 
 # Variables
-ratio = 13.5 # Gear ratio
+ratio = 9 #13.5 # Gear ratio
 #v = 1000  # Motors velocity
 a = 4500  # Motors acceleration
 
@@ -38,7 +38,7 @@ _tps = 10
 _tis = 5
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
-motor_E = RMD.RMD(0x142, bus, ratio=13.5)  # Elbow
+motor_E = RMD.RMD(0x142, bus, ratio)  # Elbow
 motor_E.Fn30()  # read PID
 motor_E.Fn33()  # read acceleration
 # Specify desired PID
@@ -54,7 +54,7 @@ motor_E.acceleration = a
 motor_E.Fn34()  # write acceleration to Ram
 
 # ---------- RMD motor with ID 2 (Shoulder) ----------
-motor_S = RMD.RMD(0x141, bus, ratio=13.5)  # Shoulder
+motor_S = RMD.RMD(0x141, bus, ratio)  # Shoulder
 motor_S.Fn30()  # read PID
 motor_S.Fn33()  # read acceleration
 # Specify desired PID
