@@ -104,7 +104,7 @@ class RMD:
             print("Message NOT rev")
             return (False,[22,0,0,0,0,0,0,0])
         print("4")
-        return (True,msg.data)
+        return (True, msg.data)
 
     #read internal encoder position and off set
     def Fn90(self):
@@ -256,8 +256,10 @@ class RMD:
     def Fn30(self):
         data = [0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
         print("5")
+        print("data: ", data)
         ret = self.wr(data)
         print("6")
+        print("ret: ", ret)
         if (ret[0]) and (ret[1][0] == 0x30):
             print("Decode Pids")
             self.PidPosKp  = struct.unpack("B",ret[1][2:3])[0]
