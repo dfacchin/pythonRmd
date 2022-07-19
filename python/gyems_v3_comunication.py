@@ -23,13 +23,13 @@ motor_E = RMD.RMD(0x141, bus, ratio)
 motor_E.Fn30()  # read PID
 #motor_E.Fn33()  # read acceleration
 # Specify desired PID
-motor_E.PidPosKp = 30
-motor_E.PidPosKi = 5
-motor_E.PidVelKp = 30
-motor_E.PidVelKi = 30
-motor_E.PidTrqKp = 5
-motor_E.PidTrqKi = 5
-motor_E.Fn31()  # write PID to Ram
+# motor_E.PidPosKp = 30
+# motor_E.PidPosKi = 5
+# motor_E.PidVelKp = 30
+# motor_E.PidVelKi = 30
+# motor_E.PidTrqKp = 5
+# motor_E.PidTrqKi = 5
+# motor_E.Fn31()  # write PID to Ram
 # Specify desired acceleration
 #motor_E.acceleration = a
 #motor_E.Fn34()  # write acceleration to Ram
