@@ -87,11 +87,9 @@ class RMDV3:
         msg = can.Message(arbitration_id=self.nodeID,
                       data=data,
                       is_extended_id=False)
-        print("1")
         #try to send the message on the bus
         try:
             self.bus.send(msg)
-            print("2")
         except can.CanError:
             print("Message NOT sent")
             return (False,[])
@@ -99,11 +97,9 @@ class RMDV3:
         #read the response, no timeout on this action without arguments in the recv function
         try:
             msg = self.bus.recv(1.0)
-            print("3")
         except:
             print("Message NOT rev")
             return (False,[22,0,0,0,0,0,0,0])
-        print("4")
         return (True, msg.data)
 
     #read internal encoder position and off set

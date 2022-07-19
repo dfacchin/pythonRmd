@@ -132,7 +132,7 @@ while idx < len(angle_S[0]):
 	actual_angle_E.append(read_angle_E+read_angle_S)
 
 	#motor_S.goG(-ik[0], 2500) # - sign, since the motor is up-side-down
-	motor_S.goG(-ik[0], 4*abs(v[0])) # - sign, since the motor is up-side-down
+	#motor_S.goG(-ik[0], 4*abs(v[0])) # - sign, since the motor is up-side-down
 	#motor_E.goG(ik[1]+ik[0], 2500) # sum of angles since we use belts
 	motor_E.goG(ik[1]+ik[0], 4*abs(v[1]+v[0])) # sum of angles since we use belts
 
