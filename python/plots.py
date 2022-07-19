@@ -30,6 +30,11 @@ def path_plot(theta_S, theta_E, actual_theta_S=None, actual_theta_E=None):
     plt.xticks(list(range(0,1100,50)))
     plt.yticks(list(range(-600,600,50)))
 
+    # Invert y-axis
+
+    ax = plt.gca() # get current axis
+    ax.invert_yaxis() # revert y-axis
+
     plt.legend()
     plt.grid(True)
 
