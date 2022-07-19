@@ -12,7 +12,7 @@ import plots
 bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)
 
 # Variables
-ratio = 9 #13.5 # Gear ratio
+ratio = 13.5 # Gear ratio
 #v = 1000  # Motors velocity
 a = 4500  # Motors acceleration
 
