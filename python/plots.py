@@ -34,8 +34,9 @@ def path_plot(theta_S, theta_E, pp, actual_theta_S=None, actual_theta_E=None):
     for i in pp:
         x_pp.append(i[0])
         y_pp.append(i[1])
-    plt.scatter(x_pp, y_pp, color='r', marker='o')
+    plt.scatter(x_pp, y_pp, color='r', marker='o', label="Path points")
 
+    # Define displayed values on axes
     plt.xticks(list(range(0,1100,50)))
     plt.yticks(list(range(-600,600,50)))
 
