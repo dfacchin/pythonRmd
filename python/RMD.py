@@ -87,11 +87,9 @@ class RMD:
         msg = can.Message(arbitration_id=self.nodeID,
                       data=data,
                       is_extended_id=False)
-        print("1")
         #try to send the message on the bus
         try:
             self.bus.send(msg)
-            print("2")
         except can.CanError:
             print("Message NOT sent")
             return (False,[])
@@ -99,12 +97,10 @@ class RMD:
         #read the response, no timeout on this action without arguments in the recv function
         try:
             msg = self.bus.recv(1.0)
-            print("3")
         except:
             print("Message NOT rev")
             return (False,[22,0,0,0,0,0,0,0])
-        print("4")
-        return (True, msg.data)
+        return (True,msg.data)
 
     #read internal encoder position and off set
     def Fn90(self):
@@ -255,11 +251,7 @@ class RMD:
     #read PIDs
     def Fn30(self):
         data = [0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
-        print("5")
-        print("data: ", data)
         ret = self.wr(data)
-        print("6")
-        print("ret: ", ret)
         if (ret[0]) and (ret[1][0] == 0x30):
             print("Decode Pids")
             self.PidPosKp  = struct.unpack("B",ret[1][2:3])[0]
@@ -294,9 +286,9 @@ class RMD:
 
     #read Acceleration
     def Fn33(self):
-        data = [0x42,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
+        data = [0x33,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
         ret = self.wr(data)
-        if (ret[0]) and (ret[1][0] == 0x42):
+        if (ret[0]) and (ret[1][0] == 0x33):
             self.acceleration  = struct.unpack("<l",ret[1][4:8])[0]
         else:
             print("ERRORE",data)
@@ -305,12 +297,12 @@ class RMD:
 
     #write Acceleration RAM
     def Fn34(self):
-        data = [0x43,0x00,0x00,0x00]
+        data = [0x34,0x00,0x00,0x00]
         data2 = struct.pack("<l",self.acceleration)
         for el in data2:
             data.append(el)
         ret = self.wr(data)
-        if (ret[0]) and (ret[1][0] == 0x43):
+        if (ret[0]) and (ret[1][0] == 0x34):
             self.acceleration  = struct.unpack("<l",ret[1][4:8])[0]
         else:
             print("ERRORE",data)
