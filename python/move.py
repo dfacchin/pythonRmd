@@ -28,21 +28,24 @@ def pick_move(home, drop, apple_coords, depth_offset, steps=3):
         pp.append(approach_apple)
         print("approach: ", approach_apple)
 
-        approach_apple.reverse()
-        print("retract: ", approach_apple)
-        approach_apple.pop() # rm the last element of the list
-        pp.append(approach_apple)
-
-        # # pp from the apple pose back to the depth_offset
-        # retract = approach_apple
-        # retract.reverse()
-        # print("retract: ", retract)
-        # retract.pop() # rm the last element of the list
-        # pp.append(retract)
+        # pp from the apple pose back to the depth_offset
+        retract = kinematics.path(x_a, y_a, x_a-depth_offset, y_a, steps=3)
+        retract.pop(0) # rm the last element of the list
+        print("last retract: ", retract)
+        pp.append(retract)
         
+        # ..
+        # via points
+        left_q = [400,0] # for apples in the left quadrant
+        right_q = [350,400] # for apples in the right quadrant
+        if retract[1][1] <= 0:
+            
+
+
         pp.append(drop)
 
-    return pp
+        list_pp = sum(pp, []) # create one single list
+    return list_pp
 
 
 def spray_move():
