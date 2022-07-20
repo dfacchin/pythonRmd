@@ -23,21 +23,6 @@ pp = [[1000,0],[700,300],[400,0],[700,300],[1000,0]]
 t = np.array([0, 1, 2, 3, 4]) # [s]
 fn = 15 #25 # [Hz]
 
-# pid
-#_pp = 200
-#_pi = 5
-#_vp = 200
-#_vi = 5
-#_tp = 5
-#_ti = 5
-
-#_pps = 200
-#_pis = 5
-#_vps = 200
-#_vis = 5
-#_tps = 10
-#_tis = 5
-
 # ---------- RMD motor with ID 1 (Elbow) ----------
 motor_E = RMD_V3.RMDV3(0x140, bus, 9)  # Elbow
 motor_E.Fn30()  # read PID

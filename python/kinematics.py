@@ -96,22 +96,22 @@ def path(x1, y1, x2, y2, steps=20):
     if x1 == x2:
         for y in steps_y:
             x = x1
-            x = round(x, 2)
-            y = round(y, 2)
+            #x = round(x, 2)
+            #y = round(y, 2)
             soln = np.array((x, y))
             solt.append(soln)
     elif y1 == y2:
         for x in steps_x:
             y = y1
-            x = round(x, 2)
-            y = round(y, 2)
+            #x = round(x, 2)
+            #y = round(y, 2)
             soln = np.array((x, y))
             solt.append(soln)
     else:
         for x in steps_x:
             y = (((x-x1)/(x2-x1))*(y2-y1))+y1
-            x = round(x, 2)
-            y = round(y, 2)
+            #x = round(x, 2)
+            #y = round(y, 2)
             soln = np.array((x, y))
             solt.append(soln)
     return solt
