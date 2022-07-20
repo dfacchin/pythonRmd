@@ -6,7 +6,7 @@ import RMD
 import RMD_V3
 import kinematics
 from trajectory_planner import Joint
-import plots
+import eef_plot
 
 
 # Specify the bus
@@ -173,5 +173,5 @@ plot_S = shoulder.plot("shoulder", angle_S[0], angle_S[1], angle_S[2], actual_an
 plot_E = elbow.plot("elbow", angle_E[0], angle_E[1], angle_E[2], actual_angle_E, actual_vel_E)
 print(plot_S)
 print(plot_E)
-traj_points = plots.path_plot(angle_S[0], angle_E[0], pp, actual_angle_S, actual_angle_E)
+traj_points = eef_plot.xy_traj_pp(angle_S[0], angle_E[0], pp, actual_angle_S, actual_angle_E)
 print(traj_points)

@@ -5,7 +5,6 @@ import time
 import RMD_V3
 import kinematics
 from trajectory_planner import Joint
-import plots
 
 
 # Specify the bus

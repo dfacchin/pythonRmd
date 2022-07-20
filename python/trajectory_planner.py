@@ -81,7 +81,7 @@ class Joint:
         return (arr_t, arr_t_d, arr_time)
 
 
-    # Plots
+    # Plots to monitor the angular position and the velocity of the robot joints (both desired and actual values are shown)
     def plot(self, joint_name, desired_theta, desired_theta_d, array_time, actual_theta=None, actual_theta_d=None):
         plt.style.use('seaborn-dark')
         if (joint_name=="shoulder"):

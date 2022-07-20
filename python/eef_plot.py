@@ -1,7 +1,11 @@
 import matplotlib.pyplot as plt
 import kinematics
 
-def path_plot(theta_S, theta_E, pp, actual_theta_S=None, actual_theta_E=None):
+'''
+Plot both the desired and actual trajectory and path points of the robot end-effector.
+The plot is represented on the horizontal xy-plane
+'''
+def xy_traj_pp(theta_S, theta_E, pp, actual_theta_S=None, actual_theta_E=None):
     desired_x = []
     desired_y = []
     actual_x = []

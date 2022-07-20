@@ -1,7 +1,7 @@
 import numpy as np
 
 from trajectory_planner import Joint
-import plots
+import eef_plot
 
 
 # Initial Conditions (i.c.):
@@ -39,5 +39,5 @@ plot_E = elbow.plot("elbow", angle_E[0], angle_E[1], angle_E[2])
 print(plot_S)
 print(plot_E)
 
-path_points = plots.path_plot(theta_S, theta_E)
+path_points = eef_plot.xy_traj_pp(theta_S, theta_E)
 print(path_points)
