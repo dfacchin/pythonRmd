@@ -49,6 +49,7 @@ def xy_traj_pp(theta_S, theta_E, pp, actual_theta_S=None, actual_theta_E=None):
 
     # Invert y-axis
     ax = plt.gca() # get current axis
+    ax.set_aspect('equal') # set x and y ticks with equal spacing
     ax.invert_yaxis() # revert y-axis
 
     plt.legend()
