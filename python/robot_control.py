@@ -18,8 +18,8 @@ ratio = 13.5 # Gear ratio
 a = 4000  # Motors acceleration
 
 # Initial Conditions (i.c.):
-#pp = [[1000,0],[750,200],[300,350],[0,500],[300,350],[750,200],[1000,0]] # [mm] path points (x,y)
-pp = [[1000,0],[700,300],[400,0],[700,300],[1000,0]]
+pp = [[500,-500],[500,500]] # [mm] path points (x,y)
+#pp = [[1000,0],[700,300],[400,0],[700,300],[1000,0]] # [mm] path points (x,y)
 t = np.array([0, 1, 2, 3, 4]) # [s]
 fn = 15 #25 # [Hz]
 
@@ -117,7 +117,7 @@ while idx < len(angle_S[0]):
 	actual_angle_E.append(read_angle_E+read_angle_S)
 
 	#motor_S.goG(-ik[0], 2500) # - sign, since the motor is up-side-down
-	#motor_S.goG(-ik[0], 4*abs(v[0])) # - sign, since the motor is up-side-down
+	motor_S.goG(-ik[0], 4*abs(v[0])) # - sign, since the motor is up-side-down
 	#motor_E.goG(ik[1]+ik[0], 2500) # sum of angles since we use belts
 	motor_E.goG(ik[1]+ik[0], 4*abs(v[1]+v[0])) # sum of angles since we use belts
 
