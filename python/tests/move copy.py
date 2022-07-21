@@ -6,16 +6,6 @@ These functions store a set of predefined path point that we want the eef
 always to pass throgh when executing picking/spraying procedure.
 '''
 
-# Predefined Path Points
-home = [250,0]
-drop = [-500,500]
-A = [425,0]
-Br = [250,500]
-Bl = [250,-500]
-
-
-linear_limit = [600, y_a]
-
 
 def pick_move(home, drop, apple_coords, pick_offset, drop_offset, steps=3):
     pp = [] # path points
