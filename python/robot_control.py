@@ -18,9 +18,9 @@ ratio = 13.5 # Gear ratio
 a = 4000  # Motors acceleration
 
 # Initial Conditions (i.c.):
-pp = [[500,-500],[500,500]] # [mm] path points (x,y)
+pp = [[1000,0],[500,500]] # [mm] path points (x,y)
 #pp = [[1000,0],[700,300],[400,0],[700,300],[1000,0]] # [mm] path points (x,y)
-t = np.array([0, 1, 2, 3, 4]) # [s]
+t = np.array([0, 1]) # [s]
 fn = 15 #25 # [Hz]
 
 # ---------- RMD motor with ID 1 (Elbow) ----------
