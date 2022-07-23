@@ -1,24 +1,45 @@
+# Camera Server
+# Open TCP socket on IP 20000
+# Allows 5 Max connections
+# Real sense starts with 
+# RGB 1920*1080
+# Depth 1280*720 -> aligned to RGB it can be a 1920*1080 picture
+
+# When a request is made it's a serialized dictionart request
+# command: RgbAndAlignDepth
+# mode: real/demo (demo has fake numpy array of the size of the RGB and Depth to test bandwidth not detection)
+# debug: 0-9 debug levels, 0 is none
+# we take a "picture" and responde with it 
+# receiving thread should allocate enough "incoming" packet size to get the images
+
 import aig_tcp_server
 import pickle
+import numpy
 
-name = "lele"
+serverPort = 20000
+
+ImageWidth = 1920
+ImageHeight = 500
 
 def example_on_receive_callback(client, address, data):    
-    global name
 
-    #Get realsense camera frame
-    #Align camera frame
-    #deep copy frames
+    #Get the request and unpack it
+    datain = pickle.loads(data)
 
-    resp = {"response":"RgbDepth"}
-    resp["name"] = name
-    resp["Rgb"] = "RGB DATA"
-    resp["Depth"] = 1280
-    resp["Height"] = 1024
+    if datain["command"] == "RgbAndAlignDepth":
+        if datain["mode"] == "real":
+            if datain.get("debug",0):
+                print("Real mode not yet implemented, Switch to Demo")
+            datain["mode"] == "demo" 
 
-    data = pickle.dumps(resp)
-    print(len(data))
-    client.send(data)
+        if datain["mode"] == "demo":
+            response = {"response":"RgbAndAlignDepthOK"}
+            response["rgb"] = numpy.array([[[0.0]*ImageWidth]*ImageHeight])
+            response["depth"] = numpy.array([[[0.1]*ImageWidth]*ImageHeight])
+            response["width"] = ImageWidth
+            response["height"] = ImageHeight
+            data = pickle.dumps(response)
+            client.send(data)
     return
 
 def example_on_connected_callback(client, address):
@@ -32,13 +53,10 @@ if __name__ == "__main__":
     #Start Realsense Camera
     
     print("Start server")
-    for a in range(10):
-        print(a)
 
-    name = name +" 2"
     aig_tcp_server.TCPThreadedServer(
         '127.0.0.1',
-        8009,
+        serverPort,
         timeout=86400,
         decode_json=True,
         #on_connected_callback=example_on_connected_callback,
@@ -47,6 +65,4 @@ if __name__ == "__main__":
         debug=True,
         debug_data=True
     ).start()    
-    name = name +" 3"
-    print("end")
 
