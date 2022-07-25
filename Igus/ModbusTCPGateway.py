@@ -6,13 +6,18 @@ import socket
 import pickle
 import copy
 import struct
+import time
 
 tipoConverter = {"uint8":"B","uint16":"<H","uint32":"<I","int8":"b","int16":"<h","int32":"<l","float":"<f"}
 
 
 CameraServerPort = 502
+
 class MTG_controlWord:
-    def __init__(self, so = False, ev = False, qs = False, eo = False, oms1 = False, oms2 = False,  oms3 = False, fr = False, h = False, oms4 = False, r = False, ms1 = False, ms2 = False, ms3 = False, ms4 = False, ms5 = False):
+    def __init__(self,sock):
+        self.sock = sock
+
+    def set(self, so = False, ev = False, qs = False, eo = False, oms1 = False, oms2 = False,  oms3 = False, fr = False, h = False, oms4 = False, r = False, ms1 = False, ms2 = False, ms3 = False, ms4 = False, ms5 = False):
         self.data  = 0
         self.controlWord = {}
         self.controlWord["so"] = so
@@ -46,13 +51,22 @@ class MTG_controlWord:
         self.controlWord["ms4"] = ms4
         self.data  += ms4 * 0x4000
         self.controlWord["ms5"] = ms5
-        self.data  += ms5 * 0x5000
+        self.data  += ms5 * 0x8000
         self.dataOut = struct.pack("<H",self.data)
+
+    def write(self):
+        MTG_reqres(self.sock,0x6040,0,"uint16",self.data) #Read Object Dictionary 6041 Status Word that is unsigned int 16
+
+
 
         
 
 class MTG_statusWord:
-    def __init__(self,data):
+    def __init__(self,sock):
+        self.sock = sock
+
+    def refresh(self):
+        data = MTG_reqres(self.sock,0x6041,0,"uint16") #Read Object Dictionary 6041 Status Word that is unsigned int 16
         # Turn data from array 2 byte litte endian
         self.dataIn = data
         self.statusWord = {}
@@ -98,16 +112,21 @@ def tipoPack(value, tipo):
 def tipoUnpack(data,tipo):
     return struct.unpack(tipoConverter[tipo],data)[0]
 
-def MTG_request(obj,idx,readSize,writeData,tipo):
-    obj += 1
+def MTG_request(obj,idx,tipo,writeData = None ):
+    #bj += 1
     buffer = [0,0,0,0,0]
-    if readSize == 0:
+    readSize = 0
+    writeSize = 0
+    if writeData != None:
         writeBuffer = tipoPack(writeData,tipo)
+        writeSize = len(writeBuffer)
+    else:
+        readSize = len(tipoPack(0,tipo))
     #Add size of read
     if readSize > 0:
         buffer.append(13)
     else:
-        buffer.append((13+len(writeBuffer))%256)
+        buffer.append((13 + writeSize) %256)
     #Fix request
     buffer = buffer + [0,43,13]
     #1 if write, 0 if read
@@ -133,7 +152,7 @@ def MTG_request(obj,idx,readSize,writeData,tipo):
         buffer.append(len(writeBuffer)%256)
     ret = bytes(buffer)
     #Add write data
-    if readSize == 0:
+    if writeSize > 0:
         ret = ret + writeBuffer
     return ret
 
@@ -156,9 +175,9 @@ def MTG_response(request,data,tipo):
             return 0
 
 
-def MTG_reqres(sock,obj,idx,readSize,writeBuffer,tipo):
+def MTG_reqres(sock,obj,idx,tipo,writeData = None):
     try:
-        dataOut = MTG_request(obj,idx,readSize,writeBuffer,tipo)
+        dataOut = MTG_request(obj,idx,tipo,writeData)
         sock.send( dataOut )
         dataIn = sock.recv(1024)
         return MTG_response(dataOut,dataIn,tipo)
@@ -178,10 +197,27 @@ server_address = ("10.170.43.149", CameraServerPort)
 print("Connect to server")
 sock.connect(server_address)
 sock.settimeout(15)
-a = MTG_reqres(sock,0x6040,0,2,[],"uint16") #Read Object Dictionary 6040 that is unsigned int 16
-x = MTG_statusWord(a)
-x.print()
-print(bin(x.dataIn))
+sw = MTG_statusWord(sock)
+sw.refresh()
+sw.print()
+
+cw = MTG_controlWord(sock)
+
+for a in range(100):
+    print( MTG_reqres(sock,0x2000,1,"uint16") )
+    cw.set(fr = True)
+    cw.write()
+    sw.refresh()
+    sw.print()
+    time.sleep(4)
+    print( MTG_reqres(sock,0x2000,1,"uint16") )
+    cw.set(fr = False)
+    cw.write()
+    sw.refresh()
+    sw.print()
+    time.sleep(4)
+ 
+
 sock.close()
 
         
