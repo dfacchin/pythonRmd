@@ -38,11 +38,11 @@ ABS, APS
 tipoConverter = {"uint8":"B","uint16":"<H","uint32":"<I","int8":"b","int16":"<h","int32":"<l","float":"<f"}
 CameraServerPort = 502
 
-homeSpeed = 5
-homeAcceleration = 20
+homeSpeed = 50
+homeAcceleration = 200
 homeType = 17
-maxSpeed = 50
-maxAcceleration = 20
+maxSpeed = 140 #Looks like 140 is the fastest we can without "arm"
+maxAcceleration = 200
 
 class MTG:
     def __init__(self, serverip, port):
@@ -55,6 +55,7 @@ class MTG:
         except socket.error:
             print("open socketError")
             return 
+        print("Connection Open")
         self.sock.settimeout(15)
         self.cwset()
         self.swrefresh()
@@ -122,61 +123,94 @@ class MTG:
         return True
 
     def cwset(self, so = False, ev = False, qs = False, eo = False, oms1 = False, oms2 = False,  oms3 = False, fr = False, h = False, oms4 = False, r = False, ms1 = False, ms2 = False, ms3 = False, ms4 = False, ms5 = False):
-        self.data  = 0
+        self.cwdata  = 0
         self.controlWord = {}
         #0 Switch On
         self.controlWord["so"] = so
-        self.data  += so * 0x1
+        self.cwdata  += so * 0x1
         #1 Enable Voltage
         self.controlWord["ev"] = ev
-        self.data  += ev * 0x2
+        self.cwdata  += ev * 0x2
         #2 Quick Stop
         self.controlWord["qs"] = qs
-        self.data  += qs * 0x4
+        self.cwdata  += qs * 0x4
         #3 Enable Operation
         self.controlWord["eo"] = eo
-        self.data  += eo * 0x8
+        self.cwdata  += eo * 0x8
         #4 Mode specific 1
         self.controlWord["oms1"] = oms1
-        self.data  += oms1 * 0x10
+        self.cwdata  += oms1 * 0x10
         #5 Mode specific 2
         self.controlWord["oms2"] = oms2
-        self.data  += oms2 * 0x20
+        self.cwdata  += oms2 * 0x20
         #6 Mode specific 3
         self.controlWord["oms3"] = oms3
-        self.data  += oms3 * 0x40
+        self.cwdata  += oms3 * 0x40
         #7 Fault Reset
         self.controlWord["fr"] = fr
-        self.data  += fr * 0x80
+        self.cwdata  += fr * 0x80
         #8 Halt
         self.controlWord["h"] = h
-        self.data  += h * 0x100
+        self.cwdata  += h * 0x100
         #9 Mode specific 4
         self.controlWord["oms4"] = oms4
-        self.data  += oms4 * 0x200
+        self.cwdata  += oms4 * 0x200
         #10 Reserver
         self.controlWord["r"] = r
-        self.data  += r * 0x400
+        self.cwdata  += r * 0x400
         #11 Manufacturer Specific 1
         self.controlWord["ms1"] = ms1
-        self.data  += ms1 * 0x800
+        self.cwdata  += ms1 * 0x800
         #12 Manufacturer Specific 2
         self.controlWord["ms2"] = ms2
-        self.data  += ms2 * 0x1000
+        self.cwdata  += ms2 * 0x1000
         #13 Manufacturer Specific 3
         self.controlWord["ms3"] = ms3
-        self.data  += ms3 * 0x2000
+        self.cwdata  += ms3 * 0x2000
         #14 Manufacturer Specific 4
         self.controlWord["ms4"] = ms4
-        self.data  += ms4 * 0x4000
+        self.cwdata  += ms4 * 0x4000
         #15 Manufacturer Specific 5
         self.controlWord["ms5"] = ms5
-        self.data  += ms5 * 0x8000
+        self.cwdata  += ms5 * 0x8000
         #Save packet data
-        self.dataOut = struct.pack("<H",self.data)
+        self.cwdataOut = struct.pack("<H",self.cwdata)
 
     def cwwrite(self):
-        return self.MTG_reqres(0x6040, 0, "uint16", self.data) #Read Object Dictionary 6041 Status Word that is unsigned int 16   
+        self.cwdata  = 0
+        #0 Switch On
+        self.cwdata  += self.controlWord["so"] * 0x1
+        #1 Enable Voltage
+        self.cwdata  += self.controlWord["ev"] * 0x2
+        #2 Quick Stop
+        self.cwdata  += self.controlWord["qs"] * 0x4
+        #3 Enable Operation
+        self.cwdata  += self.controlWord["eo"] * 0x8
+        #4 Mode specific 1
+        self.cwdata  += self.controlWord["oms1"] * 0x10
+        #5 Mode specific 2
+        self.cwdata  += self.controlWord["oms2"] * 0x20
+        #6 Mode specific 3
+        self.cwdata  += self.controlWord["oms3"] * 0x40
+        #7 Fault Reset
+        self.cwdata  += self.controlWord["fr"] * 0x80
+        #8 Halt
+        self.cwdata  += self.controlWord["h"] * 0x100
+        #9 Mode specific 4
+        self.cwdata  += self.controlWord["oms4"] * 0x200
+        #10 Reserver
+        self.cwdata  += self.controlWord["r"] * 0x400
+        #11 Manufacturer Specific 1
+        self.cwdata  += self.controlWord["ms1"] * 0x800
+        #12 Manufacturer Specific 2
+        self.cwdata  += self.controlWord["ms2"] * 0x1000
+        #13 Manufacturer Specific 3
+        self.cwdata  += self.controlWord["ms3"] * 0x2000
+        #14 Manufacturer Specific 4
+        self.cwdata  += self.controlWord["ms4"]  * 0x4000
+        #15 Manufacturer Specific 5
+        self.cwdata  += self.controlWord["ms5"] * 0x8000
+        return self.MTG_reqres(0x6040, 0, "uint16", self.cwdata) #Read Object Dictionary 6041 Status Word that is unsigned int 16   
 
 
     
@@ -281,7 +315,7 @@ class MTG:
     def DI7(self,state):
         #we use the Dout 1 to control to DI7
         if state == True:
-            if self.MTG_reqres(0x60FE, 1, "uint32", 0x10000) == None:
+            if self.MTG_reqres(0x60FE, 1, "uint32", 0x30000) == None:
                 return False
         else:
             if self.MTG_reqres(0x60FE, 1, "uint32", 0x00000) == None:
@@ -296,12 +330,14 @@ class MTG:
             self.controlWord["fr"] = True
             if self.cwwrite() == None:
                 return False
-                    #SW refresh
+            #SW refresh
             if self.swrefresh() == False:
                 return False        
             time.sleep(0.2)
             self.controlWord["fr"] = False
             time.sleep(0.2)
+            if self.cwwrite() == None:
+                return False
             if self.swrefresh() == False:
                 return False        
             if self.statusWord["f"]:
@@ -315,7 +351,7 @@ class MTG:
 
         #Set bitmask for digital output
         #We set only bit16 (DOUT 1)
-        if self.MTG_reqres(0x60FE, 2, "uint32", 0x10000) == None:
+        if self.MTG_reqres(0x60FE, 2, "uint32", 0x30000) == None:
             return False
         #SW refresh
         if self.swrefresh() == False:
@@ -336,14 +372,28 @@ class MTG:
         #Homing Acceleration
         if self.MTG_reqres(0x609A, 0, "uint32", homeAcceleration*100) == None:
             return False
-        #Max speed
-        #Max acceleration
-        #linear movement
-        #this data are written with the WEB interface
+        #Max Velocity
+        if self.MTG_reqres(0x607F, 0, "uint32", maxSpeed*100) == None:
+            return False
+        #Profile Velocity
+        if self.MTG_reqres(0x6081, 0, "uint32", maxSpeed*100) == None:
+            return False
+        #Profile Acceleration 
+        if self.MTG_reqres(0x6083, 0, "uint32", maxAcceleration*100) == None:
+            return False
+        #Profile Deceleration
+        if self.MTG_reqres(0x6084, 0, "uint32", maxAcceleration*100) == None:
+            return False
+
+        #Clear Error
+        self.clearError()
 
         #DI7 HIGH
         if self.DI7(True) == False:
             return False
+
+        #Clear Error
+        self.clearError()
 
         #Wait Bit9 remote High
         for a in range(50):
@@ -355,13 +405,15 @@ class MTG:
             time.sleep(0.1)
 
         #Write Shutdown (page100 Operatin Manual)
-        self.set(ev = True, qs = True)
+        self.cwset(ev = True, qs = True)
         if self.cwwrite() == None:
             return False
                 #SW refresh
         if self.swrefresh() == False:
             return False
         
+        self.clearError()
+
         #Wait swith On bit
         for a in range(50):
             #SW refresh
@@ -372,7 +424,7 @@ class MTG:
             time.sleep(0.1)
 
         #Switch On        
-        self.controlWord["qs"] = True
+        self.controlWord["so"] = True
         if self.cwwrite() == None:
             return False
                 #SW refresh
@@ -401,7 +453,7 @@ class MTG:
             #SW refresh
             if self.swrefresh() == False:
                 return False
-            if self.statusWord["eo"]:
+            if self.statusWord["oe"]:
                 break
             time.sleep(0.1)
 
@@ -434,77 +486,47 @@ class MTG:
                 #SW refresh
         if self.swrefresh() == False:
             return False   
-        #Remove start home flag
-        self.controlWord["oms1"] = False
-        #Wait 500ms to be sure command is accepted
-        time.sleep(0.5)
 
         #Wait until bit 10 target reached  - 12 oms
         for a in range(1200):
             if self.swrefresh() == False:
-                return False   
-            if ((self.statusWord["oms1"]) == False) and \
-               ((self.statusWord["oms2"]) == False) and \
-               ((self.statusWord["tr"]) == False):
-               #Homing is being executed
-               pass
-            elif ((self.statusWord["oms1"]) == False) and \
-                 ((self.statusWord["oms2"]) == False) and \
-                 ((self.statusWord["tr"]) == True):
-                 #homing interrupted or not yet started
-                 return False
-            elif ((self.statusWord["oms1"]) == False) and \
-                 ((self.statusWord["oms2"]) == True) and \
-                 ((self.statusWord["tr"]) == False):
-                 #Still moving to homing
-                 pass
-            elif ((self.statusWord["oms1"]) == False) and \
-                 ((self.statusWord["oms2"]) == True) and \
-                 ((self.statusWord["tr"]) == True):
-                 #Home complete
-                 break
-            elif ((self.statusWord["oms1"]) == False) and \
-                 ((self.statusWord["oms2"]) == False) and \
-                 ((self.statusWord["tr"]) == True):
-                 pass
-            elif ((self.statusWord["oms1"]) == True) and \
-                 ((self.statusWord["oms2"]) == False) and \
-                 ((self.statusWord["tr"]) == False):
-                 #Homing Error
-                 return False
-            elif ((self.statusWord["oms1"]) == True) and \
-                 ((self.statusWord["oms2"]) == False) and \
-                 ((self.statusWord["tr"]) == True):
-                 #Homing Error
-                 return False
-            elif ((self.statusWord["oms1"]) == True) and \
-                 ((self.statusWord["oms2"]) == True) and \
-                 ((self.statusWord["tr"]) == False):
-                 #reserved
-                 pass
+                return False 
+            if ((self.statusWord["oms1"]) == True) and \
+               ((self.statusWord["tr"]) == True):
+               break
             time.sleep(0.1)
         #if reached the 120sec timeout
         if a >= 1999:
             return False
         #Homing Reached
+
+        #Remove start home flag
+        self.controlWord["oms1"] = False
+        if self.cwwrite() == None:
+            return False
+                #SW refresh
+
         return True
 
     def positionMode(self):
         #Clear Error
         self.clearError()
-
+        #Set speed and all the other parameters
         if self.swrefresh() == False:
             return False
         #Set Operation Mode 
         if self.MTG_reqres(0x6060, 0, "uint8", 1) == None:
             return False   
-        #Wait 1 Second     
-        for a in range(10):
-            if self.swrefresh() == False:
-                return False
-            time.sleep(0.1)
+        #SW refresh
+        if self.swrefresh() == False:
+            return False   
+
+        for a in range(200):
         #Read Operation Mode 
-        if self.MTG_reqres(0x6061, 0, "uint8") != 1:
+            if self.MTG_reqres(0x6061, 0, "uint8") == 1:
+                break
+            time.sleep(0.1)
+        if a >= 199:
             print("Position mode not set")
             return False   
 
@@ -540,16 +562,16 @@ class MTG:
             return False   
         if self.swrefresh() == False:
             return False  
+
         #start command
-        #bit6 Oms2 set to 0 means absolute moveements
-        self.controlWord["eo"] = True
+        self.controlWord["oms1"] = True
+        #self.controlWord["oms2"] = True
         if self.cwwrite() == None:
             return False
-        #SW refresh
+                #SW refresh
         if self.swrefresh() == False:
-            return False  
-        self.controlWord["eo"] = False
-
+            return False   
+        
         for a in range(1200):
             if self.swrefresh() == False:
                 return False           
@@ -559,9 +581,33 @@ class MTG:
         #if reached the 120sec timeout
         if a >= 1999:
             return False
-        #Homing Reached
+
+        #Position Reached
+        #Remove start home flag
+        self.controlWord["oms1"] = False
+        if self.cwwrite() == None:
+            return False
+                #SW refresh
+
         return True
 
         
 vertical1 = MTG("10.170.43.149", CameraServerPort)
-        
+
+print(vertical1.swrefresh())
+print("Boot")
+print(vertical1.boot())
+print("Home")
+print(vertical1.MTG_home())
+print("Position mode")
+print(vertical1.positionMode())
+print("Move to 300")
+print(vertical1.moveTo(300))
+print("Move to 100")
+print(vertical1.moveTo(100))
+print("Move to 350")
+print(vertical1.moveTo(350))
+print("Move to 300")
+print(vertical1.moveTo(300))
+print("Move to 410")
+print(vertical1.moveTo(50))
