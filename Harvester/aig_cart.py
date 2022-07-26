@@ -23,7 +23,6 @@ class scara:
         self.gripper.calibrate()
 
     def go(self,el):
-        if "z" in el:
         pass
 
     def goWait(self,el):
@@ -105,14 +104,14 @@ class aig_cart:
         #1 Single arm
         #Offset vertical Gripper
         #Drop position
-        offsetGripper = {"x":0.0,"y":0.0","z":0.0}
-        drop = {"x":0.0,"y":0.0","z":0.0}
+        offsetGripper = {"x":0.0, "y":0.0, "z":0.0}
+        drop = {"x":0.0, "y":50.0, "z":0.0}
         #Robot definition
         self.scara = scara(offsetGripper,self.framelimit,drop))
         #define Camera Offset
-        self.offsetCamera = {"x":0.0,"y":0.0","z":0.0}
+        self.offsetCamera = {"x":0.0,"y":0.0,"z":0.0}
         #Idle Position
-        self.idlePosition = {"x":0.0,"y":0.0","z":0.0}
+        self.idlePosition = {"x":0.0,"y":0.0,"z":0.0}
 
     def run(self):
         if self.state == "BOOT":
@@ -128,7 +127,7 @@ class aig_cart:
             self.goIdle()
             self.state = "IDLE"
 
-        elif self.state == "IDLE"
+        elif self.state == "IDLE":
             if self.cmd == "SCAN":
                 self.state = "SCANNING"
                 self.cmd = "None"
@@ -151,7 +150,7 @@ class aig_cart:
                     scanPoints.append(self.framelimit["maxZ"])
             #Reach each point and then scan
             for point in scanPoints:
-                self.scara.go({"z":point}})
+                self.scara.go({"z":point})
                 self.scan()
             #Filter Scan data
             self.apples.filterScan()
@@ -163,7 +162,7 @@ class aig_cart:
             while (self.apples.findLowest() != None):
                 el = self.apples.popLowest()
                 #picking movement is elaborated in the scara low level
-                self.pickAndDrop(self,el):
+                self.pickAndDrop(self,el)
             self.goIdle()
             self.state = "IDLE"
 
@@ -209,11 +208,11 @@ class aig_cart:
         #1 Remove all the element that are not pickable
         pass
 
-    def self.pickAndDrop(self,el):
+    def pickAndDrop(self,el):
         #Ask the scara system to pick the apple at the desired coordinate
         pass
 
-    def self.pickAndDropControlled(self,el):
+    def pickAndDropControlled(self,el):
         #Reach front of apples
         #ask for pick or not
         #if not save info of UUID and not pick for Color/size

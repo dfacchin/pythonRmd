@@ -58,6 +58,10 @@ class MTG:
         self.sock.settimeout(15)
         self.cwset()
         self.swrefresh()
+    
+    def run(self):
+        while True:
+            pass
 
     def referenced(self):
         ret = self.MTG_reqres(0x2014, 0, "uint32")
@@ -76,10 +80,6 @@ class MTG:
 
     def getPosition(self):
         return self.MTG_reqres(0x6064, 0, "int32")
-
-
-
-
     def swrefresh(self):
         data = self.MTG_reqres(0x6041, 0, "uint16") #Read Object Dictionary 6041 Status Word that is unsigned int 16
         if data == None:
@@ -267,24 +267,24 @@ class MTG:
         # is this possible from "Code" ? we could wire a Digital Out ? 
 
         #Homing methond 17
-        if self.mtg.MTG_reqres(0x6098, 0, "uint8", 17) == None:
+        if self.MTG_reqres(0x6098, 0, "uint8", 17) == None:
             return False
         #Homing Speed
-        if self.mtg.MTG_reqres(0x6099, 1, "uint32", homeSpeed*100) == None:
+        if self.MTG_reqres(0x6099, 1, "uint32", homeSpeed*100) == None:
             return False
-        if self.mtg.MTG_reqres(0x6099, 2, "uint32", homeSpeed*100) == None:
+        if self.MTG_reqres(0x6099, 2, "uint32", homeSpeed*100) == None:
             return False
         #Homing Acceleration
-        if self.mtg.MTG_reqres(0x609A, 0, "uint32", homeAcceleration*100) == None:
+        if self.MTG_reqres(0x609A, 0, "uint32", homeAcceleration*100) == None:
             return False
 
     def DI7(self,state):
         #we use the Dout 1 to control to DI7
         if state == True:
-            if self.mtg.MTG_reqres(0x60FE, 1, "uint32", 0x10000) == None:
+            if self.MTG_reqres(0x60FE, 1, "uint32", 0x10000) == None:
                 return False
         else:
-            if self.mtg.MTG_reqres(0x60FE, 1, "uint32", 0x00000) == None:
+            if self.MTG_reqres(0x60FE, 1, "uint32", 0x00000) == None:
                 return False
         return True
     
@@ -315,7 +315,7 @@ class MTG:
 
         #Set bitmask for digital output
         #We set only bit16 (DOUT 1)
-        if self.mtg.MTG_reqres(0x60FE, 2, "uint32", 0x10000) == None:
+        if self.MTG_reqres(0x60FE, 2, "uint32", 0x10000) == None:
             return False
         #SW refresh
         if self.swrefresh() == False:
@@ -326,15 +326,15 @@ class MTG:
             return False
 
         #Homing methond 17
-        if self.mtg.MTG_reqres(0x6098, 0, "uint8", 17) == None:
+        if self.MTG_reqres(0x6098, 0, "uint8", 17) == None:
             return False
         #Homing Speed
-        if self.mtg.MTG_reqres(0x6099, 1, "uint32", homeSpeed*100) == None:
+        if self.MTG_reqres(0x6099, 1, "uint32", homeSpeed*100) == None:
             return False
-        if self.mtg.MTG_reqres(0x6099, 2, "uint32", homeSpeed*100) == None:
+        if self.MTG_reqres(0x6099, 2, "uint32", homeSpeed*100) == None:
             return False
         #Homing Acceleration
-        if self.mtg.MTG_reqres(0x609A, 0, "uint32", homeAcceleration*100) == None:
+        if self.MTG_reqres(0x609A, 0, "uint32", homeAcceleration*100) == None:
             return False
         #Max speed
         #Max acceleration
@@ -415,7 +415,7 @@ class MTG:
         if self.swrefresh() == False:
             return False
         #Set Operation Mode 
-        if self.mtg.MTG_reqres(0x6060, 0, "uint8", 6) == None:
+        if self.MTG_reqres(0x6060, 0, "uint8", 6) == None:
             return False   
         #Wait 1 Second     
         for a in range(10):
@@ -423,7 +423,7 @@ class MTG:
                 return False
             time.sleep(0.1)
         #Read Operation Mode 
-        if self.mtg.MTG_reqres(0x6061, 0, "uint8") == 6:
+        if self.MTG_reqres(0x6061, 0, "uint8") != 6:
             print("Homing mode not set")
             return False   
 
@@ -496,7 +496,7 @@ class MTG:
         if self.swrefresh() == False:
             return False
         #Set Operation Mode 
-        if self.mtg.MTG_reqres(0x6060, 0, "uint8", 1) == None:
+        if self.MTG_reqres(0x6060, 0, "uint8", 1) == None:
             return False   
         #Wait 1 Second     
         for a in range(10):
@@ -504,7 +504,7 @@ class MTG:
                 return False
             time.sleep(0.1)
         #Read Operation Mode 
-        if self.mtg.MTG_reqres(0x6061, 0, "uint8") == 1:
+        if self.MTG_reqres(0x6061, 0, "uint8") != 1:
             print("Position mode not set")
             return False   
 
@@ -525,8 +525,18 @@ class MTG:
         #remove Errors
         self.clearError()
 
+        #Check if homing is referenced
+        if self.referenced() == False:
+            print("Not reference home")
+            return False   
+
+        #Read Operation Mode 
+        if self.MTG_reqres(0x6061, 0, "uint8") != 1:
+            print("Position mode not set")
+            return False         
+
         #set destination position
-        if self.mtg.MTG_reqres(0x607A, 0, "uint32", posMm*100) == None:
+        if self.MTG_reqres(0x607A, 0, "uint32", posMm*100) == None:
             return False   
         if self.swrefresh() == False:
             return False  
