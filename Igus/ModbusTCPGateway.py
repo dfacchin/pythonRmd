@@ -59,6 +59,27 @@ class MTG:
         self.cwset()
         self.swrefresh()
 
+    def referenced(self):
+        ret = self.MTG_reqres(0x2014, 0, "uint32")
+        if ret == None:
+            return False
+        if ret & 0x1:
+            return True
+        else:
+            return False
+    
+    def errorCode(self):
+        return self.MTG_reqres(0x603F, 0, "uint16")
+    
+    def temperature(self):
+        return self.MTG_reqres(0x2013, 0, "float")
+
+    def getPosition(self):
+        return self.MTG_reqres(0x6064, 0, "int32")
+
+
+
+
     def swrefresh(self):
         data = self.MTG_reqres(0x6041, 0, "uint16") #Read Object Dictionary 6041 Status Word that is unsigned int 16
         if data == None:
@@ -155,7 +176,7 @@ class MTG:
         self.dataOut = struct.pack("<H",self.data)
 
     def cwwrite(self):
-        return self.mtg.MTG_reqres(0x6040, 0, "uint16", self.data) #Read Object Dictionary 6041 Status Word that is unsigned int 16   
+        return self.MTG_reqres(0x6040, 0, "uint16", self.data) #Read Object Dictionary 6041 Status Word that is unsigned int 16   
 
 
     
