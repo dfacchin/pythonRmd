@@ -1,3 +1,4 @@
+import copy
 
 #Class gripper
 class gripper:
@@ -107,13 +108,14 @@ class aig_cart:
         offsetGripper = {"x":0.0, "y":0.0, "z":0.0}
         drop = {"x":0.0, "y":50.0, "z":0.0}
         #Robot definition
-        self.scara = scara(offsetGripper,self.framelimit,drop))
+        self.scara = scara(offsetGripper,self.framelimit,drop)
         #define Camera Offset
         self.offsetCamera = {"x":0.0,"y":0.0,"z":0.0}
         #Idle Position
         self.idlePosition = {"x":0.0,"y":0.0,"z":0.0}
 
     def run(self):
+        print(self.state,self.cmd)
         if self.state == "BOOT":
             if self.cmd == "CALIBRATE":
                 self.state = "CALIBRATION"
@@ -153,7 +155,7 @@ class aig_cart:
                 self.scara.go({"z":point})
                 self.scan()
             #Filter Scan data
-            self.apples.filterScan()
+            self.filterScan()
             self.goIdle()
             self.state = "IDLE"
 
@@ -165,6 +167,8 @@ class aig_cart:
                 self.pickAndDrop(self,el)
             self.goIdle()
             self.state = "IDLE"
+        
+        self.cmd = "None"
 
     def isReachable(self,pos):
         #check if the Vertical limit and the gripper offset are ok
@@ -175,7 +179,8 @@ class aig_cart:
 
     def goIdle(self):
         #Move retract scara
-        posXYIntermediate = self.idlePosition
+        posXYIntermediate = copy.deepcopy(self.idlePosition)
+        print(posXYIntermediate)
         posZIntermediate= posXYIntermediate.pop("y")
         self.scara.goWait(posXYIntermediate)
         self.scara.goWait(posZIntermediate)
@@ -224,3 +229,12 @@ class aig_cart:
         #Ask if picciolo / pick
         #in case drop to convorybelt
         pass
+
+
+print("Start")
+robot1 = aig_cart("none")
+while True:
+    robot1.run()
+    robot1.cmd = input().replace("\r","").replace("\n","")
+
+print("Stop")
