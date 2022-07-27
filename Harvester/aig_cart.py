@@ -40,6 +40,10 @@ class scara:
         time.wait(10)
         return True
 
+    def getPosition(self):
+        #do I need to deep copy this ?
+        return {"x":0.0,"y":0.0,"z":0.0}
+
     def go(self,el):
         #send 
         pass
