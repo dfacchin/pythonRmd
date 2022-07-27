@@ -1,51 +1,96 @@
 import copy
+import time
 
-#Class gripper
-class gripper:
-    def __init__(self):
-        pass
-    def calibrate(self):
-        pass
+#Reference frame is always the mechanical frame.
+# 0 is the low limit switch
+# when we scan we get apples from all the surroundings
+# an apple is reachable if
+# apple position - offset gripper to reference is in the reference limits
+# offset limits are added to transform reference to offesett limit
+# (reference position Apple) = referene Position + offset Gripper
+# when taking picure
+# picture taken has an offset
+# real position = taken picture + offset camera + global position
+# assume the camera has an offset of x = 2, y = -10, z = 15 
+# it means that every picutre fill be 
+# 2 cm closer to the object
+# shiftet to the left of 10 cm
+# and taken higher of 15 cm
+# if we are in position 0,0,0 and we take a picutre that has an object at 100,0,0
+# in global coordinate this object will be
+# 102, -10, 15
+# Now we want to take it with the gripper that has 8,0,20 
+# to reach this object the position that we need to reach is
+# 94, -10, -5
+# if this position is inside the "limits" of the system, we are "fine", else it's not reachable
 
 #Class arms
 class scara:
     def __init__(self,offsetGripper,framelimit,Drop):
+        #Open socket connection with the SCARA 
         self.offsetGripper = offsetGripper
         self.framelimit = framelimit
-        self.gripper = gripper()
         pass
 
     def calibrate(self):
-        #Calibrate vertical
-        pass
-        #Calibrate arm
-        pass
-        #Calibrate gripper
-        self.gripper.calibrate()
+        #send socket request to SCARA to calibrate
+        #wait for response of type 
+        # "calibration complete" or "idle"
+        #if error state, quit with error
+        time.wait(10)
+        return True
+
+    def getPosition(self):
+        #do I need to deep copy this ?
+        return {"x":0.0,"y":0.0,"z":0.0}
 
     def go(self,el):
+        #send 
         pass
 
     def goWait(self,el):
         self.go(el)
+        #wait for idle state or error state
+        time.sleep(2)
+        return True
+
+    def grips(self):
+        #send command to close the gripper and twist back and forth
+        time.sleep(0.5)
+        return True
+
+    def release(self):
+        time.sleep(0.5)
+        return True
+        #open the gripper and 
 
     def pick(self,el):
-        if (self.isReachable(el)):
+        #remove the 
+        if (self.isReachable(copy.deepcopy(el))):
             #remove the Vertical offset of the gripper
-            el["z"] = el["z"] - self.offsetGripper["z"]
+            #send pick request
+            #wait for response 
+            #idle state
+            #if error state, quit with error
+            time.wait(5)
+            return True
+        return True
 
     def isReachable(self,pos):
-        if pos["x"] < (self.framelimit["minX"] + self.offsetGripper["x"]):
+        pos["x"] = pos["x"] - self.offsetGripper["x"]
+        pos["y"] = pos["y"] - self.offsetGripper["y"]
+        pos["z"] = pos["z"] - self.offsetGripper["z"]
+        if pos["x"] < (self.framelimit["minX"] - self.offsetGripper["x"]):
             return False
-        if pos["x"] > (self.framelimit["maxX"] + self.offsetGripper["x"]):
+        if pos["x"] > (self.framelimit["maxX"] - self.offsetGripper["x"]):
             return False
-        if pos["y"] < (self.framelimit["minY"] + self.offsetGripper["y"]):
+        if pos["y"] < (self.framelimit["minY"] - self.offsetGripper["y"]):
             return False
-        if pos["y"] > (self.framelimit["maxY"] + self.offsetGripper["y"]):
+        if pos["y"] > (self.framelimit["maxY"] - self.offsetGripper["y"]):
             return False
-        if pos["z"] < (self.framelimit["minZ"] + self.offsetGripper["z"]):
+        if pos["z"] < (self.framelimit["minZ"] - self.offsetGripper["z"]):
             return False
-        if pos["z"] > (self.framelimit["maxZ"] + self.offsetGripper["z"]):
+        if pos["z"] > (self.framelimit["maxZ"] - self.offsetGripper["z"]):
             return False
         return True
 
@@ -119,23 +164,30 @@ class aig_cart:
         if self.state == "BOOT":
             if self.cmd == "CALIBRATE":
                 self.state = "CALIBRATION"
-                self.cmd = "None"
             if self.cmd == "IDLE":
                 self.state = "IDLE"
-                self.cmd = "None"
+
+        elif self.state == "ERROR":
+            if self.cmd == "RESET":
+                self.state = "RESETTING"
+
+        elif self.state == "IDLE":
+            if self.cmd == "CALIBRATE":
+                self.state = "CALIBRATION"
+            if self.cmd == "SCAN":
+                self.state = "SCANNING"
+            elif self.cmd == "PICK":
+                self.state = "PICKING"
+
+        elif self.state == "RESETTING":
+            #Clear errors and restart like new
+            pass
+
         elif self.state == "CALIBRATION":
             #Calibrate Vertical
             self.scara.calibrate()
             self.goIdle()
             self.state = "IDLE"
-
-        elif self.state == "IDLE":
-            if self.cmd == "SCAN":
-                self.state = "SCANNING"
-                self.cmd = "None"
-            elif self.cmd == "PICK":
-                self.state = "PICKING"
-                self.cmd = "None"
 
         elif self.state == "SCANNING":
             #reach idle position
