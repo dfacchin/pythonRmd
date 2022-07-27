@@ -361,6 +361,10 @@ class MTG:
         if self.DI7(False) == False:
             return False
 
+        #Set the Heart beat consumer to 0
+        if self.MTG_reqres(0x1016, 1, "uint32", 0) == None:
+            return False        
+
         #Homing methond 17
         if self.MTG_reqres(0x6098, 0, "uint8", 17) == None:
             return False
