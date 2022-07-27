@@ -42,7 +42,7 @@ homeSpeed = 50
 homeAcceleration = 200
 homeType = 17
 maxSpeed = 140 #Looks like 140 is the fastest we can without "arm"
-maxAcceleration = 200
+maxAcceleration = 400 #400 works good
 
 class MTG:
     def __init__(self, serverip, port):
@@ -600,9 +600,13 @@ print(vertical1.boot())
 print("Home")
 print(vertical1.MTG_home())
 print("Position mode")
+input()
 print(vertical1.positionMode())
-print("Move to 300")
-print(vertical1.moveTo(300))
+print("Move to 400")
+timex = time.time()
+print(vertical1.moveTo(400))
+input()
+print(time.time() - timex)
 print("Move to 100")
 print(vertical1.moveTo(100))
 print("Move to 350")
