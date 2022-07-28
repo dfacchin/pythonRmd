@@ -1,5 +1,7 @@
 import copy
 import time
+import socket
+import pickle
 
 #Reference frame is always the mechanical frame.
 # 0 is the low limit switch
@@ -24,21 +26,87 @@ import time
 # 94, -10, -5
 # if this position is inside the "limits" of the system, we are "fine", else it's not reachable
 
+config = {"scaraIp":"127.0.0.1", "scaraPort":20001}
+
 #Class arms
 class scara:
-    def __init__(self,offsetGripper,framelimit,Drop):
+    def __init__(self, scaraIp , scaraPort, offsetGripper,framelimit,drop):
         #Open socket connection with the SCARA 
+        self.drop = drop
+        self.scaraIp = scaraIp
+        self.scaraPort = scaraPort
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.offsetGripper = offsetGripper
         self.framelimit = framelimit
-        pass
+    
+    #Generate a request and get the response
+    def reqres(self,data):
+        dataOut = pickle.dumps(data)
+        try:
+            self.sock.sendto(dataOut, (self.scaraIp, self.scaraPort))
+            # empty buffer
+            res = self.sock.recv(1024)
+        except:
+            return None
+        return pickle.loads(res) 
+
+    #req = string with request code
+    #condition = {"condition":conditionValue}
+    #timeout = timout in seconds to exit with timeout error
+    #frequency = 1/frequency sleep time between requests
+    def waitCondition(self,conditions,timeout,frequency,text="."):
+        timestart = time.time()
+        while (time.time() - timestart) < timeout:
+            result = {}
+            #Make a request with Read query command, it's simple read
+            res = self.reqres({"Read":True})
+            #check if response is valid
+            if res == None:
+                return False
+            #for each condition
+            for el in conditions:
+                #be sure the condition is in the response
+                #add the result to the response
+                if el in res:
+                    if res[el] == conditions[el]:
+                        result[el] = True
+                    else:
+                        result[el] = False
+            #if all conditions are met return true, else continue
+            test = True
+            for el in result:
+                if result[el] == False:
+                    test = False
+            if test:
+                return True
+            #sleep
+            #with frequency == 0 1 try only
+            if (frequency == 0):
+                return False
+            print(text,end="")
+            time.sleep(1.0/frequency)         
+        #timeout
+        return False
+    
+    def checkIs(self,conditions):
+        return self.waitCondition(conditions,999,0,text="")
 
     def calibrate(self):
         #send socket request to SCARA to calibrate
         #wait for response of type 
         # "calibration complete" or "idle"
         #if error state, quit with error
-        time.wait(10)
-        return True
+        self.waitCondition({"state":"idle","pending":False}, 5, 10)
+        # empty buffer
+        if self.reqres({"command":"calibrate"}) != None:
+            print("Calibrate")
+            if self.waitCondition({"state":"calibrating","pending":False}, 5, 10):
+                print("calibrating..")
+                if self.waitCondition({"state":"idle","calibrate":True}, 50, 10) == True:
+                    print("Calibrate Complete")
+                    return True
+        print("Calibration Fail")
+        return False
 
     def getPosition(self):
         #do I need to deep copy this ?
@@ -65,6 +133,31 @@ class scara:
         #open the gripper and 
 
     def pick(self,el):
+        #send socket request to SCARA to calibrate
+        #wait for response of type 
+        # "calibration complete" or "idle"
+        #if error state, quit with error
+        self.waitCondition({"state":"idle","pending":False}, 5, 10)
+        if self.checkIs({"calibrate":False}):
+            print("Calibrate before picking")
+            return False
+        # empty buffer
+        command = {"command":"pick"}
+        command["pickX"] = el["x"]
+        command["pickY"] = el["x"]
+        command["pickZ"] = el["x"]
+        command["dropX"] = self.drop["x"]
+        command["dropY"] = command["dropX"] = self.drop["x"]
+        command["dropZ"] = command["dropX"] = self.drop["x"]
+        if self.reqres(command) != None:
+            print("Pick")
+            if self.waitCondition({"state":"picking","pending":False}, 5, 10):
+                print("picking phase calibrating.. 1")
+                if self.waitCondition({"state":"idle","pickComplete":True}, 15, 10) == True:
+                    return True
+        print("Pick Fail")
+        return False
+
         #remove the 
         if (self.isReachable(copy.deepcopy(el))):
             #remove the Vertical offset of the gripper
@@ -151,9 +244,9 @@ class aig_cart:
         #Offset vertical Gripper
         #Drop position
         offsetGripper = {"x":0.0, "y":0.0, "z":0.0}
-        drop = {"x":0.0, "y":50.0, "z":0.0}
+        self.drop = {"x":0.0, "y":50.0, "z":0.0}
         #Robot definition
-        self.scara = scara(offsetGripper,self.framelimit,drop)
+        self.scara = scara(loadFile["scaraIp"], loadFile["scaraPort"], offsetGripper, self.framelimit, self.drop)
         #define Camera Offset
         self.offsetCamera = {"x":0.0,"y":0.0,"z":0.0}
         #Idle Position
@@ -213,11 +306,17 @@ class aig_cart:
 
         elif self.state == "PICKING":
             self.goIdle()
+            #picking movement is elaborated in the scara low level
+            self.scara.pick({"x":80.4, "y":23, "z":100})
+            self.goIdle()
+            """
+            self.goIdle()
             while (self.apples.findLowest() != None):
                 el = self.apples.popLowest()
                 #picking movement is elaborated in the scara low level
-                self.pickAndDrop(self,el)
+                self.scara.pick(self,el)
             self.goIdle()
+            """
             self.state = "IDLE"
         
         self.cmd = "None"
@@ -284,7 +383,7 @@ class aig_cart:
 
 
 print("Start")
-robot1 = aig_cart("none")
+robot1 = aig_cart(config)
 while True:
     robot1.run()
     robot1.cmd = input().replace("\r","").replace("\n","")
