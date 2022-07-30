@@ -2,6 +2,7 @@ import copy
 import time
 import socket
 import pickle
+from aig_camera import *
 
 #Reference frame is always the mechanical frame.
 # 0 is the low limit switch
@@ -26,7 +27,40 @@ import pickle
 # 94, -10, -5
 # if this position is inside the "limits" of the system, we are "fine", else it's not reachable
 
-config = {"scaraIp":"127.0.0.1", "scaraPort":20001}
+DBG1 = 0x1
+DBG2 = 0x2
+DBG3 = 0x4
+DBG4 = 0x8
+DBG5 = 0x10
+DBG6 = 0x20
+DBG7 = 0x40
+DBG7 = 0x80
+
+DBG_SCAN = DBG1
+DBG_CRITICAL = DBG7
+
+
+DBGLVL = 0xFF
+
+def aigPrint(dbglvl, stringa):
+    global DBGLVL
+    if DBGLVL & dbglvl:
+        print(stringa)
+
+
+config = {  "framelimit":{"minX":-50.0 ,"maxX": 150.0,
+                          "minY":-50.0 ,"maxY": 50.0,
+                          "minZ": 0.0 ,"maxZ": 115.0},
+            "scaraIp":"127.0.0.1", "scaraPort":20001,
+            "offsetGripper":{"x":0.0,"y":0.0,"z":0.0},
+            "cameraIp":"127.0.0.1", "cameraPort":20000,
+            "offsetCamera":{"x":0.0,"y":0.0,"z":0.0},
+            "scanStepCm":20.0,
+            "dropPosition":{"x":50.0,"y":0.0,"z":50.0},
+            "idlePosition":{"x":50.0,"y":0.0,"z":0.0}
+
+         }
+
 
 #Class arms
 class scara:
@@ -99,20 +133,26 @@ class scara:
         self.waitCondition({"state":"idle","pending":False}, 5, 10)
         # empty buffer
         if self.reqres({"command":"calibrate"}) != None:
-            print("Calibrate")
+            aigPrint( DBG2, "Calibrate")
             if self.waitCondition({"state":"calibrating","pending":False}, 5, 10):
-                print("calibrating..")
+                aigPrint( DBG2, "calibrating..")
                 if self.waitCondition({"state":"idle","calibrate":True}, 50, 10) == True:
-                    print("Calibrate Complete")
+                    aigPrint( DBG2, "Calibrate Complete")
                     return True
-        print("Calibration Fail")
+        aigPrint(DBG_CRITICAL,"Calibration Fail")
         return False
 
     def getPosition(self):
         #do I need to deep copy this ?
-        return {"x":0.0,"y":0.0,"z":0.0}
+        res = self.reqres({"Read":True})
+        #check if response is valid
+        if res == None:
+            return False        
+        return {"x":res["actual"]["x"],"y":res["actual"]["y"],"z":res["actual"]["z"]}
 
     def go(self,el):
+        aigPrint( DBG2, "go")
+        aigPrint( DBG2, el)
         #send 
         pass
 
@@ -139,7 +179,7 @@ class scara:
         #if error state, quit with error
         self.waitCondition({"state":"idle","pending":False}, 5, 10)
         if self.checkIs({"calibrate":False}):
-            print("Calibrate before picking")
+            aigPrint( DBG2, "Calibrate before picking")
             return False
         # empty buffer
         command = {"command":"pick"}
@@ -150,12 +190,12 @@ class scara:
         command["dropY"] = command["dropX"] = self.drop["x"]
         command["dropZ"] = command["dropX"] = self.drop["x"]
         if self.reqres(command) != None:
-            print("Pick")
+            aigPrint(DBG2,"Pick ")
             if self.waitCondition({"state":"picking","pending":False}, 5, 10):
-                print("picking phase calibrating.. 1")
                 if self.waitCondition({"state":"idle","pickComplete":True}, 15, 10) == True:
+                    aigPrint("DBG2","pick compelte")
                     return True
-        print("Pick Fail")
+        aigPrint( DBG2, "Pick Fail")
         return False
 
         #remove the 
@@ -229,29 +269,27 @@ class aig_cart:
         self.state = "BOOT"
         self.cmd = "None"
         #Cart config
-        self.framelimit = {}
-        self.framelimit["minX"] = -50.0
-        self.framelimit["maxX"] = 50.0
-        self.framelimit["minY"] = 50.0
-        self.framelimit["maxY"] = 90.0
-        self.framelimit["minZ"] = 0.0
-        self.framelimit["maxZ"] = 115.0
-        self.scanStepCm = 20
+        self.framelimit = loadFile["framelimit"]
+        self.scanStepCm = loadFile["scanStepCm"]
         #Apple container
         self.apples = apples()
         self.arms = []
         #1 Single arm
         #Offset vertical Gripper
         #Drop position
-        offsetGripper = {"x":0.0, "y":0.0, "z":0.0}
-        self.drop = {"x":0.0, "y":50.0, "z":0.0}
+        offsetGripper = loadFile["offsetGripper"] # {"x":0.0, "y":0.0, "z":0.0}
+        self.drop = loadFile["dropPosition"]      # {"x":0.0, "y":50.0, "z":0.0}
         #Robot definition
         self.scara = scara(loadFile["scaraIp"], loadFile["scaraPort"], offsetGripper, self.framelimit, self.drop)
         #define Camera Offset
-        self.offsetCamera = {"x":0.0,"y":0.0,"z":0.0}
+        self.offsetCamera = loadFile["offsetCamera"] # {"x":0.0,"y":0.0,"z":0.0}
         #Idle Position
-        self.idlePosition = {"x":0.0,"y":0.0,"z":0.0}
-
+        self.idlePosition = loadFile["idlePosition"] #{"x":0.0,"y":0.0,"z":0.0}
+        #Camera
+        self.camera = aig_Camera(loadFile["cameraIp"], loadFile["cameraPort"])
+        self.debugLevel = 0xFF
+    
+    
     def run(self):
         print(self.state,self.cmd)
         if self.state == "BOOT":
@@ -284,21 +322,35 @@ class aig_cart:
 
         elif self.state == "SCANNING":
             #reach idle position
+            aigPrint(DBG_SCAN,"Reach idle Position")
             self.goIdle()
             #clear all previous data
+            aigPrint(DBG_SCAN,"Clear Apple list")
             self.apples.clearAll()
             #Generate Vertical scanning points
             scanPoints = [self.framelimit["minZ"]]
-            while scanPoints[-1] < self.framelimit["minZ"]:
+            while scanPoints[-1] < self.framelimit["maxZ"]:
                 step = scanPoints[-1] + self.scanStepCm
                 if step < self.framelimit["maxZ"]:
                     scanPoints.append(step)
                 else:
                     scanPoints.append(self.framelimit["maxZ"])
+
             #Reach each point and then scan
+            aigPrint(DBG_SCAN,scanPoints)
             for point in scanPoints:
-                self.scara.go({"z":point})
-                self.scan()
+                aigPrint(DBG_SCAN,"Go scan position {}".format(str(point)))
+                # Make a copy of the idle position
+                pos = copy.deepcopy(self.idlePosition)
+                # Change the Vertical position
+                pos["z"] = point
+                self.scara.go(pos)
+                aigPrint(DBG_SCAN,"Position Reached, SCAN")
+                #Scan and pass the actual position
+                aigPrint( DBG_CRITICAL, "WARNING: using the scan request, not the actual position, change when scara is complete")
+                #self.scan(self.scara.getPosition())
+                self.scan(pos)
+
             #Filter Scan data
             self.filterScan()
             self.goIdle()
@@ -330,27 +382,14 @@ class aig_cart:
 
     def goIdle(self):
         #Move retract scara
-        posXYIntermediate = copy.deepcopy(self.idlePosition)
-        print(posXYIntermediate)
-        posZIntermediate= posXYIntermediate.pop("y")
-        self.scara.goWait(posXYIntermediate)
-        self.scara.goWait(posZIntermediate)
+        self.scara.goWait(self.idlePosition)
 
-    def scan(self):
-        #Get the real vertical Position
-        #Get the Frame RGB/DEPTH
-        #GET BBOX
-        #Clear BBOX
-        #GET APPLE Position
-        #For each APPLE
-        ##x,y,z Position
-        ##uuid
-        ##camera pixel coordinate of bbox center RGB
-        ##grade of confidance
-        ##e BBox
-        #Save apples info
-        #SAVE RGB image
-        #SAVE DEPTH frame
+    def scan(self,position):
+        data = self.camera.singleDetection("AppleDetection","save")
+        #For each element we need to add the actual position of the machine, just the vertical in our case
+        for idx in range(len(data["elements"])):
+            data["elements"][idx]["z"] = data["elements"][idx]["z"] + position["z"]
+        aigPrint(DBG_SCAN,data)
         #push to apple data array
         pass
 
@@ -382,10 +421,10 @@ class aig_cart:
         pass
 
 
-print("Start")
+aigPrint( DBG2, "Start")
 robot1 = aig_cart(config)
 while True:
     robot1.run()
     robot1.cmd = input().replace("\r","").replace("\n","")
 
-print("Stop")
+aigPrint( DBG2, "Stop")

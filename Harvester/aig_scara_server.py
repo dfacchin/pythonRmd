@@ -10,7 +10,12 @@ import pickle
 class Scara:
     #Init
     def __init__(self):
-        self.scara = {"state":"idle", "command":"none", "pending":False, "calibrate":False}
+        self.scara = { "state":"idle", 
+                       "command":"none",
+                       "pending":False,
+                       "calibrate":False,
+                       "actual":{"x":0,"y":0,"z":0}
+                     }
         pass
 
     def moveCtrl(self):
@@ -73,6 +78,8 @@ class Scara:
                 self.scara["state"] = "idle"
 
         #Refresh scara single element
+        self.scara["actualX"] = "idle"
+
         pass
 
 
@@ -111,6 +118,7 @@ if __name__ == "__main__":
 
     try:
         server_thread.start()
+        print("Server Running 20001")
         #print("Server started at {} port {}".format(HOST, PORT))
         while True:
             while 1:
