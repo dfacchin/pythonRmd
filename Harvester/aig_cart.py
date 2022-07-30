@@ -48,16 +48,26 @@ def aigPrint(dbglvl, stringa):
         print(stringa)
 
 
-config = {  "framelimit":{"minX":-50.0 ,"maxX": 150.0,
+config = {  #MECHANICAL FRAME OF THE SCARA ARM
+            "framelimit":{"minX":-50.0 ,"maxX": 150.0,
                           "minY":-50.0 ,"maxY": 50.0,
                           "minZ": 0.0 ,"maxZ": 115.0},
+            #SCARA SERVER 
             "scaraIp":"127.0.0.1", "scaraPort":20001,
+            #GRIPPER MECHANICAL OFFSET
             "offsetGripper":{"x":0.0,"y":0.0,"z":0.0},
+            #CAMERA SERVER
             "cameraIp":"127.0.0.1", "cameraPort":20000,
+            #CAMERA OFFSET
             "offsetCamera":{"x":0.0,"y":0.0,"z":0.0},
+            #DISTANCE BETWEEN SCANS
             "scanStepCm":20.0,
+            #DROP POSITION
             "dropPosition":{"x":50.0,"y":0.0,"z":50.0},
-            "idlePosition":{"x":50.0,"y":0.0,"z":0.0}
+            #IDLE POSITION
+            "idlePosition":{"x":50.0,"y":0.0,"z":0.0},
+            #APPLE SIZE LIMIT 
+            "appleSize":7.0
 
          }
 
@@ -232,6 +242,7 @@ class scara:
 class apples:
     def __init__(self):
         self.data = []
+        self.sizeLimit = 8.0
 
     def clearAll(self):
         self.data = []
@@ -273,6 +284,8 @@ class aig_cart:
         self.scanStepCm = loadFile["scanStepCm"]
         #Apple container
         self.apples = apples()
+        self.apples.sizeLimit = loadFile["appleSize"]
+
         self.arms = []
         #1 Single arm
         #Offset vertical Gripper
@@ -288,6 +301,7 @@ class aig_cart:
         #Camera
         self.camera = aig_Camera(loadFile["cameraIp"], loadFile["cameraPort"])
         self.debugLevel = 0xFF
+        #Apple size limit
     
     
     def run(self):
@@ -389,11 +403,26 @@ class aig_cart:
         #For each element we need to add the actual position of the machine, just the vertical in our case
         for idx in range(len(data["elements"])):
             data["elements"][idx]["z"] = data["elements"][idx]["z"] + position["z"]
-        aigPrint(DBG_SCAN,data)
-        #push to apple data array
-        pass
+            #push to apple data array
+            self.apples.data.append(copy.deepcopy(data["elements"][idx]))
+        
 
     def filterScan(self):
+        for el in self.apples.data:
+            print(el)
+
+        #1 Remove all the apples that are smaller than desired size
+        #def remove_values_from_list(the_list, key, val):
+        #    return [value for value in the_list if value[key] != val]
+        self.apples.data = [value for value in self.apples.data if value["sizeHeight"] >= self.apples.sizeLimit]
+        self.apples.data = [value for value in self.apples.data if value["sizeWidth"] >= self.apples.sizeLimit]
+
+        print("After size control")
+
+        for el in self.apples.data:
+            print(el)
+
+
         #For each data we have:
         # Pos X,Y,Z
         # UUID
