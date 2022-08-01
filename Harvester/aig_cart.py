@@ -4,6 +4,34 @@ import socket
 import pickle
 from aig_camera import *
 
+# aig_cart is connected to 
+# ADAM2/python/RealTest3.py to control the RealSense camera 
+#   camera1IP -> IP of the nano with the realsense
+#   camera1Port -> 20000 for the first camera, second camera it will be  a second IP
+#   this module reports the coordinate, size , refernce time and unique id 
+#   for each "scanned" apple, also on the device with the camera the RGB, depth
+#   and each scanned info is stored
+#   data = self.camera.singleDetection("AppleDetection","save")
+
+
+# PythonRMD/Harvester/aig_scara_server.py
+# This module is performing all the scara movements
+# messages are exchanged with dictionaries
+# Read -> (scara) if True reports the entire dic of the scara
+#         this is used to query state or position
+# command -> (scara) change state to the machine
+#            (calibrate) from BOOT, IDLE -> CALIBRATING -> IDLE
+#            (idle) from BOOT -> IDLE
+#            (pick) from IDLE -> PICKING -> IDLE (pickComplete = True)
+#                   entire pick sequece, requires:
+#                   {"pickX","pickY","PickZ"}
+#                   {"dropX","dropY","dropZ"}
+#                   {"requestTime"} ????
+#            (moveto) from IDLE -> MOVINGTO -> IDLE (positionReached = True)
+#            (grab) 
+#            (release)
+
+
 #Reference frame is always the mechanical frame.
 # 0 is the low limit switch
 # when we scan we get apples from all the surroundings
@@ -57,7 +85,7 @@ config = {  #MECHANICAL FRAME OF THE SCARA ARM
             #GRIPPER MECHANICAL OFFSET
             "offsetGripper":{"x":0.0,"y":0.0,"z":0.0},
             #CAMERA SERVER
-            "cameraIp":"127.0.0.1", "cameraPort":20000,
+            "camera1Ip":"127.0.0.1", "camera1Port":20000,
             #CAMERA OFFSET
             "offsetCamera":{"x":0.0,"y":0.0,"z":0.0},
             #DISTANCE BETWEEN SCANS
@@ -299,7 +327,7 @@ class aig_cart:
         #Idle Position
         self.idlePosition = loadFile["idlePosition"] #{"x":0.0,"y":0.0,"z":0.0}
         #Camera
-        self.camera = aig_Camera(loadFile["cameraIp"], loadFile["cameraPort"])
+        self.camera = aig_Camera(loadFile["camera1Ip"], loadFile["camera1Port"])
         self.debugLevel = 0xFF
         #Apple size limit
     
