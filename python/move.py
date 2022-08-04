@@ -19,19 +19,59 @@ y_lim = None # range(1000,-1000)
 linear_limit = [x_lim, y_lim]
 
 
-def pick_move(home, eef_pose, apple_pose, linear_limit, pre_drop, drop):
+def pick_move(home, eef_pose, apple_pose, safezone_limit, pre_drop, drop, steps):
 
-    # get current eef position [x_eef, y_eef]
+    # Get current eef position [x_eef, y_eef]
     x_eef = eef_pose[0]
     y_eef = eef_pose[1]
-    # get desired apple position [x_a, y_a]
+    # Get desired apple position [x_a, y_a]
     x_a = apple_pose[0]
     y_a = apple_pose[1]
 
-    # define sequences of path points (pp) based on specific cases.
-        # the cases depend on: [x_eef, y_eef] and [x_a, y_a]
+    # Define the safe-zone limit (eef within safe-zone perpendicular to apple)
+    x_sz = 600
+    y_sz = apple_pose[1]
 
-    
+    # Define sequences of path points (pp) based on specific cases
+    pp = []
+
+    # Apple on the RIGHT side
+    if y_a > 0:
+        
+        # Eef on the RIGHT side
+        if (0 <= x_eef <= x_sz) and (0 <= y_eef < 1000):
+            # Go straight to the safezone_limit
+            face_apple = kinematics.linear_path(x_eef, y_eef, x_sz, y_sz, steps)
+            pp.append(face_apple)
+
+        # Eef on the LEFT side
+        elif (250 <= x_eef <= x_sz) and (0 >= y_eef > -1000):
+            # Go straight to the safezone_limit
+            face_apple = kinematics.linear_path(x_eef, y_eef, x_sz, y_sz, steps)
+            pp.append(face_apple)
+
+        else:
+            print("End-effector is in a non defined position!")
+
+    # Apple on the LEFT side
+    if y_a < 0:
+
+        # Eef on the LEFT side
+        if (0 <= x_eef <= x_sz) and (0 >= y_eef > -1000):
+            # Go straight to the safezone_limit
+            face_apple = kinematics.linear_path(x_eef, y_eef, x_sz, y_sz, steps)
+            pp.append(face_apple)
+
+        # Eef on the RIGHT side
+        if (y_a < 0) and (250 <= x_eef <= x_sz) and (0 <= y_eef < 1000):
+            # Go straight to the safezone_limit
+            face_apple = kinematics.linear_path(x_eef, y_eef, x_sz, y_sz, steps)
+            pp.append(face_apple)
+        
+        else:
+            print("End-effector is in a non defined position!")
+
+
 
     # pp sequances:
     # - eef current pose --> linear limit
