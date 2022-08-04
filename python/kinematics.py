@@ -87,7 +87,7 @@ Splits the vector in multiple points that define the path to follow.
 '''
 
 
-def path(x1, y1, x2, y2, steps=20):
+def linear_path(x1, y1, x2, y2, steps=20):
     steps_x = np.linspace(x1, x2, steps, endpoint=True)  # (start, stop, steps)
     steps_y = np.linspace(y1, y2, steps, endpoint=True)
 
