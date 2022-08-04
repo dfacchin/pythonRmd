@@ -1,3 +1,5 @@
+import numpy as np
+
 '''
 Trajectory Planning:
 Ensure a smooth variation of the joint angles while following a desired path
