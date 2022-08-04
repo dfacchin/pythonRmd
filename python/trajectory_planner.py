@@ -11,6 +11,13 @@ import matplotlib.pyplot as plt
 import kinematics
 
 
+'''
+Trajectory Planning:
+Ensure a smooth variation of the joint angles while following a desired path
+using the (Cubic) Polinomial Trajectory Function
+'''
+
+
 class Joint:
 
     # TODO
