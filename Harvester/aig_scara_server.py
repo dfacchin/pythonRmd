@@ -47,7 +47,52 @@ class Scara:
                 self.scara["calibrate"] = True
                 self.scara["state"] = "idle"
 
+        
+        
+
         #Picking State
+        #This is the picking commands
+        #command = {"command":"pick"}
+        #command["pickX"] = el["x"]
+        #command["pickY"] = el["x"]
+        #command["pickZ"] = el["x"]
+        #command["dropX"] = self.drop["x"]
+        #command["dropY"] = command["dropX"] = self.drop["x"]
+        #command["dropZ"] = command["dropX"] = self.drop["x"]
+        #1 Be sure to move out of the dropping zone
+        #2 Once out, move vertical to picking position, at that point we need to be with the horizontal in the limit of the safe are
+        #3 Enter and pick the apple
+        #4 retract to the safe area
+        #5 start moving to the drop position vertical, horizontal must stop in fron of the dropping area
+        #6 when the vertical is done, enter e drop the apple
+
+        Points = []
+        timeMoveVertical = 3.0 # getFromToVerticalTiming()
+
+        #1 Move out of collision zone
+        timeRef = 0.0
+        if self.scara["actualX"] < 10:
+            timeRef += 1 #1 sec to move out of the area
+            Points.add[ {"x":15, "y":self.scara["actualY"], "z":self.scara["actualz"], "time":timeRef } ]
+        
+        #2 Reach apple height and in front of it
+        timeRef += timeMoveVertical
+        if (self.scara["pickX"] -10.0) > 60.0:
+            x = 60.0
+        else:
+            x = self.scara["pickX"]
+        Points.add[ {"x":x, "y":self.scara["pickY"], "z":self.scara["pickY"], "time": timeRef} ]
+
+        #3 Reach apple height and in front of it
+        timeRef += 1
+        Points.add[ {"x":self.scara["pickX"], "y":self.scara["pickY"], "z":self.scara["pickY"], "time": timeRef} ]
+
+
+
+
+
+    
+        
         elif self.scara["state"] == "picking":
             #Prepare path, test it and launch to command for the vertical
             if self.scara["pickState"] == 0:
@@ -70,6 +115,7 @@ class Scara:
                 self.scara["state"] = "idle"
             #If the vertical permits it, now move to drop position
             #drop reached, ok drop!
+
 
         #Go position X, Y, Z
         elif self.scara["state"] == "movingto":
