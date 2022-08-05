@@ -9,64 +9,79 @@ always to pass throgh when executing picking/spraying procedure.
 # Predefined Path Points
 home = [250,0]
 drop = [-500,500]
-A = [425,0]
+Bm = [425,0]
 Br = [250,500]
 Bl = [250,-500]
 
+# Define a limit within we can move freely
+x_lim = 600
+y_lim = None # range(1000,-1000)
+linear_limit = [x_lim, y_lim]
 
-linear_limit = [600, y_a]
 
+def pick_move(home, eef_pose, apple_pose, safezone_limit, pre_drop, drop, steps):
 
-def pick_move(home, drop, apple_coords, pick_offset, drop_offset, steps=3):
-    pp = [] # path points
+    # Get current eef position [x_eef, y_eef]
+    x_eef = eef_pose[0]
+    y_eef = eef_pose[1]
+    # Get desired apple position [x_a, y_a]
+    x_a = apple_pose[0]
+    y_a = apple_pose[1]
 
-    for apple_coord in apple_coords:
+    # Define the safe-zone limit (eef within safe-zone perpendicular to apple)
+    x_sz = 600
+    y_sz = apple_pose[1]
 
-        x_h = home[0] # x_coord of home_pose
-        y_h = home[1] # y_coord of home_pose
-        x_a = apple_coord[0] # x_coord of apple
-        y_a = apple_coord[1] # y_coord of apple
+    # Define sequences of path points (pp) based on specific cases
+    pp = []
 
-        # from current eef pose --> to safe zone limit (perpendicular to apple)
-        face_apple = kinematics.path(x_h, y_h, x_a-pick_offset, y_a, steps)
-        pp.append(face_apple)
-
-        # from safe zone limit --> to apple
-        approach_apple = kinematics.path(x_a-pick_offset, y_a, x_a, y_a, steps=3)
-        approach_apple.pop(0) # rm the first element of the list
-        pp.append(approach_apple)
-        print("approach: ", approach_apple)
-
-        # from apple --> back to safe zone limit 
-        retract = kinematics.path(x_a, y_a, x_a-pick_offset, y_a, steps=3)
-        retract.pop(0) # rm the last element of the list
-        print("last retract: ", retract)
-        pp.append(retract)
+    # Apple on the RIGHT side
+    if y_a > 0:
         
-        # from safe zone limit --> to via point
-        # via points
-        left_q = [[400,0]] # for apples in the left quadrant
-        right_q = [[350,400]] # for apples in the right quadrant
+        # Eef on the RIGHT side
+        if (0 <= x_eef <= x_sz) and (0 <= y_eef < 1000):
+            # Go straight to the safezone_limit
+            face_apple = kinematics.linear_path(x_eef, y_eef, x_sz, y_sz, steps)
+            pp.append(face_apple)
 
-        if retract[1][1] <= 0:
-            pp.append(left_q)
+        # Eef on the LEFT side
+        elif (250 <= x_eef <= x_sz) and (0 >= y_eef > -1000):
+            # Go straight to the safezone_limit
+            face_apple = kinematics.linear_path(x_eef, y_eef, x_sz, y_sz, steps)
+            pp.append(face_apple)
+
         else:
-            pp.append(right_q)
+            print("End-effector is in a non defined position!")
 
-        # from via point --> to drop offset
-        x_d = drop[0]
-        y_d = drop[1]
-        approach_drop = [drop[0]+drop_offset, drop[1]]
-        print('approach_drop: ', approach_drop)
-        pp.append(approach_drop)
+    # Apple on the LEFT side
+    if y_a < 0:
 
-        # from drop offset --> to drop pose
-        pp.append(drop)
+        # Eef on the LEFT side
+        if (0 <= x_eef <= x_sz) and (0 >= y_eef > -1000):
+            # Go straight to the safezone_limit
+            face_apple = kinematics.linear_path(x_eef, y_eef, x_sz, y_sz, steps)
+            pp.append(face_apple)
 
-        list_pp = sum(pp, []) # create one single list
-    return list_pp
+        # Eef on the RIGHT side
+        if (y_a < 0) and (250 <= x_eef <= x_sz) and (0 <= y_eef < 1000):
+            # Go straight to the safezone_limit
+            face_apple = kinematics.linear_path(x_eef, y_eef, x_sz, y_sz, steps)
+            pp.append(face_apple)
+        
+        else:
+            print("End-effector is in a non defined position!")
+
+
+
+    # pp sequances:
+    # - eef current pose --> linear limit
+    # - linear limit --> desired apple
+    # - desired apple --> linear limit
+    # - linear limit --> pre-drop pose
+    # - pre-drop pose --> drop pose
+
+    pass
 
 
 def spray_move():
     pass
-
