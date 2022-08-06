@@ -49,7 +49,7 @@ class aig_Camera:
             sock.settimeout(15)
         except:
             print("Connection Error")
-            return returnElements
+            return {"response":"Error","errorCode":"ServerConnection","elements":[]}
         #get RgbDepth
         if request == "RgbAndAlignDepth":
             data = self.getRgbDepth(sock,mode)
@@ -68,7 +68,7 @@ class aig_Camera:
                 data["elements"][idx]["z"] = data["elements"][idx]["z"] + self.offsetCamera["z"]
 
         else:
-            data = {"response":"Error","elements":[]}
+            data = {"response":"Error","errorCode":"RealSenseTransfer","elements":[]}
 
         return copy.deepcopy(data)
 

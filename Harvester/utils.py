@@ -3,6 +3,28 @@ import zlib
 import pickle
 import copy
 
+DBG1 = 0x1
+DBG2 = 0x2
+DBG3 = 0x4
+DBG4 = 0x8
+DBG5 = 0x10
+DBG6 = 0x20
+DBG7 = 0x40
+DBG8 = 0x80
+
+DBG_SCAN = DBG1
+DBG_CRITICAL = DBG7
+DBG_ERROR = DBG8
+
+
+DBGLVL = 0xFF
+
+def aigPrint(dbglvl, stringa):
+    global DBGLVL
+    if DBGLVL & dbglvl:
+        print(stringa)
+        
+
 #Transfer an entire file
 def fileTransferSend(sock, data):
     try:
