@@ -29,8 +29,7 @@ from dynamixel_sdk import *
 
 class DynamixelControl:
 
-    # Definition of class varialbles (same values for each motor)
-    # Dynamixel model definition
+    # Dynamixel info/model definition (same values for each motor)
     MY_DXL = 'X_SERIES'         # X430
     BAUDRATE                    = 57600
     PROTOCOL_VERSION            = 2.0
@@ -43,6 +42,22 @@ class DynamixelControl:
     # Initialize PortHandler instance
     portHandler = PortHandler(DEVICENAME)
     packetHandler = PacketHandler(PROTOCOL_VERSION)
+    # Open port
+    if portHandler.openPort():
+        print("Succeeded to open the port")
+    else:
+        print("Failed to open the port")
+        print("Press any key to terminate...")
+        getch()
+        quit()
+    # Set port baudrate
+    if portHandler.setBaudRate(BAUDRATE):
+        print("Succeeded to change the baudrate")
+    else:
+        print("Failed to change the baudrate")
+        print("Press any key to terminate...")
+        getch()
+        quit()
 
 
     # Init method used to set the motor ID
@@ -52,24 +67,6 @@ class DynamixelControl:
 
     # Method for initializing the motor
     def initDyn(self):
-        # Open port
-        if self.portHandler.openPort():
-            print("Succeeded to open the port")
-        else:
-            print("Failed to open the port")
-            print("Press any key to terminate...")
-            getch()
-            quit()
-
-        # Set port baudrate
-        if self.portHandler.setBaudRate(self.BAUDRATE):
-            print("Succeeded to change the baudrate")
-        else:
-            print("Failed to change the baudrate")
-            print("Press any key to terminate...")
-            getch()
-            quit()
-
         # Enable Dynamixel Torque
         dxl_comm_result, dxl_error = self.packetHandler.write1ByteTxRx(self.portHandler, self.DXL_ID, self.ADDR_TORQUE_ENABLE, self.TORQUE_ENABLE)
         if dxl_comm_result != COMM_SUCCESS:
@@ -80,9 +77,9 @@ class DynamixelControl:
             print("Dynamixel has been successfully connected")
 
 
+    # Method to send desired position and velocity to the motor
     def moveDyn(self, angle, velocity):
-        #global packetHandler,portHandler,DXL_ID,ADDR_TORQUE_ENABLE,TORQUE_ENABLE
-        
+
         # Change velocity (velocity is in rev/min)
         if 0 < velocity <= 70:
             velReq = int(velocity / 0.229)
@@ -96,5 +93,10 @@ class DynamixelControl:
 
 
 dyna1 = DynamixelControl(1)
+dyna2 = DynamixelControl(2)
+
 dyna1.initDyn()
-dyna1.moveDyn(90, 10) # (angle [deg], velocity [rev/min])
+dyna1.moveDyn(90, 50) # (angle [deg], velocity [rev/min])
+
+dyna2.initDyn()
+dyna2.moveDyn(0, 50) # (angle [deg], velocity [rev/min])
