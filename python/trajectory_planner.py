@@ -9,14 +9,12 @@ matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
 
 
-'''
-Trajectory Planning:
-Ensure a smooth variation of the joint angles while following a desired path
-using the (Cubic) Polinomial Trajectory Function
-'''
-
-
 class Joint:
+    '''
+    Trajectory Planning:
+    Ensure a smooth variation of the joint angles while following a desired path
+    using the (Cubic) Polinomial Trajectory Function
+    '''
 
     # TODO
     # Create Class variables that can be defined in other files:
@@ -31,15 +29,21 @@ class Joint:
         self.time = time # [s]
         self.fn = fn # [Hz]
 
-    # Velocity in each segment
+ 
     def velocity(self):
+        '''
+        Velocity in each segment
+        '''
         for index, (el_time,el_theta) in enumerate(zip(self.time,self.theta)):
             if (index+1 < len(self.time)): # compute only until the second to last value
                 self.v.append((self.theta[index+1]-self.theta[index])/(self.time[index+1]-self.time[index]))
         return self.v
 
-    # Velocity at each (pp) path point
+
     def theta_d_pp(self):
+        '''
+        Velocity at each (pp) path point
+        '''
         for index, elem in enumerate(self.v):
             if (index+1 < len(self.v)):
                 if np.sign(self.v[index]) == np.sign(self.v[index+1]):
@@ -49,8 +53,12 @@ class Joint:
         self.theta_d.append(0) # this represents the endpoint-velocity (i.c.)
         return self.theta_d
 
-    # Angular displacement and velocity along each trajectory segment (they are a function of time)
+
     def trajectory(self):
+        '''
+        Angular displacement and velocity along each trajectory segment
+        (they are a function of time)
+        '''
         arr_time = np.array([]) # time_array
         arr_t = np.array([]) # theta_array (position)
         arr_t_d = np.array([]) # theta_d_array (velocity)
@@ -86,8 +94,11 @@ class Joint:
         return (arr_t, arr_t_d, arr_time)
 
 
-    # Plots to monitor the angular position and the velocity of the robot joints (both desired and actual values are shown)
     def plot(self, joint_name, desired_theta, desired_theta_d, array_time, actual_theta=None, actual_theta_d=None):
+        '''
+        Plots to monitor the angular position and the velocity of the robot joints.
+        Both desired and actual values are shown.
+        '''
         plt.style.use('seaborn-dark')
         if (joint_name=="shoulder"):
             plt.suptitle("SHOULDER", fontweight='bold', fontsize=15)
