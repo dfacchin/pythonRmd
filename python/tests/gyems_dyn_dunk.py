@@ -115,7 +115,7 @@ else:
     print("Dynamixel has been successfully connected")
 
 #Change velocity of dyn
-dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_ID, 112, 30)
+dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_ID, 112, 60)
 
 
 def moveDyn(angle):
