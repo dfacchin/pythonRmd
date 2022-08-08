@@ -4,7 +4,7 @@ import can
 '''
 Python script to calibrate the horizontal SCARA arm,
 Gyems motors only (shoulder and elbow).
-Before running this script place the arm manualy perpendicular to the trees (completely extended).
+Before running this script place the arm manually perpendicular to the trees (completely extended).
 After this calibration the motor angles will be set to 0 degrees.
 '''
 
