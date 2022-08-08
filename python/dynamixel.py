@@ -100,13 +100,3 @@ class DynamixelControl:
         # Change position (angle is in degrees)
         posReq = int((angle *4096) / 360) # 4096 = 360 DEGREES
         dxl_comm_result, dxl_error = self.packetHandler.write4ByteTxRx(self.portHandler, self.DXL_ID, self.ADDR_GOAL_POSITION, posReq)
-
-
-dyna1 = DynamixelControl(1)
-dyna2 = DynamixelControl(2)
-
-dyna1.initDyn()
-dyna1.moveDyn(90, 50) # (angle [deg], velocity [rev/min])
-
-dyna2.initDyn()
-dyna2.moveDyn(0, 50) # (angle [deg], velocity [rev/min])
