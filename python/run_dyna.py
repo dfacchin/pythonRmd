@@ -11,7 +11,7 @@ dyna2.initDyn()
 #gripper.twist_right(dyna2, dyna1)
 #time.sleep(3)
 gripper.twist_left(dyna2, dyna1)
-
+#gripper.open(dyna1)
 
 
 '''

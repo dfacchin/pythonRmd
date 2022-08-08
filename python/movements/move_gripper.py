@@ -11,7 +11,7 @@ def open(motor1):
     Method used to open the gripper fingers,
     in order to release the apple.
     '''
-    motor1.moveDyn(0, 30) # (angle [deg], velocity [rev/min])
+    motor1.moveDyn(90, 30) # (angle [deg], velocity [rev/min])
 
 
 def close(motor1):
@@ -28,9 +28,9 @@ def twist_right(motor2, motor1):
     in order to cut the stalk.
     '''
     # execute the twist
-    motor2.moveDyn(340, 30) # (angle [deg], velocity [rev/min])
+    motor2.moveDyn(30, 30) # (angle [deg], velocity [rev/min])
     # compensate the twist-rotation to avoid opening/closing fingers 
-    motor1.moveDyn(90, 50) # (angle [deg], velocity [rev/min])
+    motor1.moveDyn(0, 50) # (angle [deg], velocity [rev/min])
 
 def twist_left(motor2, motor1):
     '''
@@ -38,6 +38,6 @@ def twist_left(motor2, motor1):
     in order to go back to their starting pose.
     '''
     # execute the twist
-    motor2.moveDyn(90, -30) # (angle [deg], velocity [rev/min])
+    motor2.moveDyn(90, 30) # (angle [deg], velocity [rev/min])
     # compensate the twist-rotation to avoid opening/closing fingers 
     motor1.moveDyn(0, 30) # (angle [deg], velocity [rev/min])
