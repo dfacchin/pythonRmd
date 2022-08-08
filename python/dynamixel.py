@@ -91,10 +91,10 @@ class DynamixelControl:
         '''
 
         # Change velocity (velocity is in rev/min)
-        if 0 < velocity <= 70:
+        if 0 < velocity <= 70 or 0 > velocity >= -70:
             velReq = int(velocity / 0.229)
         else:
-            print("Wrong dynamixel velocity! Choose a value between 0 and 70 [rev/min]")
+            print("Wrong dynamixel velocity! Choose a value between 0 and (+/-)70 [rev/min]")
         dxl_comm_result, dxl_error = self.packetHandler.write4ByteTxRx(self.portHandler, self.DXL_ID, self.ADDR_VELOCITY, velReq)
         
         # Change position (angle is in degrees)

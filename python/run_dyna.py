@@ -8,8 +8,8 @@ dyna2 = dyn.DynamixelControl(2) # ID=2
 dyna1.initDyn()
 dyna2.initDyn()
 
-gripper.twist_right(dyna2, dyna1)
-time.sleep(3)
+#gripper.twist_right(dyna2, dyna1)
+#time.sleep(3)
 gripper.twist_left(dyna2, dyna1)
 
 
