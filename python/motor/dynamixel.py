@@ -125,7 +125,7 @@ class DynamixelControl:
         dxl_present_position = self.dyanamixelPort.packetHandler.read4ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_PRESENT_POSITION)
         print("Present position: ", dxl_present_position)
         current_pose = (360/4096)*dxl_present_position[0]
-        print("current pose [deg]: ", current_pose)
+        print("Current pose [deg]: ", current_pose)
 
 # For testing
 if __name__ == "__main__":
