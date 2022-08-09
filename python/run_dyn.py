@@ -12,10 +12,13 @@ dyn2.initDyn("cw") # initialize motor2 and set direction
 
 #right = gripper.twist_right(dyn2,dyn1)
 # time.sleep(3)
-# dyn2.getPose()
-# dyn1.getPose()
+#close = gripper.close(dyn1)
+for a in range(200): 
+    a = dyn1.getPose()
+    time.sleep(0.4)
+#dyn1.getPose()
 
-left = gripper.twist_left(dyn2,dyn1)
+#left = gripper.twist_left(dyn2,dyn1)
 # time.sleep(3)
 # dyn2.getPose()
 # dyn1.getPose()
