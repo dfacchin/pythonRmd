@@ -10,15 +10,15 @@ dyn2 = dyn.DynamixelControl(2,_dynPort)
 dyn1.initDyn("cw") # initialize motor1 and set direction
 dyn2.initDyn("cw") # initialize motor2 and set direction
 
-right = gripper.twist_right(dyn2,dyn1)
-time.sleep(3)
-dyn2.getPos()
-dyn1.getPos()
+#right = gripper.twist_right(dyn2,dyn1)
+# time.sleep(3)
+# dyn2.getPose()
+# dyn1.getPose()
 
 left = gripper.twist_left(dyn2,dyn1)
-time.sleep(3)
-dyn2.getPos()
-dyn1.getPos()
+# time.sleep(3)
+# dyn2.getPose()
+# dyn1.getPose()
 
 
 #open = gripper.open(dyn1)

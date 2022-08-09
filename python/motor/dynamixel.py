@@ -122,7 +122,7 @@ class DynamixelControl:
         dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write4ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_GOAL_POSITION, posReq)
 
 
-    def getPos(self):
+    def getPose(self):
         '''
         Method to read the present position
         '''
@@ -145,7 +145,7 @@ if __name__ == "__main__":
     dyn2.initDyn("cw") # initialize motor2 and set direction
     
     # motor2
-    twist = 300 # [deg]
+    twist = 100 # [deg]
     gear_ratio = 2
     start_2 = 180 # [deg] we want dyn2 to be at 180deg after calibration
     end_2 = start_2 - (twist*gear_ratio)

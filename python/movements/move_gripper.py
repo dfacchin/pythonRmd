@@ -7,16 +7,16 @@ This script stores all the functions to make the gripper move
 ###################################  VARIABLES  #######################################
 
 gear_ratio = 2
-twist = 300 # [deg]
+twist = 100 # [deg]
 
 # Velocities [rev/min]
 vel_max = 70
-vel_2 = 50
+vel_2 = 40
 vel_1 = vel_2 / gear_ratio
 
 # Positions Open/Close [deg]
-open_pose = 180
-close_pose = 0
+open_pose = 0
+close_pose = 180
 
 # Positions Twist [deg]
 start_2 = 180 # we want dyn2 to be at 180deg after calibration
@@ -51,7 +51,7 @@ def twist_right(motor2, motor1):
     # execute the twist
     motor2.moveDyn(end_2, vel_2) # (angle, velocity)
     # compensate the twist-rotation to avoid opening/closing fingers 
-    motor1.moveDyn(end_1, vel_1) # (angle, velocity)
+    motor1.moveDyn(motor1.getPose() + twist, vel_1) # (angle, velocity)
 
 
 def twist_left(motor2, motor1):
@@ -62,4 +62,4 @@ def twist_left(motor2, motor1):
     # execute the twist
     motor2.moveDyn(start_2, vel_2) # (angle, velocity)
     # compensate the twist-rotation to avoid opening/closing fingers 
-    motor1.moveDyn(start_1, vel_1) # (angle, velocity)
+    motor1.moveDyn(start_2 - motor2.getPose(), vel_1) # (angle, velocity)
