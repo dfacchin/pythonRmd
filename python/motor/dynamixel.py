@@ -70,6 +70,7 @@ class DynamixelControl:
     ADDR_VELOCITY               = 112 # used to set velocity
     ADDR_DRIVE_MODE             = 10 # used to chande direction of rotation
     ADDR_OPERATING_MODE         = 11 # used to set multi or single turn
+    ADDR_PRESENT_POSITION       = 132 # used to get current position
 
 
     def __init__(self, DXL_ID, dyanamixelPort):
@@ -106,7 +107,7 @@ class DynamixelControl:
         else:
             print("Dynamixel has been successfully connected")
 
-
+    dxl_present_position = 0 
     def moveDyn(self, angle, velocity):
         '''
         Method to send desired position and velocity to the motor
@@ -120,23 +121,44 @@ class DynamixelControl:
         posReq = int((angle *4096) / 360) # 4096 = 360 DEGREES
         dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write4ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_GOAL_POSITION, posReq)
 
+        # Read present position
+        dxl_present_position = self.dyanamixelPort.packetHandler.read4ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_PRESENT_POSITION)
+        print("Present position: ", dxl_present_position)
+        current_pose = (360/4096)*dxl_present_position[0]
+        print("current pose [deg]: ", current_pose)
 
 # For testing
 if __name__ == "__main__":
 
     _dynPort = DyanamixelPort()
+    # Set ID and port
     dyn1 = DynamixelControl(1,_dynPort)
     dyn2 = DynamixelControl(2,_dynPort)
 
-    dyn1.initDyn("ccw")
-    dyn2.initDyn("cw")
+    dyn1.initDyn("cw") # initialize motor1 and set direction
+    dyn2.initDyn("cw") # initialize motor2 and set direction
+    
+    # motor2
+    twist = 300 # [deg]
+    gear_ratio = 2
+    start_2 = 180 # [deg] we want dyn2 to be at 180deg after calibration
+    end_2 = start_2 - (twist*gear_ratio)
+    vel_2 = 50
 
-    for a in range(20):
-        dyn1.moveDyn(200,3000)
-        dyn2.moveDyn(-200,3000)
-        time.sleep(5)
-        dyn1.moveDyn(-200,100)
-        dyn2.moveDyn(200,100)
-        time.sleep(5)
+    # motor1
+    start_1 = 0 # [deg] we want dyn1 to be at 0deg after calibration
+    end_1 = twist
+    vel_1 = vel_2 / gear_ratio
 
 
+    # home
+    dyn2.moveDyn(start_2, vel_2) # home
+    dyn1.moveDyn(start_1, vel_1) # home
+    time.sleep(3)
+    # twist
+    dyn2.moveDyn(end_2, vel_2) # twist right
+    dyn1.moveDyn(end_1, vel_1) # counter twist
+    time.sleep(6)
+    # back home
+    dyn2.moveDyn(start_2, vel_2) # home
+    dyn1.moveDyn(start_1, vel_1) # home

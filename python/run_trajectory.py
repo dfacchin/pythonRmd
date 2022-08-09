@@ -1,7 +1,7 @@
 import numpy as np
 
 from robot.trajectory_planner import Joint
-import eef_plot
+import robot.eef_plot as eef_plot
 
 
 # Initial Conditions (i.c.):

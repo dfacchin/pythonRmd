@@ -6,7 +6,7 @@ import motor.RMD as RMD
 import motor.RMD_V3 as RMD_V3
 import robot.kinematics as kinematics
 from robot.trajectory_planner import Joint
-import eef_plot
+import robot.eef_plot as eef_plot
 
 
 # Specify the bus
