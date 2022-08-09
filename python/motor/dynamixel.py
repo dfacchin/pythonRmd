@@ -1,0 +1,147 @@
+#
+# Python sample code to control the Dynamixel motors:
+# https://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_sdk/sample_code/python_read_write_protocol_2_0/#python-protocol-20
+#
+# Dynamixel control table:
+# https://emanual.robotis.com/docs/en/dxl/x/xc430-w240/
+#
+##################################################
+
+import os
+
+if os.name == 'nt':
+    import msvcrt
+    def getch():
+        return msvcrt.getch().decode()
+else:
+    import sys, tty, termios
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    def getch():
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+
+from dynamixel_sdk import *
+
+class DyanamixelPort:
+    '''
+    Set Usb port and Baudrate
+    '''
+    MY_DXL = 'X_SERIES'         # X430
+    BAUDRATE                    = 57600
+    PROTOCOL_VERSION            = 2.0
+    DEVICENAME                  = '/dev/ttyUSB0'
+
+    def __init__(self):
+        # Initialize PortHandler instance
+        self.portHandler = PortHandler(self.DEVICENAME)
+        self.packetHandler = PacketHandler(self.PROTOCOL_VERSION)
+        # Open port
+        if self.portHandler.openPort():
+            print("Succeeded to open the port")
+        else:
+            print("Failed to open the port")
+            print("Press any key to terminate...")
+            getch()
+            quit()
+            # Set port baudrate
+        if self.portHandler.setBaudRate(self.BAUDRATE):
+            print("Succeeded to change the baudrate")
+        else:
+            print("Failed to change the baudrate")
+            print("Press any key to terminate...")
+            getch()
+            quit()
+
+        print("xxx", self.packetHandler)
+        dxl_comm_result, dxl_error = self.packetHandler.write1ByteTxRx(self.portHandler, 1, 64, 1)
+
+class DynamixelControl:
+    '''
+    This python class is used to initialize and control the Dynamixel motors.
+    '''
+
+    # Dynamixel info/model definition (same values for each motor)
+
+    TORQUE_ENABLE               = 1 # Value for enabling the torque
+    # Addresses
+    ADDR_TORQUE_ENABLE          = 64
+    ADDR_GOAL_POSITION          = 116
+    ADDR_VELOCITY               = 112
+
+
+    def __init__(self, DXL_ID, dyanamixelPort):
+        '''
+        Init method used to set the motor ID
+        '''
+        self.DXL_ID = DXL_ID
+        self.dyanamixelPort = dyanamixelPort
+        print("struttura packet 1",dyanamixelPort)
+        print("struttura packet 3",self.dyanamixelPort)
+
+
+
+    def initDyn(self, direction):
+        '''
+        Method for initializing/connect the motor
+        '''
+
+        dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write1ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_TORQUE_ENABLE, 0)
+
+        if direction == "ccw":
+            setBit = 1
+        else:
+            setBit = 0
+        dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write1ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, 10 , setBit)
+
+        #set operation mode to multi turn
+        dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write1ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, 11 , 4)
+
+        # Enable Dynamixel Torque
+        dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write1ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_TORQUE_ENABLE, self.TORQUE_ENABLE)
+        if dxl_comm_result != COMM_SUCCESS:
+            print("%s" % self.dyanamixelPort.getTxRxResult(dxl_comm_result))
+        elif dxl_error != 0:
+            print("%s" % self.dyanamixelPort.getRxPacketError(dxl_error))
+        else:
+            print("Dynamixel has been successfully connected")
+
+
+    def moveDyn(self, angle, velocity):
+        '''
+        Method to send desired position and velocity to the motor
+        '''
+
+        # Change velocity (velocity is in rev/min)
+        #if 0 < velocity <= 70 or 0 > velocity >= -70:
+        velReq = int(velocity / 0.229)
+        #else:
+        print("Wrong dynamixel velocity! Choose a value between 0 and (+/-)70 [rev/min]")
+        dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write4ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_VELOCITY, velReq)
+        
+        # Change position (angle is in degrees)
+        posReq = int((angle *4096) / 360) # 4096 = 360 DEGREES
+        dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write4ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_GOAL_POSITION, posReq)
+
+
+if __name__ == "__main__":
+    _dynPort = DyanamixelPort()
+    dyn1 = DynamixelControl(1,_dynPort)
+    dyn2 = DynamixelControl(2,_dynPort)
+
+    dyn1.initDyn("ccw")
+    dyn2.initDyn("cw")
+
+    for a in range(20):
+        dyn1.moveDyn(900,3000)
+        dyn2.moveDyn(-900,3000)
+        time.sleep(10)
+        dyn1.moveDyn(-900,300)
+        dyn2.moveDyn(900,300)
+        time.sleep(10)
+
+

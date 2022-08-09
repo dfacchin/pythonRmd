@@ -1,4 +1,4 @@
-import kinematics
+import robot.kinematics as kinematics
 
 '''
 These functions store a set of predefined path point that we want the eef

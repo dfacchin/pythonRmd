@@ -1,6 +1,6 @@
 import numpy as np
 
-from trajectory_planner import Joint
+from robot.trajectory_planner import Joint
 import eef_plot
 
 

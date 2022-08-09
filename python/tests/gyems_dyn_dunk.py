@@ -1,8 +1,8 @@
-import RMD
+import motor.RMD as RMD
 import can
 import time
 import numpy as np
-import kinematics
+import robot.kinematics as kinematics
 
 ############## DUNKER ##################
 import socket

@@ -1,4 +1,4 @@
-import RMD
+import motor.RMD as RMD
 import can
 
 '''

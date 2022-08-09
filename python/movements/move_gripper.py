@@ -1,4 +1,4 @@
-import dynamixel as dyn
+import motor.dynamixel as dyn
 
 '''
 This script is used to make the gripper move

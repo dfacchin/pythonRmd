@@ -2,9 +2,9 @@ import numpy as np
 import can
 import time
 
-import RMD_V3
-import kinematics
-from trajectory_planner import Joint
+import motor.RMD_V3 as RMD_V3
+import robot.kinematics as kinematics
+from robot.trajectory_planner import Joint
 
 
 # Specify the bus

@@ -1,4 +1,4 @@
-import dynamixel as dyn
+import motor.dynamixel as dyn
 import time
 import movements.move_gripper as gripper
 
