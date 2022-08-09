@@ -29,7 +29,7 @@ from dynamixel_sdk import *
 
 class DyanamixelPort:
     '''
-    Set Usb port and Baudrate
+    Set Usb-port and Baudrate
     '''
     MY_DXL = 'X_SERIES'         # X430
     BAUDRATE                    = 57600
@@ -57,48 +57,44 @@ class DyanamixelPort:
             getch()
             quit()
 
-        print("xxx", self.packetHandler)
-        dxl_comm_result, dxl_error = self.packetHandler.write1ByteTxRx(self.portHandler, 1, 64, 1)
 
 class DynamixelControl:
     '''
     This python class is used to initialize and control the Dynamixel motors.
     '''
 
-    # Dynamixel info/model definition (same values for each motor)
-
     TORQUE_ENABLE               = 1 # Value for enabling the torque
     # Addresses
-    ADDR_TORQUE_ENABLE          = 64
-    ADDR_GOAL_POSITION          = 116
-    ADDR_VELOCITY               = 112
+    ADDR_TORQUE_ENABLE          = 64 # used to enabel torque
+    ADDR_GOAL_POSITION          = 116 # used to set position
+    ADDR_VELOCITY               = 112 # used to set velocity
+    ADDR_DRIVE_MODE             = 10 # used to chande direction of rotation
+    ADDR_OPERATING_MODE         = 11 # used to set multi or single turn
 
 
     def __init__(self, DXL_ID, dyanamixelPort):
         '''
-        Init method used to set the motor ID
+        Init method used to set the motor ID and port
         '''
         self.DXL_ID = DXL_ID
         self.dyanamixelPort = dyanamixelPort
-        print("struttura packet 1",dyanamixelPort)
-        print("struttura packet 3",self.dyanamixelPort)
-
 
 
     def initDyn(self, direction):
         '''
         Method for initializing/connect the motor
         '''
-
+        # Disable torque before applying changes
         dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write1ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_TORQUE_ENABLE, 0)
 
-        if direction == "ccw":
+        # Set direction of rotation
+        if direction == "ccw": # ccw = counter-clockwise
             setBit = 1
         else:
             setBit = 0
         dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write1ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, 10 , setBit)
 
-        #set operation mode to multi turn
+        # Set operation mode to multi turn
         dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write1ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, 11 , 4)
 
         # Enable Dynamixel Torque
@@ -116,11 +112,8 @@ class DynamixelControl:
         Method to send desired position and velocity to the motor
         '''
 
-        # Change velocity (velocity is in rev/min)
-        #if 0 < velocity <= 70 or 0 > velocity >= -70:
+        # Change velocity (velocity is in rev/min) - Max vel of X430-240: 70 rev/min
         velReq = int(velocity / 0.229)
-        #else:
-        print("Wrong dynamixel velocity! Choose a value between 0 and (+/-)70 [rev/min]")
         dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write4ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_VELOCITY, velReq)
         
         # Change position (angle is in degrees)
@@ -128,7 +121,9 @@ class DynamixelControl:
         dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write4ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_GOAL_POSITION, posReq)
 
 
+# For testing
 if __name__ == "__main__":
+
     _dynPort = DyanamixelPort()
     dyn1 = DynamixelControl(1,_dynPort)
     dyn2 = DynamixelControl(2,_dynPort)
@@ -137,11 +132,11 @@ if __name__ == "__main__":
     dyn2.initDyn("cw")
 
     for a in range(20):
-        dyn1.moveDyn(900,3000)
-        dyn2.moveDyn(-900,3000)
-        time.sleep(10)
-        dyn1.moveDyn(-900,300)
-        dyn2.moveDyn(900,300)
-        time.sleep(10)
+        dyn1.moveDyn(200,3000)
+        dyn2.moveDyn(-200,3000)
+        time.sleep(5)
+        dyn1.moveDyn(-200,100)
+        dyn2.moveDyn(200,100)
+        time.sleep(5)
 
 
