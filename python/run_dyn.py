@@ -1,5 +1,6 @@
 import movements.move_gripper as gripper
 import motor.dynamixel as dyn
+import time
 
 _dynPort = dyn.DyanamixelPort()
 # Set ID and port
@@ -10,5 +11,15 @@ dyn1.initDyn("cw") # initialize motor1 and set direction
 dyn2.initDyn("cw") # initialize motor2 and set direction
 
 right = gripper.twist_right(dyn2,dyn1)
+time.sleep(3)
+dyn2.getPos()
+dyn1.getPos()
+
+left = gripper.twist_left(dyn2,dyn1)
+time.sleep(3)
+dyn2.getPos()
+dyn1.getPos()
+
+
 #open = gripper.open(dyn1)
 #close = gripper.close(dyn1)

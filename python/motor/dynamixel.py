@@ -107,7 +107,7 @@ class DynamixelControl:
         else:
             print("Dynamixel has been successfully connected")
 
-    dxl_present_position = 0 
+
     def moveDyn(self, angle, velocity):
         '''
         Method to send desired position and velocity to the motor
@@ -121,11 +121,17 @@ class DynamixelControl:
         posReq = int((angle *4096) / 360) # 4096 = 360 DEGREES
         dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write4ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_GOAL_POSITION, posReq)
 
-        # Read present position
+
+    def getPos(self):
+        '''
+        Method to read the present position
+        '''
         dxl_present_position = self.dyanamixelPort.packetHandler.read4ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_PRESENT_POSITION)
-        print("Present position: ", dxl_present_position)
+        print("Present position [4byte]: ", dxl_present_position)
         current_pose = (360/4096)*dxl_present_position[0]
         print("Current pose [deg]: ", current_pose)
+        return current_pose
+
 
 # For testing
 if __name__ == "__main__":
