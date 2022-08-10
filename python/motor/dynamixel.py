@@ -94,19 +94,19 @@ class DynamixelControl:
             setBit = 1
         else:
             setBit = 0
-        dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write1ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, 10 , setBit)
+        dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write1ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_DRIVE_MODE, setBit)
 
         # Set operation mode to multi turn
-        dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write1ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, 11 , 4)
+        dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write1ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_OPERATING_MODE, 4)
 
         # Enable Dynamixel Torque
-        #dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write1ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_TORQUE_ENABLE, self.TORQUE_ENABLE)
-        #if dxl_comm_result != COMM_SUCCESS:
-        #    print("%s" % self.dyanamixelPort.getTxRxResult(dxl_comm_result))
-        #elif dxl_error != 0:
-        #    print("%s" % self.dyanamixelPort.getRxPacketError(dxl_error))
-        #else:
-        #    print("Dynamixel has been successfully connected")
+        dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write1ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_TORQUE_ENABLE, self.TORQUE_ENABLE)
+        if dxl_comm_result != COMM_SUCCESS:
+           print("%s" % self.dyanamixelPort.getTxRxResult(dxl_comm_result))
+        elif dxl_error != 0:
+           print("%s" % self.dyanamixelPort.getRxPacketError(dxl_error))
+        else:
+           print("Dynamixel has been successfully connected")
 
 
     def moveDyn(self, angle, velocity):
@@ -128,12 +128,11 @@ class DynamixelControl:
         Method to read the present position
         '''
         dxl_present_position = self.dyanamixelPort.packetHandler.read4ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_PRESENT_POSITION)
-        print("Present position [4byte]: ", dxl_present_position)
-        print(dxl_present_position[0],hex(dxl_present_position[0]))
+        #print(dxl_present_position[0],hex(dxl_present_position[0]))
         valByte = struct.pack("I",dxl_present_position[0])
         valRet = struct.unpack("i",valByte)
         current_pose = (360.0/4096.0)*valRet[0]
-        print("Current pose [deg]: ", current_pose)
+        #print("Current pose [deg]: ", current_pose)
         return current_pose
 
 

@@ -7,11 +7,11 @@ This script stores all the functions to make the gripper move
 ###################################  VARIABLES  #######################################
 
 gear_ratio = 2
-twist = 100 # [deg]
+twist = 300 # [deg]
 
 # Velocities [rev/min]
 vel_max = 70
-vel_2 = 40
+vel_2 = 30
 vel_1 = vel_2 / gear_ratio
 
 # Positions Open/Close [deg]
@@ -49,7 +49,7 @@ def twist_right(motor2, motor1):
     in order to cut the stalk.
     '''
     # execute the twist
-    motor2.moveDyn(end_2, vel_2) # (angle, velocity)
+    motor2.moveDyn(motor2.getPose() - (twist*gear_ratio), vel_2) # (angle, velocity)
     # compensate the twist-rotation to avoid opening/closing fingers 
     motor1.moveDyn(motor1.getPose() + twist, vel_1) # (angle, velocity)
 
@@ -60,6 +60,8 @@ def twist_left(motor2, motor1):
     in order to go back to their starting pose.
     '''
     # execute the twist
-    motor2.moveDyn(start_2, vel_2) # (angle, velocity)
+    motor2.moveDyn(motor2.getPose() + (twist*gear_ratio), vel_2) # (angle, velocity)
     # compensate the twist-rotation to avoid opening/closing fingers 
-    motor1.moveDyn(start_2 - motor2.getPose(), vel_1) # (angle, velocity)
+    motor1.moveDyn(motor1.getPose() - twist, vel_1) # (angle, velocity)
+    
+    #motor1.moveDyn(start_2 - motor2.getPose(), vel_1) # (angle, velocity)
