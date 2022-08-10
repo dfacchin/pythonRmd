@@ -38,6 +38,3 @@ left = gripper.twist_left(dyn2,dyn1)
 time.sleep(7)
 print("Pose home dyn2; ", dyn2.getPose())
 print("Pose home dyn1; ", dyn1.getPose())
-
-#open = gripper.open(dyn1)
-#close = gripper.close(dyn1)

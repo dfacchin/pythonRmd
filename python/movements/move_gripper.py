@@ -4,8 +4,7 @@ This script stores all the functions to make the gripper move
 - motor2 = responsible for the finger twist movement
 '''
 
-###################################  VARIABLES  #######################################
-
+###################################  VARIABLES  ######################################
 gear_ratio = 2
 twist = 300 # [deg]
 
@@ -15,15 +14,8 @@ vel_2 = 30
 vel_1 = vel_2 / gear_ratio
 
 # Positions Open/Close [deg]
-open_pose = 0
-close_pose = 180
-
-# Positions Twist [deg]
-start_2 = 180 # we want dyn2 to be at 180deg after calibration
-end_2 = start_2 - (twist*gear_ratio)
-start_1 = 0 # we want dyn1 to be at 0deg after calibration
-end_1 = twist
-
+open_pose = -230
+close_pose = -5 # 5deg of tolerance to avoid collision
 ######################################################################################
 
 
