@@ -74,6 +74,7 @@ class DynamixelControl:
     ADDR_PRESENT_POSITION       = 132 # used to get current position
     ADDR_PWM_LIMIT              = 36 # used to set the PWM limit
     ADDR_PRESENT_PWM            = 124 # used to read the present PWM
+    ADDR_HOMING_OFFSET          = 20 # used to set a new home position
 
 
     def __init__(self, DXL_ID, dyanamixelPort):
@@ -136,6 +137,15 @@ class DynamixelControl:
         current_pose = (360.0/4096.0)*valRet[0]
         return current_pose
 
+
+    def setHomePose(self, home_offset):
+        '''
+        Method to set a new home position
+        homing_offset = - current pose
+        '''
+        dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write4ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_HOMING_OFFSET, home_offset)
+
+
     def setPWM(self, PWM_limit):
         '''
         Method to set the PWM to a desired limit
@@ -149,4 +159,6 @@ class DynamixelControl:
         Method to read the present PWM
         '''
         dxl_read_pwm = self.dyanamixelPort.packetHandler.read2ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_PRESENT_PWM)
-        return dxl_read_pwm
+        valByte = struct.pack("H",dxl_read_pwm[0])
+        valRet = struct.unpack("h",valByte)
+        return valRet

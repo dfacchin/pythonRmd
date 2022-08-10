@@ -12,8 +12,15 @@ dyn2.initDyn("cw") # initialize motor2 and set direction
 
 
 
+dyn1.moveDyn(0,70)
+while True:
+    print("current pwm: ", dyn1.readPWM())
+    time.sleep(1)
+
+
+
 # Home
-dyn1.moveDyn(-90,40)
+# dyn1.moveDyn(-90,40)
 # dyn2.moveDyn(-90,40)
 # time.sleep(5)
 # print("Pose home dyn2; ", dyn2.getPose())

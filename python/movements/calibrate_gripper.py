@@ -8,7 +8,7 @@ Python script to calibrate all the Dynamixel motors.
 
 ###################################  VARIABLES  ######################################
 # set slow velocity
-vel = 15
+vel = 10
 # set maxPWM to a low value, e.g. 50
 PWM_max = 885
 PWM_calibrate = 50
@@ -25,17 +25,30 @@ def calibrate_grasp(motor1):
     '''
     # Set maxPWM to a low value for calibration
     motor1.setPWM(PWM_calibrate)
-    # Open until we reach the mechanical limit
-    motor_pwm = motor1.readPWM()
-    while True:
-        if motor_pwm < PWM_calibrate:
-            motor_pwm = motor1.readPWM()
-            time.sleep(0.5)
-        motor1.moveDyn(-1000, vel) # (angle, velocity)
-    #set pose
 
-        
-    pass
+    # Open until we reach the mechanical limit
+    motor1.moveDyn(-1000, vel) # (angle, velocity)
+
+    while True:
+        i = 0
+        # While rotating, keep reading PWM every 0.5s
+        motor_pwm = motor1.readPWM()
+
+        # If PWM > 50 then stop rotating and calibrate
+        if motor_pwm > PWM_calibrate:
+            # stop moving
+            current_pose = motor1.getPose()
+            motor1.moveDyn(current_pose+1, vel)
+            # set current positon to 0 degrees
+            # ...
+            # Set maxPWM back to its highest value
+            motor1.setPWM(PWM_max)
+            i = 1
+
+        time.sleep(0.5) # read PWM twice every second
+
+        if i==1:
+            break
 
 
 def calibrate_twist(motor2):
