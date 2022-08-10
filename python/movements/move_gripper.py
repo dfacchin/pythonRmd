@@ -63,5 +63,3 @@ def twist_left(motor2, motor1):
     motor2.moveDyn(motor2.getPose() + (twist*gear_ratio), vel_2) # (angle, velocity)
     # compensate the twist-rotation to avoid opening/closing fingers 
     motor1.moveDyn(motor1.getPose() - twist, vel_1) # (angle, velocity)
-    
-    #motor1.moveDyn(start_2 - motor2.getPose(), vel_1) # (angle, velocity)

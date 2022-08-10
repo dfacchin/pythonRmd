@@ -132,42 +132,4 @@ class DynamixelControl:
         valByte = struct.pack("I",dxl_present_position[0])
         valRet = struct.unpack("i",valByte)
         current_pose = (360.0/4096.0)*valRet[0]
-        #print("Current pose [deg]: ", current_pose)
         return current_pose
-
-
-# For testing
-if __name__ == "__main__":
-
-    _dynPort = DyanamixelPort()
-    # Set ID and port
-    dyn1 = DynamixelControl(1,_dynPort)
-    dyn2 = DynamixelControl(2,_dynPort)
-
-    dyn1.initDyn("cw") # initialize motor1 and set direction
-    dyn2.initDyn("cw") # initialize motor2 and set direction
-    
-    # motor2
-    twist = 100 # [deg]
-    gear_ratio = 2
-    start_2 = 180 # [deg] we want dyn2 to be at 180deg after calibration
-    end_2 = start_2 - (twist*gear_ratio)
-    vel_2 = 50
-
-    # motor1
-    start_1 = 0 # [deg] we want dyn1 to be at 0deg after calibration
-    end_1 = twist
-    vel_1 = vel_2 / gear_ratio
-
-
-    # home
-    dyn2.moveDyn(start_2, vel_2) # home
-    dyn1.moveDyn(start_1, vel_1) # home
-    time.sleep(3)
-    # twist
-    dyn2.moveDyn(end_2, vel_2) # twist right
-    dyn1.moveDyn(end_1, vel_1) # counter twist
-    time.sleep(6)
-    # back home
-    dyn2.moveDyn(start_2, vel_2) # home
-    dyn1.moveDyn(start_1, vel_1) # home
