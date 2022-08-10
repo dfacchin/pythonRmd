@@ -61,7 +61,7 @@ class DyanamixelPort:
 
 class DynamixelControl:
     '''
-    This python class is used to initialize and control the Dynamixel motors.
+    This python class is used to control (read/write) the Dynamixel motors.
     '''
 
     TORQUE_ENABLE               = 1 # Value for enabling the torque
@@ -72,6 +72,8 @@ class DynamixelControl:
     ADDR_DRIVE_MODE             = 10 # used to chande direction of rotation
     ADDR_OPERATING_MODE         = 11 # used to set multi or single turn
     ADDR_PRESENT_POSITION       = 132 # used to get current position
+    ADDR_PWM_LIMIT              = 36 # used to set the PWM limit
+    ADDR_PRESENT_PWM            = 124 # used to read the present PWM
 
 
     def __init__(self, DXL_ID, dyanamixelPort):
@@ -133,3 +135,18 @@ class DynamixelControl:
         valRet = struct.unpack("i",valByte)
         current_pose = (360.0/4096.0)*valRet[0]
         return current_pose
+
+    def setPWM(self, PWM_limit):
+        '''
+        Method to set the PWM to a desired limit
+        Range: min 0,  max 885 (2byte)
+        '''
+        dxl_set_pwm = self.dyanamixelPort.packetHandler.write2ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_PWM_LIMIT, PWM_limit)
+
+
+    def readPWM(self):
+        '''
+        Method to read the present PWM
+        '''
+        dxl_read_pwm = self.dyanamixelPort.packetHandler.read2ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_PRESENT_PWM)
+        return dxl_read_pwm
