@@ -85,7 +85,7 @@ class DynamixelControl:
         self.dyanamixelPort = dyanamixelPort
 
 
-    def initDyn(self, direction):
+    def initDyn(self, direction, maxPWM=885):
         '''
         Method for initializing/connect the motor
         '''
@@ -101,6 +101,9 @@ class DynamixelControl:
 
         # Set operation mode to multi turn
         dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write1ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_OPERATING_MODE, 4)
+
+        # set PWM limit (Range: min 0,  max 885)
+        dxl_set_pwm = self.dyanamixelPort.packetHandler.write2ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_PWM_LIMIT, maxPWM)
 
         # Enable Dynamixel Torque
         dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write1ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_TORQUE_ENABLE, self.TORQUE_ENABLE)
@@ -146,14 +149,6 @@ class DynamixelControl:
         dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write4ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_HOMING_OFFSET, home_offset)
 
 
-    def setPWM(self, PWM_limit):
-        '''
-        Method to set the PWM to a desired limit
-        Range: min 0,  max 885 (2byte)
-        '''
-        dxl_set_pwm = self.dyanamixelPort.packetHandler.write2ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_PWM_LIMIT, PWM_limit)
-
-
     def readPWM(self):
         '''
         Method to read the present PWM
@@ -161,4 +156,5 @@ class DynamixelControl:
         dxl_read_pwm = self.dyanamixelPort.packetHandler.read2ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_PRESENT_PWM)
         valByte = struct.pack("H",dxl_read_pwm[0])
         valRet = struct.unpack("h",valByte)
-        return valRet
+        valNum = int(valRet[0])
+        return valNum

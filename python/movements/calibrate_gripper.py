@@ -12,11 +12,8 @@ vel = 10
 # set maxPWM to a low value, e.g. 50
 PWM_max = 885
 PWM_calibrate = 50
-# go to 1000deg (rotate until you hit the calibration mechanical part)
-# check present PWM:
-#  -  if PWM > maxPWM --> stop and calibrate
-# set maxPWM back to a high value
 ######################################################################################
+
 
 def calibrate_grasp(motor1):
     '''
@@ -32,7 +29,7 @@ def calibrate_grasp(motor1):
     while True:
         i = 0
         # While rotating, keep reading PWM every 0.5s
-        motor_pwm = motor1.readPWM()
+        motor_pwm = abs(motor1.readPWM())
 
         # If PWM > 50 then stop rotating and calibrate
         if motor_pwm > PWM_calibrate:
@@ -40,7 +37,8 @@ def calibrate_grasp(motor1):
             current_pose = motor1.getPose()
             motor1.moveDyn(current_pose+1, vel)
             # set current positon to 0 degrees
-            # ...
+            home_offset = motor1.getPose()
+            motor1.setHomePose(-home_offset)
             # Set maxPWM back to its highest value
             motor1.setPWM(PWM_max)
             i = 1
@@ -49,6 +47,8 @@ def calibrate_grasp(motor1):
 
         if i==1:
             break
+
+    print("Calibration motor1 complete!")
 
 
 def calibrate_twist(motor2):
