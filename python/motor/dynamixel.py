@@ -85,7 +85,7 @@ class DynamixelControl:
         self.dyanamixelPort = dyanamixelPort
 
 
-    def initDyn(self, direction, homing_offset=0, maxPWM=885):
+    def initDyn(self, direction, homing_offset=0, reset_homePose=False, maxPWM=885):
         '''
         Method for initializing/connect the motor
         '''
@@ -106,7 +106,8 @@ class DynamixelControl:
         dxl_set_pwm = self.dyanamixelPort.packetHandler.write2ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_PWM_LIMIT, maxPWM)
 
         # set a new home position
-        dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write4ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_HOMING_OFFSET, homing_offset)
+        if reset_homePose == True:
+            dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write4ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_HOMING_OFFSET, homing_offset)
 
         # Enable Dynamixel Torque
         dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write1ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_TORQUE_ENABLE, self.TORQUE_ENABLE)
