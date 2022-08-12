@@ -16,17 +16,17 @@ dyn2.initDyn("cw", homing_offset=0, reset_homePose=True) # initialize motor2 and
 
 a = calibrate.calibrate_twist(dyn2, dyn1)
 #dyn1.moveDyn(90, 50)
-time.sleep(2)
+time.sleep(1)
 current_pose_2 = dyn2.getPose()
 print("a) current pose dyn2: ", current_pose_2)
 current_pose_1 = dyn1.getPose()
 print("a) current pose dyn1: ", current_pose_1)
 
-time.sleep(3)
+time.sleep(5)
 
 b = calibrate.calibrate_grasp(dyn1)
 #dyn1.moveDyn(90, 50)
-time.sleep(2)
+time.sleep(1)
 current_pose_1 = dyn1.getPose()
 print("b) current pose dyn1: ", current_pose_1)
 current_pose_2 = dyn2.getPose()

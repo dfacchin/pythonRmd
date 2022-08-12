@@ -6,16 +6,16 @@ This script stores all the functions to make the gripper move
 
 ###################################  VARIABLES  ######################################
 gear_ratio = 2
-twist = 300 # [deg]
+twist = 200 # [deg]
 
 # Velocities [rev/min]
-vel_max = 70
-vel_2 = 30
+vel_max = 15 #70
+vel_2 = 15
 vel_1 = vel_2 / gear_ratio
 
 # Positions Open/Close [deg]
-close_pose = -200 # -230
-open_pose = -5 # 5deg of tolerance to avoid collision
+open_pose = -200 # -230
+close_pose = -5 # 5deg of tolerance to avoid collision
 ######################################################################################
 
 

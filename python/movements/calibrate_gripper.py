@@ -8,9 +8,10 @@ Python script to calibrate all the Dynamixel motors.
 
 ###################################  VARIABLES  ######################################
 gear_ratio = 2
+pwm_overshoot = 8
 goal_pose_2 = 3000 # large enough value to reach the mechanical limit
 vel_2 = 10 # set slow velocity
-goal_pose_1 = -3000 # large enough value to reach the mechanical limit
+goal_pose_1 = 3000 # large enough value to reach the mechanical limit
 vel_1 = vel_2 / gear_ratio
 ######################################################################################
 
@@ -18,7 +19,7 @@ vel_1 = vel_2 / gear_ratio
 def calibrate_grasp(motor1):
     '''
     Calibrate motor1 responsible for opening/closing the fingers.
-    Fingers completely open means motor1 at 0 degrees
+    Fingers completely closed means motor1 at 0 degrees
     '''
     # rotate until reaching the mechanical limit
     motor1.moveDyn(goal_pose_1, vel_2)
@@ -28,7 +29,7 @@ def calibrate_grasp(motor1):
     current_pwm = abs(motor1.readPWM())
     print("current pwm: ", current_pwm)
     # set limit pwm
-    limit_pwm = current_pwm + 8
+    limit_pwm = current_pwm + pwm_overshoot
     print("limit_pwm: ", limit_pwm)
 
     while True:
@@ -45,8 +46,8 @@ def calibrate_grasp(motor1):
         if current_pwm > limit_pwm:
             # stop moving
             current_pose = motor1.getPose()
-            motor1.moveDyn(current_pose+2, 30)
-            time.sleep(0.5)
+            motor1.moveDyn(current_pose-2, 30)
+            time.sleep(2)
 
             # set new home position
             current_pose = motor1.getPose()
@@ -61,7 +62,7 @@ def calibrate_grasp(motor1):
 
             break
 
-        time.sleep(1)
+        #time.sleep(0.5)
 
     print("Calibration (Grasp) completed successfully!")
 
@@ -75,14 +76,14 @@ def calibrate_twist(motor2, motor1):
 
     # rotate until reaching the mechanical limit
     motor2.moveDyn(goal_pose_2, vel_2)
-    motor1.moveDyn(goal_pose_1, vel_1)
+    motor1.moveDyn(-goal_pose_2, vel_1)
     time.sleep(1) # wait to reach max pwm
 
     # read PWM
     current_pwm = abs(motor2.readPWM())
     print("current pwm dyn2: ", current_pwm)
     # set limit pwm
-    limit_pwm = current_pwm + 8
+    limit_pwm = current_pwm + pwm_overshoot
     print("limit_pwm: ", limit_pwm)
 
     while True:
@@ -102,7 +103,7 @@ def calibrate_twist(motor2, motor1):
             current_pose_1 = motor1.getPose()
             motor2.moveDyn(current_pose_2-2, 30)
             motor1.moveDyn(current_pose_1+2, 30)
-            time.sleep(0.5)
+            time.sleep(2)
 
             # set new home position
             current_pose_2 = motor2.getPose()
@@ -117,6 +118,6 @@ def calibrate_twist(motor2, motor1):
 
             break
 
-        time.sleep(1)
+        #time.sleep(0.5)
 
     print("Calibration (Twist) completed successfully!")
