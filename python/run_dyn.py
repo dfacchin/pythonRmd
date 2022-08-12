@@ -13,16 +13,10 @@ dyn1.initDyn("cw") # initialize motor1 and set direction
 dyn2.initDyn("cw") # initialize motor2 and set direction
 
 
-# a = calibrate.calibrate_grasp(dyn1)
-# dyn1.moveDyn(90, 50)
-# time.sleep(2)
-# current_pose = dyn1.getPose()
-# print("current pose: ", current_pose)
-
-b = calibrate.calibrate_twist(dyn2, dyn1)
-#dyn1.moveDyn(90, 50)
-time.sleep(2)
-current_pose_2 = dyn2.getPose()
-print("current pose dyn2: ", current_pose_2)
+#c = gripper.twist_left(dyn2, dyn1)
+c = gripper.open(dyn1)
+time.sleep(5)
 current_pose_1 = dyn1.getPose()
-print("current pose dyn1: ", current_pose_1)
+print("c) current pose dyn1: ", current_pose_1)
+current_pose_2 = dyn2.getPose()
+print("c) current pose dyn2: ", current_pose_2)

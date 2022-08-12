@@ -14,8 +14,8 @@ vel_2 = 30
 vel_1 = vel_2 / gear_ratio
 
 # Positions Open/Close [deg]
-open_pose = -230
-close_pose = -5 # 5deg of tolerance to avoid collision
+close_pose = -200 # -230
+open_pose = -5 # 5deg of tolerance to avoid collision
 ######################################################################################
 
 

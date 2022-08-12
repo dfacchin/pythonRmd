@@ -145,14 +145,6 @@ class DynamixelControl:
         return current_pose
 
 
-    def setHomePose(self, home_offset):
-        '''
-        Method to set a new home position
-        homing_offset = - current pose
-        '''
-        dxl_comm_result, dxl_error = self.dyanamixelPort.packetHandler.write4ByteTxRx(self.dyanamixelPort.portHandler, self.DXL_ID, self.ADDR_HOMING_OFFSET, home_offset)
-
-
     def readPWM(self):
         '''
         Method to read the present PWM
