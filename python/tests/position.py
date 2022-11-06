@@ -1,8 +1,8 @@
-import RMD
+import motor.RMD as RMD
 import can
 import time
 import numpy as np
-import kinematics
+import robot.kinematics as kinematics
 
 # Using specific buses works similar:
 bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)

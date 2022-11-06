@@ -1,5 +1,4 @@
-import kinematics
-
+import robot.kinematics as kinematics
 
 '''
 These functions store a set of predefined path point that we want the eef
@@ -8,18 +7,22 @@ always to pass throgh when executing picking/spraying procedure.
 
 # Predefined Path Points
 home = [250,0]
-drop = [-500,500]
+drop = [-450,500]
+pre_drop = [0,500]
 Bm = [425,0]
 Br = [250,500]
 Bl = [250,-500]
 
-# Define a limit within we can move freely
-x_lim = 600
-y_lim = None # range(1000,-1000)
-linear_limit = [x_lim, y_lim]
+
+# pp sequances:
+# - eef current pose --> linear limit
+# - linear limit --> desired apple
+# - desired apple --> linear limit
+# - linear limit --> pre-drop pose
+# - pre-drop pose --> drop pose
 
 
-def pick_move(home, eef_pose, apple_pose, safezone_limit, pre_drop, drop, steps):
+def pick_move(pickState, home, eef_pose, apple_pose, pre_drop, drop, steps):
 
     # Get current eef position [x_eef, y_eef]
     x_eef = eef_pose[0]
@@ -35,7 +38,11 @@ def pick_move(home, eef_pose, apple_pose, safezone_limit, pre_drop, drop, steps)
     # Define sequences of path points (pp) based on specific cases
     pp = []
 
-    # Apple on the RIGHT side
+
+    ''' 
+    Eef current pose --> Safe-zone limit
+    '''
+    #  Apple on the RIGHT side
     if y_a > 0:
         
         # Eef on the RIGHT side
@@ -45,7 +52,7 @@ def pick_move(home, eef_pose, apple_pose, safezone_limit, pre_drop, drop, steps)
             pp.append(face_apple)
 
         # Eef on the LEFT side
-        elif (250 <= x_eef <= x_sz) and (0 >= y_eef > -1000):
+        elif (home[0] <= x_eef <= x_sz) and (0 >= y_eef > -1000):
             # Go straight to the safezone_limit
             face_apple = kinematics.linear_path(x_eef, y_eef, x_sz, y_sz, steps)
             pp.append(face_apple)
@@ -53,7 +60,7 @@ def pick_move(home, eef_pose, apple_pose, safezone_limit, pre_drop, drop, steps)
         else:
             print("End-effector is in a non defined position!")
 
-    # Apple on the LEFT side
+    #  Apple on the LEFT side
     if y_a < 0:
 
         # Eef on the LEFT side
@@ -63,7 +70,7 @@ def pick_move(home, eef_pose, apple_pose, safezone_limit, pre_drop, drop, steps)
             pp.append(face_apple)
 
         # Eef on the RIGHT side
-        if (y_a < 0) and (250 <= x_eef <= x_sz) and (0 <= y_eef < 1000):
+        if (home[0] <= x_eef <= x_sz) and (0 <= y_eef < 1000):
             # Go straight to the safezone_limit
             face_apple = kinematics.linear_path(x_eef, y_eef, x_sz, y_sz, steps)
             pp.append(face_apple)
@@ -72,13 +79,34 @@ def pick_move(home, eef_pose, apple_pose, safezone_limit, pre_drop, drop, steps)
             print("End-effector is in a non defined position!")
 
 
+    '''
+    Safe-zone limit --> Apple
+    '''
+    # Move perpendicularly to the trees
+    to_apple = kinematics.linear_path(x_sz, y_sz, x_a, y_a, steps)
+    pp.append(to_apple)
 
-    # pp sequances:
-    # - eef current pose --> linear limit
-    # - linear limit --> desired apple
-    # - desired apple --> linear limit
-    # - linear limit --> pre-drop pose
-    # - pre-drop pose --> drop pose
+
+    '''
+    Apple --> Safe-zone limit
+    '''
+    # Move perpendicularly to the trees
+    back_apple = kinematics.linear_path(x_a, y_a, x_sz, y_sz, steps)
+    pp.append(back_apple)
+
+
+    '''
+    Safe-zone limit --> Pre-drop pose
+    '''
+    face_drop = kinematics.linear_path(x_sz, y_sz, pre_drop[0], pre_drop[1], steps)
+    pp.append(face_drop)
+
+
+    '''
+    Pre-drop pose --> Drop pose
+    '''
+    to_drop = kinematics.linear_path(pre_drop[0], pre_drop[1], drop[0], drop[1], steps)
+    pp.append(to_drop)
 
     pass
 

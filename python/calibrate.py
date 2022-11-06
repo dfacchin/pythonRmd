@@ -1,6 +1,12 @@
-import RMD
+import motor.RMD as RMD
 import can
-import time
+
+'''
+Python script to calibrate the horizontal SCARA arm,
+Gyems motors only (shoulder and elbow).
+Before running this script place the arm manually perpendicular to the trees (completely extended).
+After this calibration the motor angles will be set to 0 degrees.
+'''
 
 # Using specific buses works similar:
 bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=1000000)

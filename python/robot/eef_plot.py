@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-import kinematics
+import robot.kinematics as kinematics
 
 
 '''
