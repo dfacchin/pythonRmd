@@ -308,7 +308,7 @@ bool dynamixelInit(dyn_t *psDyn, uint8_t ui8Id)
 	setValue(Min_Position_Limit, 512);
 	setValue(Startup_Configuration, 0);
 	setValue(Shutdown, 52);
-	setValue(Torque_Enable, 0);
+	setValue(Torque_Enable, 1);
 	setValue(LED, 0);
 	setValue(Status_Return_Level, 2);
 	setValue(Registered_Instruction, 0);

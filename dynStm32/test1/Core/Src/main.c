@@ -214,12 +214,7 @@ int main(void)
 
 		  }
 	  }
-	  if (ui16gPwmACtual< ui16gPwm)
-	  {
-		  ui16gPwmACtual += 100;
 
-	  }
-	  ui16gPwmACtual =
 	  htim2.Instance->CCR1 = ui16gPwm;
 	  //gPwm += ui8Dir;
 	  //ui8Dir *= ((gPwm > 2500)||(gPwm < 500)) ? -1 : 1;
