@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "can.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -54,7 +55,17 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+uint8_t ubKeyNumber = 0x0;
+CAN_TxHeaderTypeDef   TxHeader;
+CAN_RxHeaderTypeDef   RxHeader;
+uint8_t               TxData[8];
+uint8_t               RxData[8];
+uint32_t              TxMailbox;
 
+int32_t i32AbsPosition = 0;
+int32_t i32Velocity = 0;
+int16_t i16Current = 0;
+float f32AbsPosition = 0;
 /* USER CODE END 0 */
 
 /**
@@ -64,6 +75,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+	  CAN_FilterTypeDef  sFilterConfig;
 
   /* USER CODE END 1 */
 
@@ -86,16 +98,106 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_CAN1_Init();
   /* USER CODE BEGIN 2 */
 
+  //hcan1 = CAN1;
+
+  sFilterConfig.FilterBank = 0;
+  sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;
+  sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
+  sFilterConfig.FilterIdHigh = 0x0000;
+  sFilterConfig.FilterIdLow = 0x0000;
+  sFilterConfig.FilterMaskIdHigh = 0x0000;
+  sFilterConfig.FilterMaskIdLow = 0x0000;
+  sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0;
+  sFilterConfig.FilterActivation = ENABLE;
+  sFilterConfig.SlaveStartFilterBank = 14;
+
+  if (HAL_CAN_ConfigFilter(&hcan1, &sFilterConfig) != HAL_OK)
+  {
+    /* Filter configuration Error */
+    Error_Handler();
+  }
+
+  /*##-3- Start the CAN peripheral ###########################################*/
+  if (HAL_CAN_Start(&hcan1) != HAL_OK)
+  {
+    /* Start Error */
+    Error_Handler();
+  }
+
+  /*##-4- Activate CAN RX notification #######################################*/
+  if (HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
+  {
+    /* Notification Error */
+    Error_Handler();
+  }
+
+  TxHeader.StdId = 0x145;
+  TxHeader.ExtId = 0x01;
+  TxHeader.RTR = CAN_RTR_DATA;
+  TxHeader.IDE = CAN_ID_STD;
+  TxHeader.DLC = 8;
+  TxHeader.TransmitGlobalTime = DISABLE;
+  TxData[0]  = 0x60;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  HAL_Delay(100);
-	  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+		HAL_Delay(2);
+		//Request Position
+        TxData[0]  = 0x60;
+		HAL_GPIO_TogglePin(LD3_GPIO_Port,LD3_Pin);
+		if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+		{
+			 /* Transmission request Error */
+			 Error_Handler();
+		}
+		HAL_Delay(2);
+		//Set Velocity
+		if (i32Velocity != 0)
+		{
+			TxData[0]  = 0xA2;
+			TxData[1]  = 0;
+			TxData[2]  = 0;
+			TxData[3]  = 0;
+			TxData[4]  = i32Velocity & 0xFF;
+			TxData[5]  = (i32Velocity >> 8) & 0xFF;
+			TxData[6]  = (i32Velocity >> 16) & 0xFF;
+			TxData[7]  = (i32Velocity >> 32) & 0xFF;
+			HAL_GPIO_TogglePin(LD3_GPIO_Port,LD3_Pin);
+			/* Start the Transmission process */
+			//if (HAL_CAN_IsTxMessagePending(&hcan1, &TxMailbox) == 0)
+			if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+			{
+				 /* Transmission request Error */
+				 Error_Handler();
+			}
+		}
+		else
+		{
+			TxData[0]  = 0xA1;
+			TxData[1]  = 0;
+			TxData[2]  = 0;
+			TxData[3]  = 0;
+			TxData[4]  = i16Current & 0xFF;
+			TxData[5]  = (i16Current >> 8) & 0xFF;
+			TxData[6]  = 0;
+			TxData[7]  = 0;
+			HAL_GPIO_TogglePin(LD3_GPIO_Port,LD3_Pin);
+			/* Start the Transmission process */
+			//if (HAL_CAN_IsTxMessagePending(&hcan1, &TxMailbox) == 0)
+			if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+			{
+				 /* Transmission request Error */
+				 Error_Handler();
+			}
+		}
+ 		//i32Velocity += 1;
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -152,7 +254,31 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+/**
+  * @brief  Rx Fifo 0 message pending callback
+  * @param  hcan: pointer to a CAN_HandleTypeDef structure that contains
+  *         the configuration information for the specified CAN.
+  * @retval None
+  */
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+  /* Get RX message */
+  if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
+  {
+    /* Reception Error */
+    Error_Handler();
+  }
 
+  /* Display LEDx */
+  if ((RxHeader.StdId == 0x245) && (RxHeader.IDE == CAN_ID_STD) && (RxHeader.DLC == 8))
+  {
+	  if (TxData[0] == 0x60)
+	  {
+		  i32AbsPosition = RxData[4] + (RxData[5] << 8) + (RxData[6] << 16) + (RxData[7] << 24);
+		  f32AbsPosition = i32AbsPosition /100.0;
+	  }
+  }
+}
 /* USER CODE END 4 */
 
 /**
