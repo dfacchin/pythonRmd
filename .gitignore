@@ -1,2 +1,3 @@
 *.pyc
 dynStm32/test1/Debug
+embedded/AIG_STM32_SPRAY/Debug
