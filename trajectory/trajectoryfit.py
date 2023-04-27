@@ -55,6 +55,8 @@ def calcAtoB(pointA,pointB):
     imposing max acceleration we have a time
 
     """
+    pass
+
 """
 The formula to calculate time taken to cover a specific distance with starting speed and constant acceleration is given by:
 
@@ -79,14 +81,90 @@ t is the time taken to cover the distance
 I hope this helps! Let me know if you have any other questions.
 """
 import math
+
 def calc_time(d,a,v):
     t = (math.sqrt((2*d)/a + v*v)-v)/a
     return t
+def calc_a(d,vi,vf):
+    a = (vf*vf-vi*vi)/(2*d)
+    return a 
+def calc_t(vi,vf,a):
+    t = (vf-vi)/a
+    return t
+def calc_t_dva(d,vi,a):
+    t = (math.sqrt((2*d*a) + (vi*vi)) - vi) / a
+    return t
+def cald_d(vi,a,t):
+    d = vi*t + (a*t*t)/2
+    return d
+def calc_a_dvt(d,v,t):
+    a = (d-v*t)*(2/(t*t))
+    return a
+def calc_vf_dva(d,vi,a):
+    #works if it "goes" straight
+    vf = math.sqrt(2*a*d+vi*vi)
+    return vf
+
+# Calculate the time and final speed
+# to cover a distance, with a starting speed
+# 
+def calcAB(posA,posB,Vi,Vmax,Amax):
+    d = posB-posA
+    #check if we need to change speed
+    if Vi == Vmax:
+        #moving already at the right speed, no acceleration
+        a = 0
+        #time is space divide by speed
+        t = d/Vi
+    else:
+        #calculate the max acceleration required to reach speed at B
+        #with final speed Vmax
+        a = calc_a(d,Vi,Vmax)
+        #if the acceleration exceeds max acceleration
+        if abs(a) > Amax:
+            #ideal acceleration leads to speed exceeding limit
+            #if the desired acceleration is negative set -Amax
+            if a < 0:
+                a = -Amax
+            else:
+                a = Amax
+            #with the new acceleration the max speed will be lower
+            Vmax = calc_vf_dva(d,Vi,a)
+        if a!=0:
+            #with know initial Velocity, max speed, and acceleration we can calculate time
+            t = calc_t(Vi, Vmax, a)
+            #just for test knowing distance, initial speed and acceleration
+            t1 = calc_t_dva(d,Vi,a)
+            print(t,t1)
+        else:
+            t = d/Vi
+    return (Vmax,t)
+
 
 def calc(A,B):
     #A has a starting V
     #A B both have a Vxmax Vymax velocity that starts with Vmax
+
+    #1 Find the distance between the point in x and y
     d = B-A
+
+    #2 Search for right acceleration for each axis.
+
+    #check if we need to change speed
+    if A.Vx == B.Vxmax:
+        ax = 0
+        tx = d[a]/A.Vx
+    else:
+        #calculate the max acceleration required to reach speed at B
+        ax = calc_a(d[0],A.Vx,B.Vxmax)
+        #if the acceleration exceeds max acceleration
+        if abs(ax) > B.Axmax:
+            ax = B.Axmax
+            B.Vxmax = calc_vf_dva(d[0],A.Vx,ax)
+        tx = calc_t(A.Vx,B.Vxmax,ax)
+
+        
+    
 
 
 
@@ -97,7 +175,11 @@ class myPoint:
         self.x = x
         self.y = y
         self.Vmax = Vmax
+        self.Vxmax = Vmax
+        self.Vymax = Vmax
         self.Amax = Amax
+        self.Axmax = Amax
+        self.Aymax = Amax
         self.Vx = 0
         self.Vy = 0
         self.Vtarget = 0
@@ -147,9 +229,28 @@ def trajectoryToPoints(distance):
     a = [[0,0],[1,0],[2,0],[3,0],[3,1],[3,2],[2,2]]
     return a
 
+
+
+
+
 if __name__ == "__main__":
+    while True:
+        try:
+            a = float(input("a:"))
+            b = float(input("b:"))
+            Vi = float(input("Vi:"))
+            Vmax = float(input("Vmax:"))
+            Amax = float(input("Amax:"))
+            print(calcAB(a,b,Vi,Vmax,Amax))
+        except:
+            pass
+    """
+    a = [[0,0],[1,0],[2,0],[3,0],[3,1],[3,2],[2,2]]
+    A = myPoint(a[0][0],a[0][1])
+    B = myPoint(a[1][0],a[1][1])
+    print(B-A)
     # Get a list of points from a trajectory
     # points must be of a specified distance between them
     listPoints = trajectoryToPoints(5)
     myTrajectory = trajectoryFit(listPoints)
-    
+    """
