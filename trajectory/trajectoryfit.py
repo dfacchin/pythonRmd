@@ -55,7 +55,42 @@ def calcAtoB(pointA,pointB):
     imposing max acceleration we have a time
 
     """
-    
+"""
+The formula to calculate time taken to cover a specific distance with starting speed and constant acceleration is given by:
+
+t = (sqrt(2 * s / a + u^2) - u) / a
+
+where
+
+t is the time taken to cover the distance
+s is the distance covered
+u is the initial velocity
+a is the acceleration
+This formula can be derived from the kinematic equation:
+
+s = ut + 1/2 at^2
+
+where
+
+s is the distance covered
+u is the initial velocity
+a is the acceleration
+t is the time taken to cover the distance
+I hope this helps! Let me know if you have any other questions.
+"""
+import math
+def calc_time(d,a,v):
+    t = (math.sqrt((2*d)/a + v*v)-v)/a
+    return t
+
+def calc(A,B):
+    #A has a starting V
+    #A B both have a Vxmax Vymax velocity that starts with Vmax
+    d = B-A
+
+
+
+
 
 class myPoint:
     def __init__(self, x, y, Vmax = 100, Amax = 50):
@@ -75,6 +110,11 @@ class myPoint:
         self.Vmax = Amax
     def setTargetSpeed(self,Vtarget):
         self.Vtarget = self.Vmax
+
+    def __sub__(self,other):
+        x = self.x - other.x
+        y = self.y - other.y
+        return (x,y)
 
 class trajectoryFit:
     def __init__(self, listPoints):
@@ -108,7 +148,6 @@ def trajectoryToPoints(distance):
     return a
 
 if __name__ == "__main__":
-
     # Get a list of points from a trajectory
     # points must be of a specified distance between them
     listPoints = trajectoryToPoints(5)
