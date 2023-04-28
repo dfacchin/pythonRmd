@@ -82,6 +82,12 @@ I hope this helps! Let me know if you have any other questions.
 """
 import math
 
+STATE_INIT = 0
+STATE_DONE = 1
+STATE_NEXT = 2
+STATE_BACKFIRE = 3
+STATE_ERROR_ACC = 4
+
 def calc_time(d,a,v):
     t = (math.sqrt((2*d)/a + v*v)-v)/a
     return t
@@ -108,95 +114,226 @@ def calc_vf_dva(d,vi,a):
 # Calculate the time and final speed
 # to cover a distance, with a starting speed
 # 
-def calcAB(posA,posB,Vi,Vmax,Amax):
-    d = posB-posA
-    #check if we need to change speed
-    if Vi == Vmax:
-        #moving already at the right speed, no acceleration
-        a = 0
-        #time is space divide by speed
-        t = d/Vi
+def calcAB(A,B):
+    """
+    IF state OK always make sure
+    A.acc.value  #REQ1
+    B.vel.value  #REQ2
+    B.vel.max    #REQ3
+    B.time.value #REQ4
+    are set
+    """
+    d = B.pos.value - A.pos.value
+    #if d is 0 Velocity must be 0
+    if d == 0:
+        if A.vel.value != 0:
+            A.vel.max = 0
+            A.state = STATE_BACKFIRE
+            B.state = STATE_INIT
+            return A,B
+        #REQ1 No need for acceleration
+        A.acc.value = 0
+        #REQ2 No change in velocity
+        B.vel.value = 0
+        #REQ3 max velocity is limited to 0
+        B.vel.max = 0
+        #REQ4 No time constraint        
+        B.time.value = 0 
     else:
-        #calculate the max acceleration required to reach speed at B
-        #with final speed Vmax
-        a = calc_a(d,Vi,Vmax)
-        #if the acceleration exceeds max acceleration
-        if abs(a) > Amax:
-            #ideal acceleration leads to speed exceeding limit
-            #if the desired acceleration is negative set -Amax
-            if a < 0:
-                a = -Amax
-            else:
-                a = Amax
-            #with the new acceleration the max speed will be lower
-            Vmax = calc_vf_dva(d,Vi,a)
-        if a!=0:
-            #with know initial Velocity, max speed, and acceleration we can calculate time
-            t = calc_t(Vi, Vmax, a)
-            #just for test knowing distance, initial speed and acceleration
-            t1 = calc_t_dva(d,Vi,a)
-            print(t,t1)
-        else:
-            t = d/Vi
-    return (Vmax,t)
+        #check if we need to change speed
+        if A.vel.value == B.vel.max:
+            #REQ1 No need for acceleration
+            #moving already at the right speed, no acceleration            
+            A.acc.value = 0
+            #REQ2 No change in velocity
+            B.vel.value = A.vel.value
+            #REQ3 max velocity does not change
+            B.vel.max = B.vel.max
+            #REQ4 time is space dived by constat speed        
+            B.time.value = d/A.vel.value
 
+        else:
+            #calculate the max acceleration required to reach speed at B
+            #with final speed Vmax
+            acc = calc_a(d, A.vel.value, B.vel.max)
+            #if the acceleration exceeds max acceleration
+            if abs(acc) > B.acc.max:
+                #ideal acceleration leads to speed exceeding limit
+                #if the desired acceleration is negative set -Amax
+                if acc < 0:
+                    acc = -B.acc.max
+                else:
+                    acc = B.acc.max
+                #with the new acceleration the max speed will be lower                 
+                vel = calc_vf_dva(d, A.vel.value, acc)
+            if acc != 0:
+                #with know initial Velocity, max speed, and acceleration we can calculate time
+                tim = calc_t(A.vel.value, vel, acc)
+                #just for test knowing distance, initial speed and acceleration
+                #t1 = calc_t_dva(d, A.vel.value, acc)
+                #print(B.time.value, t1)
+            else:
+                tim = d/A.vel.value
+
+            #REQ1 
+            A.acc.value = acc
+            #REQ2 
+            B.vel.value = vel
+            #REQ3 no change to the max possibile speed
+            B.vel.max = B.vel.max
+            #REQ4 
+            B.time.value = tim 
+        return A,B
+
+
+def calcAB_t(A,B,t):
+    """
+    IF state OK always make sure
+    A.acc.value  #REQ1
+    B.vel.value  #REQ2
+    B.vel.max    #REQ3
+    B.time.value is fixed
+    are set
+    """
+    d = B.pos.value - A.pos.value
+    #calc acceleration
+    acc = calc_a_dvt(d,A.vel.value,t)
+    #This should not happend, we ask for longer time respect to the first acceleration tested
+    if (acc>B.acc.max):
+        print("ERROR")
+        return A,B
+    vel = calc_vf_dva(d, A.vel.value, acc)
+    #REQ1 
+    A.acc.value = acc
+    #REQ2 
+    B.vel.value = vel
+    #REQ3 no change to the max possibile speed
+    B.vel.max = B.vel.max
+    #REQ4 
+    B.time.value = t
+    return A,B
+
+
+def calcTime(A,B):
+    tx = B.x.time.value
+    ty = B.y.time.value
+    if tx < ty:
+        A.x,B.x = calcAB_t(A.x,B.x,ty)
+    elif ty < tx:
+        A.y,B.y = calcAB_t(A.y,B.y,tx)
+    return A,B
 
 def calc(A,B):
     #A has a starting V
     #A B both have a Vxmax Vymax velocity that starts with Vmax
 
     #1 Find the distance between the point in x and y
-    d = B-A
 
     #2 Search for right acceleration for each axis.
+    ##1 Step 1 consider each axis indipendetly
+    A.x,B.x = calcAB(A.x,B.x)
+    A.x,B.x = calcAB(A.y,B.y)
+    #if we found no "solution" step to previous element
+    if A.noBackfire() == False:
+        return False,A,B
 
-    #check if we need to change speed
-    if A.Vx == B.Vxmax:
-        ax = 0
-        tx = d[a]/A.Vx
-    else:
-        #calculate the max acceleration required to reach speed at B
-        ax = calc_a(d[0],A.Vx,B.Vxmax)
-        #if the acceleration exceeds max acceleration
-        if abs(ax) > B.Axmax:
-            ax = B.Axmax
-            B.Vxmax = calc_vf_dva(d[0],A.Vx,ax)
-        tx = calc_t(A.Vx,B.Vxmax,ax)
+    #find the longest time of the 2 elements
+    A,B = calcTime(A,B)
+
+    #Now the 2 elements are aligned in time
+    #let's check that the max acceleration and max speed are ok
+    if A.checkAcc() == False:
+        ret = False
+        while ret == False:
+            #Too much acceleration 
+            #reduce limit by 10%
+            B.x.acc.max = A.x.acc.value * 0.9
+            B.y.acc.max = A.y.acc.value * 0.9
+            ret,A,B = calc(A,B)
+
+    if B.checkSpeed() == False:
+        ret = False
+        while ret == False:
+            #Reduce axis speed 
+            #reduce limit by 10%
+            B.x.vel.max = A.x.acc.value * 0.9
+            B.y.vel.max = A.y.acc.value * 0.9
+            ret,A,B = calc(A,B)
+    
+    #Solution found, return True and the values
+    return True,A,B
 
         
     
 
 
+class element:
+    def __init__(self,value,max):
+        self.value = value
+        self.max = max
 
-
+    def test(self):
+        return abs(self.value) <= abs(self.max)
+class Axis:
+    def __init__(self,value,Vmax,Amax):
+        self.pos = element(value,None)
+        self.vel = element(0,Vmax)
+        self.acc = element(0,Amax)
+        self.time = element(0,0)
+        self.state = STATE_INIT
 
 class myPoint:
-    def __init__(self, x, y, Vmax = 100, Amax = 50):
-        self.x = x
-        self.y = y
+    def __init__(self, x, y, Vmax = 2, Amax = 1):
+        self.x = Axis(x,Vmax,Amax)
+        self.y = Axis(y,Vmax,Amax)
         self.Vmax = Vmax
-        self.Vxmax = Vmax
-        self.Vymax = Vmax
         self.Amax = Amax
-        self.Axmax = Amax
-        self.Aymax = Amax
-        self.Vx = 0
-        self.Vy = 0
-        self.Vtarget = 0
     
-    def setMaxSpeed(self,Vmax):
-        self.Vmax = Vmax
-    def getMaxSpeed(self):
-        return self.Vmax
-    def setMaxAcceleration(self,Amax):
-        self.Vmax = Amax
-    def setTargetSpeed(self,Vtarget):
-        self.Vtarget = self.Vmax
+    
+    def noBackfire(self):
+        ret = True
+        if self.x.state == STATE_BACKFIRE:
+            #Speed is the output of backfire
+            #we can restore the max acceleration limit
+            self.x.acc.max = self.Amax
+            ret = False
+        if self.y.state == STATE_BACKFIRE:
+            #Speed is the output of backfire
+            #we can restore the max acceleration limit
+            self.y.acc.max = self.Amax
+            ret = False
+        return ret
 
-    def __sub__(self,other):
-        x = self.x - other.x
-        y = self.y - other.y
-        return (x,y)
+    
+    def checkVel(self):
+        #check if velocity of the 2 axis in lower than the velocity Max
+        if self.x.vel.test() and self.y.vel.test():
+            value = self.x.vel.value^2 + self.y.vel.value^2
+            if (self.Vmax^2) > value:
+                return True
+        return False
+
+    def checkAcc(self):
+        #check if acc of the 2 axis in lower than the velocity Max
+        if self.x.acc.test() and self.y.acc.test():
+            value = self.x.acc.value^2 + self.y.acc.value^2
+            if (self.Amax^2) > value:
+                return True
+        return False
+   
+    def setMaxSpeed(self,Vmax):
+        self.x.vel.max = Vmax
+        self.y.vel.max = Vmax
+
+    def setMaxAcceleration(self,Amax):
+        self.x.acc.max = Amax
+        self.y.acc.max = Amax
+    def setTargetSpeed(self,Vtarget):
+        self.x.vel.value = Vtarget
+        self.x.vel.max = Vtarget
+        self.y.vel.value = Vtarget
+        self.y.vel.max = Vtarget
+
 
 class trajectoryFit:
     def __init__(self, listPoints):
@@ -234,6 +371,7 @@ def trajectoryToPoints(distance):
 
 
 if __name__ == "__main__":
+    """
     while True:
         try:
             a = float(input("a:"))
@@ -248,7 +386,9 @@ if __name__ == "__main__":
     a = [[0,0],[1,0],[2,0],[3,0],[3,1],[3,2],[2,2]]
     A = myPoint(a[0][0],a[0][1])
     B = myPoint(a[1][0],a[1][1])
-    print(B-A)
+
+    calc(A,B)
+    """
     # Get a list of points from a trajectory
     # points must be of a specified distance between them
     listPoints = trajectoryToPoints(5)
