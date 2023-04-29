@@ -6,6 +6,11 @@
     vectorV is the sqrt(Vx^2+Vy^2)
     vectorA is the sqrt(Ax^2+Ay^2)
 """
+CORRECTION_MARGIN = 0.999
+REDUCTION_FACTOR = 0.9
+import time
+import logging
+logging.basicConfig(level=logging.CRITICAL)
 
 def calcAtoB(pointA,pointB):
     """
@@ -82,11 +87,11 @@ I hope this helps! Let me know if you have any other questions.
 """
 import math
 
-STATE_INIT = 0
-STATE_DONE = 1
-STATE_NEXT = 2
-STATE_BACKFIRE = 3
-STATE_ERROR_ACC = 4
+STATE_INIT = "INIT"
+STATE_DONE = "DONE"
+STATE_NEXT = "NEXT"
+STATE_BACKFIRE = "BACKFIRE"
+STATE_ERROR_ACC = "ERROR_ACC"
 
 def calc_time(d,a,v):
     t = (math.sqrt((2*d)/a + v*v)-v)/a
@@ -108,7 +113,10 @@ def calc_a_dvt(d,v,t):
     return a
 def calc_vf_dva(d,vi,a):
     #works if it "goes" straight
-    vf = math.sqrt(2*a*d+vi*vi)
+    try:
+        vf = math.sqrt(2*a*d+vi*vi)
+    except:
+        vf = 0
     return vf
 
 # Calculate the time and final speed
@@ -124,6 +132,8 @@ def calcAB(A,B):
     are set
     """
     d = B.pos.value - A.pos.value
+    A.state = STATE_INIT
+    B.state = STATE_INIT    
     #if d is 0 Velocity must be 0
     if d == 0:
         if A.vel.value != 0:
@@ -150,40 +160,55 @@ def calcAB(A,B):
             #REQ3 max velocity does not change
             B.vel.max = B.vel.max
             #REQ4 time is space dived by constat speed        
-            B.time.value = d/A.vel.value
+            try:
+                B.time.value = d/A.vel.value
+            except:
+                B.time.value = 0.0
 
         else:
             #calculate the max acceleration required to reach speed at B
             #with final speed Vmax
-            acc = calc_a(d, A.vel.value, B.vel.max)
+            velf = B.vel.max*CORRECTION_MARGIN
+            acc = calc_a(d, A.vel.value, velf)
             #if the acceleration exceeds max acceleration
             if abs(acc) > B.acc.max:
                 #ideal acceleration leads to speed exceeding limit
                 #if the desired acceleration is negative set -Amax
                 if acc < 0:
-                    acc = -B.acc.max
+                    acc = -B.acc.max*CORRECTION_MARGIN
                 else:
-                    acc = B.acc.max
+                    acc = B.acc.max*CORRECTION_MARGIN
                 #with the new acceleration the max speed will be lower                 
-                vel = calc_vf_dva(d, A.vel.value, acc)
+                velf = calc_vf_dva(d, A.vel.value, acc)
             if acc != 0:
                 #with know initial Velocity, max speed, and acceleration we can calculate time
-                tim = calc_t(A.vel.value, vel, acc)
+                tim = calc_t(A.vel.value, velf, acc)
                 #just for test knowing distance, initial speed and acceleration
-                #t1 = calc_t_dva(d, A.vel.value, acc)
+                t1 = calc_t_dva(d, A.vel.value, acc)
                 #print(B.time.value, t1)
             else:
                 tim = d/A.vel.value
 
+            #Need to check the if the final speed in in between the limits
+            if abs(velf) > B.vel.max:
+                #Set in A the max speed it can have to reach B with its max acceleration
+                # Dont use all the max acceleration otherwise we will play on the variable precision
+                vmax = calc_vf_dva(d, B.vel.max, A.acc.max*CORRECTION_MARGIN)
+                A.vel.max = vmax
+                A.state = STATE_BACKFIRE
+                B.state = STATE_INIT
+                return A,B
             #REQ1 
             A.acc.value = acc
             #REQ2 
-            B.vel.value = vel
+            B.vel.value = velf
             #REQ3 no change to the max possibile speed
             B.vel.max = B.vel.max
             #REQ4 
             B.time.value = tim 
-        return A,B
+    A.state = STATE_DONE
+    B.state = STATE_NEXT             
+    return A,B
 
 
 def calcAB_t(A,B,t):
@@ -223,7 +248,30 @@ def calcTime(A,B):
         A.y,B.y = calcAB_t(A.y,B.y,tx)
     return A,B
 
-def calc(A,B):
+def infoNode(pointName,point,level):
+    strA =  "\n"+str(level)
+    strA += "\t"*(1+level)+pointName+"\n"
+    strA += point.string(pad=" "*len(str(level))+"\t"*(1+level)+"  ")
+    return strA
+
+def infoStep(A,B):
+    stra  = "\n--- X\n"
+    stra += "P:"+str(A.x.pos.value)+"->"+str(B.x.pos.value)+"\n"
+    stra += "S:"+str(A.x.vel.value)+"->"+str(B.x.vel.value)+"_"+str(A.x.vel.max)+"->"+str(B.x.vel.max)+"\n"
+    stra += "A:"+str(A.x.acc.value)+"->"+str(B.x.acc.value)+"_"+str(A.x.acc.max)+"->"+str(B.x.acc.max)+"\n"
+    stra += "t:"+str(A.x.time.value)+"->"+str(B.x.time.value)+"_"+str(A.x.time.max)+"->"+str(B.x.time.max)+"\n"
+    stra += "--- Y\n"
+    stra += "P:"+str(A.y.pos.value)+"->"+str(B.y.pos.value)+"\n"
+    stra += "S:"+str(A.y.vel.value)+"->"+str(B.y.vel.value)+"_"+str(A.y.vel.max)+"->"+str(B.y.vel.max)+"\n"
+    stra += "A:"+str(A.y.acc.value)+"->"+str(B.y.acc.value)+"_"+str(A.y.acc.max)+"->"+str(B.y.acc.max)+"\n"
+    stra += "t:"+str(A.y.time.value)+"->"+str(B.y.time.value)+"_"+str(A.y.time.max)+"->"+str(B.y.time.max)+"\n"
+    stra += "---\n"
+    return stra
+
+def calc(A,B,level):
+    #logging.debug(infoNode("Ain",A,level) + infoNode("Bin",B,level))
+    level +=1
+    logging.info(infoStep(A,B))
     #A has a starting V
     #A B both have a Vxmax Vymax velocity that starts with Vmax
 
@@ -232,35 +280,46 @@ def calc(A,B):
     #2 Search for right acceleration for each axis.
     ##1 Step 1 consider each axis indipendetly
     A.x,B.x = calcAB(A.x,B.x)
-    A.x,B.x = calcAB(A.y,B.y)
-    #if we found no "solution" step to previous element
+    A.y,B.y = calcAB(A.y,B.y)
+    # if we found no "solution" step to previous element
+    # we call it backfire, means the element A has a new constraint
+    # either acceleration limit or speed limit
     if A.noBackfire() == False:
+        logging.info("Fail\n"+infoStep(A,B))
         return False,A,B
+
+    logging.info("Intermediate1 \n"+infoStep(A,B))
 
     #find the longest time of the 2 elements
     A,B = calcTime(A,B)
 
+    logging.info("Intermediate1 \n"+infoStep(A,B))
+
+
     #Now the 2 elements are aligned in time
     #let's check that the max acceleration and max speed are ok
-    if A.checkAcc() == False:
-        ret = False
-        while ret == False:
-            #Too much acceleration 
-            #reduce limit by 10%
-            B.x.acc.max = A.x.acc.value * 0.9
-            B.y.acc.max = A.y.acc.value * 0.9
-            ret,A,B = calc(A,B)
+    while A.checkAcc() == False:
+        #Acceleration constraing are not met
+        #reduce max acceleration on both axes
+        B.x.acc.max *= REDUCTION_FACTOR
+        B.y.acc.max *= REDUCTION_FACTOR
+        ret,A,B = calc(A,B,level)
+        if ret == False:
+            logging.info("Fail\n"+infoStep(A,B))
+            return False,A,B
 
-    if B.checkSpeed() == False:
-        ret = False
-        while ret == False:
-            #Reduce axis speed 
-            #reduce limit by 10%
-            B.x.vel.max = A.x.acc.value * 0.9
-            B.y.vel.max = A.y.acc.value * 0.9
-            ret,A,B = calc(A,B)
-    
+
+    while B.checkVel() == False:
+        B.x.vel.max *= REDUCTION_FACTOR
+        B.y.vel.max *= REDUCTION_FACTOR
+        ret,A,B = calc(A,B,level)
+        if ret == False:
+            logging.info("Fail\n"+infoStep(A,B))
+            return False,A,B
+        
     #Solution found, return True and the values
+    #logging.debug(infoNode("Aou",A,level-1) + infoNode("Bou",A,level-1))
+    logging.info("Sucseed \n"+infoStep(A,B))
     return True,A,B
 
         
@@ -271,6 +330,10 @@ class element:
     def __init__(self,value,max):
         self.value = value
         self.max = max
+    
+    def string(self):
+        stringa = "[value:"+str(self.value)+", max:"+str(self.max)+"]"
+        return stringa
 
     def test(self):
         return abs(self.value) <= abs(self.max)
@@ -282,12 +345,22 @@ class Axis:
         self.time = element(0,0)
         self.state = STATE_INIT
 
+    def string(self):
+        stringa = "[pos:"+self.pos.string()+", vel"+self.vel.string()+", acc"+self.acc.string()+", state:"+self.state+"]"
+        return stringa
+
 class myPoint:
     def __init__(self, x, y, Vmax = 2, Amax = 1):
         self.x = Axis(x,Vmax,Amax)
         self.y = Axis(y,Vmax,Amax)
         self.Vmax = Vmax
         self.Amax = Amax
+    
+    def string(self,pad=""):
+        stringa  = pad+"x"+self.x.string()+"\n"
+        stringa += pad+"y"+self.y.string()+"\n"
+        stringa += pad+"Vmax:"+str(self.Vmax)+",Amax:"+str(self.Amax)+"\n"
+        return stringa
     
     
     def noBackfire(self):
@@ -308,27 +381,27 @@ class myPoint:
     def checkVel(self):
         #check if velocity of the 2 axis in lower than the velocity Max
         if self.x.vel.test() and self.y.vel.test():
-            value = self.x.vel.value^2 + self.y.vel.value^2
-            if (self.Vmax^2) > value:
+            value = math.pow(self.x.vel.value,2) + math.pow(self.y.vel.value,2)
+            if math.pow(self.Vmax,2) >= value:
                 return True
         return False
 
     def checkAcc(self):
         #check if acc of the 2 axis in lower than the velocity Max
         if self.x.acc.test() and self.y.acc.test():
-            value = self.x.acc.value^2 + self.y.acc.value^2
-            if (self.Amax^2) > value:
+            value = math.pow(self.x.acc.value,2) + math.pow(self.y.acc.value,2)
+            if math.pow(self.Amax,2) >= value:
                 return True
         return False
    
-    def setMaxSpeed(self,Vmax):
+    def setMaxVel(self,Vmax):
         self.x.vel.max = Vmax
         self.y.vel.max = Vmax
 
-    def setMaxAcceleration(self,Amax):
+    def setMaxAcc(self,Amax):
         self.x.acc.max = Amax
         self.y.acc.max = Amax
-    def setTargetSpeed(self,Vtarget):
+    def setTargetVel(self,Vtarget):
         self.x.vel.value = Vtarget
         self.x.vel.max = Vtarget
         self.y.vel.value = Vtarget
@@ -338,36 +411,50 @@ class myPoint:
 class trajectoryFit:
     def __init__(self, listPoints):
         self.Points = []
+        self.Vmax = 0
+        self.Max = 0
         for el in listPoints:
-            self.Points.append(el)
+            self.Points.append(myPoint(el[0],el[1]))
     
-    def setMaxSpeed(self, Vmax):
+    def setMaxVel(self, Vmax):
+        self.Vmax = Vmax
         for el in self.Points:
-            el.setMaxSpeed(Vmax)
+            el.setMaxVel(Vmax)
 
-    def setMaxVelocity(self, Amax):
+    def getMaxVel(self):        
+        return self.Vmax
+    
+    def getMaxAcc(self):
+        return self.Amax
+        
+    def setMaxAcc(self, Amax):
+        self.Amax = Amax
         for el in self.Points:
-            el.setMaxAcceleration(Amax)
+            el.setMaxAcc(Amax)
     
     def evaluate(self):
         #First and last points have target 0 speed
         #All other points we want to go as fast as possible
-        self.Points[0].setTargetSpeed(0)
-        self.Points[-1].setTargetSpeed(0)
-        for el in self.Points[1:-1]:
-            el.setTargetSpeed(el.getMaxSpeed())
+        self.Points[0].setTargetVel(0)
+        self.Points[-1].setTargetVel(0)
 
-
-            
-
-
-
-def trajectoryToPoints(distance):
-    a = [[0,0],[1,0],[2,0],[3,0],[3,1],[3,2],[2,2]]
-    return a
-
-
-
+        idx = 0
+        #We evaluate 2 point at the timne
+        #A  to B
+        #last point B is end of line so do not evaluate it (array -1)
+        while idx < (len(self.Points)-1):
+            logging.info("IDX:" +str(idx))
+            ret,A,B = calc(self.Points[idx],self.Points[idx+1],0)
+            #Found a solution move to next point
+            if ret == True:
+                idx+=1
+            #No solution, revaluate the previous step if possible
+            else:
+                if (idx>0):
+                    idx -= 1
+                else:
+                    print("ERROR")
+                    return
 
 
 if __name__ == "__main__":
@@ -383,11 +470,20 @@ if __name__ == "__main__":
         except:
             pass
     """
-    a = [[0,0],[1,0],[2,0],[3,0],[3,1],[3,2],[2,2]]
-    A = myPoint(a[0][0],a[0][1])
-    B = myPoint(a[1][0],a[1][1])
-
-    calc(A,B)
+    #a = [[0,0],[1,0],[2,0],[3,0],[3,1],[3,2],[2,2]]
+    timex = time.time()
+    a = []
+    for b in range(101):
+        a.append([b*0.1,b*0.2])
+    tf = trajectoryFit(a)
+    tf.setMaxAcc(1)
+    tf.setMaxVel(2)
+    tf.evaluate()
+    timey = time.time()
+    #if we reach here all points are evaluated ! PERFECT
+    for a in tf.Points:
+        print("Pos:\n\t"+ str(a.x.pos.value)+" Vel:" + str(a.x.vel.value)+"\n\t"+ str(a.y.pos.value)+" Vel:" + str(a.y.vel.value))    
+    print("calc time",timey-timex)
     """
     # Get a list of points from a trajectory
     # points must be of a specified distance between them
