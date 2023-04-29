@@ -6,86 +6,12 @@
     vectorV is the sqrt(Vx^2+Vy^2)
     vectorA is the sqrt(Ax^2+Ay^2)
 """
-CORRECTION_MARGIN = 0.999
-REDUCTION_FACTOR = 0.9
 import time
 import logging
-logging.basicConfig(level=logging.CRITICAL)
-
-def calcAtoB(pointA,pointB):
-    """
-    #A and B are two myPoint in space xy
-    #A is the starting point of the sequence going to B
-    #A has a Vx Vy component
-    
-    #Rule to apply
-    1) NEVER have a vecotor velocity higher than the Vmax
-    2) NEVER apply acceleration higher Amax between the 2 points
-
-    Results:
-    1 move on a straight line with constant velocity keeping Vvecotr costant from the starting point      
-    2 move from A to B with a uniform accelerated acceleration
-
-    result will be:
-    time needed to reach point B
-    V at point B (Vx, Vy)
-
-
-    How to perform the calc:
-    if I were to move on 1 dimension we can use the formula
-    t = (sqrt((2d/a) + (v_i^2)) - v_i) / a
-    this gives us the time with time we can fill the B time and V
-    if V is higher than the expected we need to reduce the acceleration
-        if we were accelerating 
-            we can decrees the acceleration
-        if we were deccelerating
-            we need to reduce the previous target velocity and redu the calcs, otherwise we will not fit into the curve
-    if V is lower than the expected:
-        if we were accelerating 
-            we need to increase the previous target velocity and redu the calcs, otherwise we will not fit into the curve
-        if we were deccelerating (-)
-            we can decrees the acceleration (less decceleration)
-    What when we start point 0 is V0
-    Point 1 is set to be MAX velocity
-    We accelerate at max, but at point 1 velocity is lower than maxV
-    we are lower and are accelerating, in this case we need to "increase previous point"
-    this is not possible start is 0, we should be able to accept this.
-
-    Vmax should not be the target velocity
-    we should just check if we can reach the point from 0 to 1 using at max vectorA
-    for example if from point A to point B
-    A is still and we go to point B, it must be "physically" possible to do so
-    A-B:
-    Av=0 time is based on distance and acceleration
-    imposing max acceleration we have a time
-
-    """
-    pass
-
-"""
-The formula to calculate time taken to cover a specific distance with starting speed and constant acceleration is given by:
-
-t = (sqrt(2 * s / a + u^2) - u) / a
-
-where
-
-t is the time taken to cover the distance
-s is the distance covered
-u is the initial velocity
-a is the acceleration
-This formula can be derived from the kinematic equation:
-
-s = ut + 1/2 at^2
-
-where
-
-s is the distance covered
-u is the initial velocity
-a is the acceleration
-t is the time taken to cover the distance
-I hope this helps! Let me know if you have any other questions.
-"""
 import math
+
+CORRECTION_MARGIN = 0.999
+REDUCTION_FACTOR = 0.9
 
 STATE_INIT = "INIT"
 STATE_DONE = "DONE"
@@ -93,8 +19,14 @@ STATE_NEXT = "NEXT"
 STATE_BACKFIRE = "BACKFIRE"
 STATE_ERROR_ACC = "ERROR_ACC"
 
+#logging.basicConfig(level=logging.CRITICAL)
+logging.basicConfig(level=logging.DEBUG)
+
 def calc_time(d,a,v):
-    t = (math.sqrt((2*d)/a + v*v)-v)/a
+    try:
+        t = (math.sqrt((2*d)/a + v*v)-v)/a
+    except:
+        t = 0
     return t
 def calc_a(d,vi,vf):
     a = (vf*vf-vi*vi)/(2*d)
@@ -103,7 +35,10 @@ def calc_t(vi,vf,a):
     t = (vf-vi)/a
     return t
 def calc_t_dva(d,vi,a):
-    t = (math.sqrt((2*d*a) + (vi*vi)) - vi) / a
+    try:
+        t = (math.sqrt((2*d*a) + (vi*vi)) - vi) / a
+    except:
+        t = 0
     return t
 def cald_d(vi,a,t):
     d = vi*t + (a*t*t)/2
@@ -189,6 +124,16 @@ def calcAB(A,B):
             else:
                 tim = d/A.vel.value
 
+            #Check if time is negative something is not right
+            if tim < 0:
+                if d>0:
+                    vmax = calc_vf_dva(d, B.vel.max, A.acc.max*CORRECTION_MARGIN)
+                else:
+                    vmax = calc_vf_dva(d, B.vel.max, -A.acc.max*CORRECTION_MARGIN)
+                A.vel.max = vmax
+                A.state = STATE_BACKFIRE
+                B.state = STATE_INIT
+                return A,B                    
             #Need to check the if the final speed in in between the limits
             if abs(velf) > B.vel.max:
                 #Set in A the max speed it can have to reach B with its max acceleration
@@ -451,6 +396,8 @@ class trajectoryFit:
         #last point B is end of line so do not evaluate it (array -1)
         idx = 0
         while idx < (len(self.Points)-1):
+            if idx == 10:
+                print("start debug")
             logging.info("IDX:" +str(idx))
             #Check if thre is a valid fit for A->B
             ret,A,B = calc(self.Points[idx],self.Points[idx+1],0)
@@ -473,8 +420,10 @@ class trajectoryFit:
 if __name__ == "__main__":
     #list of points
     a = []
-    for b in range(101):
+    for b in range(10):
         a.append([b*0.1,b*0.2])
+    for b in range(10):
+        a.append([1-b*0.1,1-b*0.2])
 
     #create the trajectory using the list [[x1,y1]..]
     tf = trajectoryFit(a)
