@@ -413,37 +413,46 @@ class trajectoryFit:
         self.Points = []
         self.Vmax = 0
         self.Max = 0
+        self.executionTime = 0
         for el in listPoints:
             self.Points.append(myPoint(el[0],el[1]))
     
+    #Set the max velocity for the trajectory
     def setMaxVel(self, Vmax):
         self.Vmax = Vmax
         for el in self.Points:
             el.setMaxVel(Vmax)
 
+    #Get the max velocity for the trajectory
     def getMaxVel(self):        
         return self.Vmax
     
+    #Get the max acceleration for the trajectory
     def getMaxAcc(self):
         return self.Amax
         
+    #Set the max acceleration for the entire trajectory
     def setMaxAcc(self, Amax):
         self.Amax = Amax
         for el in self.Points:
             el.setMaxAcc(Amax)
     
     def evaluate(self):
+        #Set a reference time
+        timex = time.time()
         #First and last points have target 0 speed
         #All other points we want to go as fast as possible
+        #previously setMaxAcc and setMaxVel must be used
         self.Points[0].setTargetVel(0)
         self.Points[-1].setTargetVel(0)
 
-        idx = 0
         #We evaluate 2 point at the timne
         #A  to B
         #last point B is end of line so do not evaluate it (array -1)
+        idx = 0
         while idx < (len(self.Points)-1):
             logging.info("IDX:" +str(idx))
+            #Check if thre is a valid fit for A->B
             ret,A,B = calc(self.Points[idx],self.Points[idx+1],0)
             #Found a solution move to next point
             if ret == True:
@@ -452,41 +461,39 @@ class trajectoryFit:
             else:
                 if (idx>0):
                     idx -= 1
+                #If we fall back to the first element evaluation failed
                 else:
                     print("ERROR")
-                    return
+                    return False
+        #Store execution time
+        self.executionTime = time.time() - timex
+        return True
 
 
 if __name__ == "__main__":
-    """
-    while True:
-        try:
-            a = float(input("a:"))
-            b = float(input("b:"))
-            Vi = float(input("Vi:"))
-            Vmax = float(input("Vmax:"))
-            Amax = float(input("Amax:"))
-            print(calcAB(a,b,Vi,Vmax,Amax))
-        except:
-            pass
-    """
-    #a = [[0,0],[1,0],[2,0],[3,0],[3,1],[3,2],[2,2]]
-    timex = time.time()
+    #list of points
     a = []
     for b in range(101):
         a.append([b*0.1,b*0.2])
+
+    #create the trajectory using the list [[x1,y1]..]
     tf = trajectoryFit(a)
+
+    #set max acceleration along the entire trajectory
     tf.setMaxAcc(1)
+
+    #set max velocity along the entire trajectory
     tf.setMaxVel(2)
-    tf.evaluate()
-    timey = time.time()
-    #if we reach here all points are evaluated ! PERFECT
-    for a in tf.Points:
-        print("Pos:\n\t"+ str(a.x.pos.value)+" Vel:" + str(a.x.vel.value)+"\n\t"+ str(a.y.pos.value)+" Vel:" + str(a.y.vel.value))    
-    print("calc time",timey-timex)
-    """
-    # Get a list of points from a trajectory
-    # points must be of a specified distance between them
-    listPoints = trajectoryToPoints(5)
-    myTrajectory = trajectoryFit(listPoints)
-    """
+
+    #evalute the trajectory 
+    ret = tf.evaluate()
+
+    #Print out all the POS xy and their velocity
+    if ret:
+        for a in tf.Points:
+            print("Pos:\n\t"+ str(a.x.pos.value)+" Vel:" + str(a.x.vel.value)+"\n\t"+ str(a.y.pos.value)+" Vel:" + str(a.y.vel.value))    
+    else:
+        print("Point calculation fail")
+
+    #Tell the execution time
+    print("Execution time:",tf.executionTime)
