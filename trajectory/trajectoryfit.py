@@ -9,6 +9,7 @@
 import time
 import logging
 import math
+from trajectoryfunctions import *
 
 CORRECTION_MARGIN = 0.96
 REDUCTION_FACTOR = 0.96
@@ -21,38 +22,6 @@ STATE_ERROR_ACC = "ERROR_ACC"
 
 #logging.basicConfig(level=logging.CRITICAL)
 logging.basicConfig(level=logging.DEBUG)
-
-def calc_time(d,a,v):
-    try:
-        t = (math.sqrt((2*d)/a + v*v)-v)/a
-    except:
-        t = 0
-    return t
-def calc_a(d,vi,vf):
-    a = (vf*vf-vi*vi)/(2*d)
-    return a 
-def calc_t(vi,vf,a):
-    t = (vf-vi)/a
-    return t
-def calc_t_dva(d,vi,a):
-    try:
-        t = (math.sqrt((2*d*a) + (vi*vi)) - vi) / a
-    except:
-        t = 0
-    return t
-def cald_d(vi,a,t):
-    d = vi*t + (a*t*t)/2
-    return d
-def calc_a_dvt(d,v,t):
-    a = (d-v*t)*(2/(t*t))
-    return a
-def calc_vf_dva(d,vi,a):
-    #works if it "goes" straight
-    try:
-        vf = math.sqrt(2*a*d+vi*vi)
-    except:
-        vf = 0
-    return vf
 
 # Calculate the time and final speed
 # to cover a distance, with a starting speed
@@ -147,13 +116,13 @@ def calcAB(A,B):
 
 
             #if the acceleration exceeds max acceleration
-            if abs(acc) > B.acc.max:
+            if abs(acc) > abs(A.acc.max):
                 #ideal acceleration leads to speed exceeding limit
                 #if the desired acceleration is negative set -Amax
                 if acc < 0:
-                    acc = -B.acc.max*CORRECTION_MARGIN
+                    acc = -A.acc.max*CORRECTION_MARGIN
                 else:
-                    acc = B.acc.max*CORRECTION_MARGIN
+                    acc = A.acc.max*CORRECTION_MARGIN
                 #with the new acceleration the max speed will be lower  
                 if sign == 1:               
                     velf = calc_vf_dva(d, A.vel.value, acc)
@@ -205,7 +174,7 @@ def calcAB(A,B):
     return A,B
 
 
-def calcAB_t(A,B,t):
+def calcAB_t2(A,B,t):
     """
     IF state OK always make sure
     A.acc.value  #REQ1
@@ -224,7 +193,7 @@ def calcAB_t(A,B,t):
     if sign == -1:
         acc = -calc_a_dvt(-d,-A.vel.value,t)
     #This should not happend, we ask for longer time respect to the first acceleration tested
-    if (abs(acc)>abs(B.acc.max)):
+    if (abs(acc)>abs(A.acc.max)):
         print("ERROR")
         return A,B
     if sign == 1:
@@ -232,6 +201,17 @@ def calcAB_t(A,B,t):
     elif sign == -1:
         #not sure about inverting the sign of acceleration
         vel = -calc_vf_dva(-d, -A.vel.value, -acc)
+    #check if the final speed in the limits
+    if abs(vel) > abs(B.vel.max):
+        if sign == 1:
+            vmax = calc_vf_dvt(d, B.vel.max, t)
+        elif sign == -1:
+            #not sure about inverting the sign of acceleration
+            vmax = -calc_vf_dva(-d, -B.vel.max, t)
+        A.vel.max = vmax
+        A.state = STATE_BACKFIRE
+        B.state = STATE_INIT
+        return A,B        
     #REQ1 
     A.acc.value = acc
     #REQ2 
@@ -242,10 +222,103 @@ def calcAB_t(A,B,t):
     B.time.value = t
     return A,B
 
+def calcAB_t(A,B,t):
+    """
+    To reach B in t having a specific speed in A
+    B has a max speed limit
+    A has a max acceleration limit
+
+    If in B there is a tight constraing on velocity there is only a solution:
+    Ex1:
+    From A(p:0,v:0) to B(p:1,v:<=33) t = 2
+    the distance is 1, we can tune the acceleration to cover the distance in t=2 having a final speed
+    a = (d-v*t)*(2/(t*t))
+    vf = math.sqrt(2*a*d+vi*vi)    
+    if a is in the acceleration limit and vf is in the permitted range of final velocity we have a solution
+    a = 0.5 v = 1.0 all stays in the limit
+
+    Ex2:
+    (A(p:0,v=3),B(p:1,v<=1)) t=2
+    in this case  
+    a = (d-v*t)*(2/(t*t))
+    a = -2.5 v=2.0 
+    too much acceleration is need
+
+    """
+    d = B.pos.value - A.pos.value
+    sign = 1
+    if d < 0:
+        sign = -1
+    
+    if sign == 1:
+        if A.vel.value < 0: 
+            print("ERROR velocity is negative when moving to")
+            input()
+        a = calc_a_dvt(d,A.vel.value,t)
+        if a <= A.acc.max:
+            vf = calc_vf_dvt(d,A.vel.value,t)
+            if vf <= B.vel.max:
+                B.vel.value = vf
+                A.acc.value = a
+                B.time.value = t
+                A.state = STATE_DONE
+                B.state = STATE_NEXT
+                return A,B
+            else:
+                #Out of velocity
+                #What is the velocity in A that with max acc fits vel constraint in B?
+                #it also means we were decelerating
+                vf = calc_vf_dvt(d,B.vel.max,t)
+                A.vel.max = vmax
+                A.state = STATE_BACKFIRE
+                B.state = STATE_INIT
+                return A,B
+        else:
+            #too much acceleration
+            #Actual velocity is not compatible with 
+            #distance and time constraint
+            v= calc_vi_dat(d,A.acc.max,t)
+            A.vel.max = v
+            A.state = STATE_BACKFIRE
+            B.state = STATE_INIT
+            return A,B            
+    if sign == -1:
+        if A.vel.value > 0: 
+            print("ERROR velocity is negative when moving to")
+            input()
+        a = -calc_a_dvt(-d,-A.vel.value,t)
+        if abs(a) <= A.acc.max:
+            vf = -calc_vf_dvt(-d,-A.vel.value,t)
+            if abs(vf) <= B.vel.max:
+                B.vel.value = vf
+                A.acc.value = a
+                B.time.value = t
+                A.state = STATE_DONE
+                B.state = STATE_NEXT
+                return A,B
+            else:
+                #Out of velocity
+                #What is the velocity in A that with max acc fits vel constraint in B?
+                #it also means we were decelerating
+                vf = -calc_vf_dvt(-d,abs(B.vel.max),t)
+                A.vel.max = vmax
+                A.state = STATE_BACKFIRE
+                B.state = STATE_INIT
+                return A,B
+        else:
+            #too much acceleration
+            #Actual velocity is not compatible with 
+            #distance and time constraint
+            v= calc_vi_dat(-d,abs(A.acc.max),t)
+            A.vel.max = v
+            A.state = STATE_BACKFIRE
+            B.state = STATE_INIT
+            return A,B  
 
 def calcTime(A,B):
     tx = B.x.time.value
     ty = B.y.time.value
+    #time clould be a little different
     if tx < ty:
         A.x,B.x = calcAB_t(A.x,B.x,ty)
     elif ty < tx:
@@ -299,6 +372,11 @@ def calc(A,B,level):
 
     #find the longest time of the 2 elements
     A,B = calcTime(A,B)
+    #Check if the speed in B is not exceeding the imposed limit
+    #if it's the case, set the max A state that will permit B to reach it's condition
+    if A.noBackfire() == False:
+        logging.info("Fail\n"+infoStep(A,B))
+        return False,A,B
 
     logging.info("Intermediate1 \n"+infoStep(A,B))
 
@@ -313,8 +391,8 @@ def calc(A,B,level):
         ratio = A.xy.acc.max / A.xy.acc.value
         #apply a reduction factor for safety
         ratio *= REDUCTION_FACTOR
-        B.x.acc.max *= ratio
-        B.y.acc.max *= ratio
+        A.x.acc.max = A.x.acc.value * ratio
+        A.y.acc.max = A.y.acc.value * ratio
         ret,A,B = calc(A,B,level)
         A.update()
         B.update()
@@ -329,8 +407,8 @@ def calc(A,B,level):
         ratio = B.xy.vel.max / B.xy.vel.value
         #apply a reduction factor for safety
         ratio *= REDUCTION_FACTOR
-        B.x.vel.max *= ratio
-        B.y.vel.max *= ratio
+        B.x.vel.max = B.x.vel.value * ratio
+        B.y.vel.max = B.y.vel.value * ratio
         ret,A,B = calc(A,B,level)
         A.update()
         B.update()
@@ -479,7 +557,7 @@ class trajectoryFit:
         idx = 0
         count = 0
         while idx < (len(self.Points)-1):
-            if idx == 10:
+            if idx == 32:
                 print("start debug")
             logging.info("IDX:" +str(idx))
             logging.info("count:" +str(count))
@@ -495,20 +573,76 @@ class trajectoryFit:
                     idx -= 1
                 #If we fall back to the first element evaluation failed
                 else:
-                    print("ERROR")
-                    return False
+                    #print("ERROR")
+                    #return False
+                    print("Revalate the first point")
         #Store execution time
         self.executionTime = time.time() - timex
         return True
 
 
+
+from trajectory import *
+
 if __name__ == "__main__":
-    #list of points
+
+    #Points = [[0,0],[0,200],[0,400],[200,400],[500,400],[800,400],[400,405]]
+    #Points = [[0,200], [-300,400], [0,502],[300,600], [0,600], [0,800], [0,1000], [0,1200]]
+    #Points = [[0,200], [-300,400],[300,600], [0,600], [0,800]]
+    #Points = [[0,200], [-300,400], [300,600], [0,800], [0,1000], [0,1200], [0,1500]]
+    #Points = [[0,200], [0,400], [150,400], [300,400], [300,100], [800, 600], [0, 1000], [500, 1000]]
+    #Points = [[0,200], [0,400], [300,400], [300,-300],[-300,-400], [0, 1000], [500, 1000],[0,200], [-300,400], [300,600]]
+    Points = [[0,0],[-400,400],[0,600]]
+    #Points = [[0,0],[500,800]]
+
+
+    # Generate the trajectory
+    traj1 = TrajectoryPlanner(Points)
+    traj1.parabolic_path()
+  
+    # Generate equally spaced lines
+    traj1.equally_spaced_lines()
+
+    """
+    # Plot
+    import matplotlib.pyplot as plt
+    
+    # path points
+    for pp in traj1.pp:
+        plt.plot(pp[0],pp[1], marker=(5,0), label="pp")
+
+    # # parabola start
+    # for s in traj1.p_start:
+    #     plt.plot(s[0],s[1], marker=".", label="p_start")
+
+    # # parabola end
+    # for e in traj1.p_end:
+    #     plt.plot(e[0],e[1], marker=(5,2), label="p_end")
+
+    # parabola vertex
+    #plt.plot(, marker=(5,2), label="p_vertex")
+
+
+    plt.plot(traj1.equal_traj_x, traj1.equal_traj_y, marker=(5,2), label="lin")
+
+    # Set equal axis aspect
+    ax = plt.gca()
+    ax.set_aspect('equal', adjustable='box')
+    
+    plt.xlabel("x")
+    plt.ylabel("y")
+
+    plt.legend()
+    plt.show()
+    """
+    a = traj1.equal_traj_xy
+
     a = []
-    for b in range(10):
-        a.append([b*0.1,b*0.2])
-    for b in range(10):
-        a.append([1-b*0.1,2-b*0.2])
+    steps = 50
+    for c in range(steps):
+        a.append([0.1*c,0.2*c])
+    for c in range(steps):
+        a.append([steps*0.1-0.1*c,steps*0.2-0.2*c])
 
     #create the trajectory using the list [[x1,y1]..]
     tf = trajectoryFit(a)
