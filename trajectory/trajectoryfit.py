@@ -10,8 +10,8 @@ import time
 import logging
 import math
 
-CORRECTION_MARGIN = 0.999
-REDUCTION_FACTOR = 0.9
+CORRECTION_MARGIN = 0.96
+REDUCTION_FACTOR = 0.96
 
 STATE_INIT = "INIT"
 STATE_DONE = "DONE"
@@ -67,6 +67,9 @@ def calcAB(A,B):
     are set
     """
     d = B.pos.value - A.pos.value
+    sign = 1
+    if d < 0:
+        sign = -1
     A.state = STATE_INIT
     B.state = STATE_INIT    
     #if d is 0 Velocity must be 0
@@ -86,7 +89,20 @@ def calcAB(A,B):
         B.time.value = 0 
     else:
         #check if we need to change speed
-        if A.vel.value == B.vel.max:
+        if (A.vel.value == B.vel.max) and (sign > 0):
+            #REQ1 No need for acceleration
+            #moving already at the right speed, no acceleration            
+            A.acc.value = 0
+            #REQ2 No change in velocity
+            B.vel.value = A.vel.value
+            #REQ3 max velocity does not change
+            B.vel.max = B.vel.max
+            #REQ4 time is space dived by constat speed        
+            try:
+                B.time.value = d/A.vel.value
+            except:
+                B.time.value = 0.0
+        if (A.vel.value == -B.vel.max) and (sign < 0):
             #REQ1 No need for acceleration
             #moving already at the right speed, no acceleration            
             A.acc.value = 0
@@ -103,8 +119,33 @@ def calcAB(A,B):
         else:
             #calculate the max acceleration required to reach speed at B
             #with final speed Vmax
-            velf = B.vel.max*CORRECTION_MARGIN
-            acc = calc_a(d, A.vel.value, velf)
+
+            # 1 initial speed and final speed must be of the same "sign"
+            # speed sign must be of the same sign of the direction
+            if sign == 1:
+                if A.vel.value >= 0:
+                    velf = abs(B.vel.max*CORRECTION_MARGIN)
+                    acc = calc_a(d, A.vel.value, velf)
+
+                else:
+                    #start velocity can't be of opposite direction
+                    A.vel.max = 0.0
+                    A.state = STATE_BACKFIRE
+                    B.state = STATE_INIT
+                    return A,B
+            elif sign == -1:
+                if A.vel.value <= 0:
+                    velf = abs(B.vel.max*CORRECTION_MARGIN) * -1
+                    #due to the direction negative the acceleration will flip sign as expected
+                    acc = calc_a(d, A.vel.value, velf)
+                else:
+                    #start velocity can't be of opposite direction
+                    A.vel.max = 0.0
+                    A.state = STATE_BACKFIRE
+                    B.state = STATE_INIT
+                    return A,B
+
+
             #if the acceleration exceeds max acceleration
             if abs(acc) > B.acc.max:
                 #ideal acceleration leads to speed exceeding limit
@@ -113,8 +154,12 @@ def calcAB(A,B):
                     acc = -B.acc.max*CORRECTION_MARGIN
                 else:
                     acc = B.acc.max*CORRECTION_MARGIN
-                #with the new acceleration the max speed will be lower                 
-                velf = calc_vf_dva(d, A.vel.value, acc)
+                #with the new acceleration the max speed will be lower  
+                if sign == 1:               
+                    velf = calc_vf_dva(d, A.vel.value, acc)
+                else:
+                    #invert all the signs
+                    velf = -calc_vf_dva(-d, -A.vel.value, -acc)
             if acc != 0:
                 #with know initial Velocity, max speed, and acceleration we can calculate time
                 tim = calc_t(A.vel.value, velf, acc)
@@ -135,10 +180,14 @@ def calcAB(A,B):
                 B.state = STATE_INIT
                 return A,B                    
             #Need to check the if the final speed in in between the limits
-            if abs(velf) > B.vel.max:
+            if abs(velf) > abs(B.vel.max):
                 #Set in A the max speed it can have to reach B with its max acceleration
                 # Dont use all the max acceleration otherwise we will play on the variable precision
-                vmax = calc_vf_dva(d, B.vel.max, A.acc.max*CORRECTION_MARGIN)
+                if sign == 1:
+                    vmax = calc_vf_dva(d, B.vel.max, A.acc.max*CORRECTION_MARGIN)
+                elif sign == -1:
+                    #not sure about inverting the sign of acceleration
+                    vmax = -calc_vf_dva(-d, -B.vel.max, A.acc.max*CORRECTION_MARGIN)
                 A.vel.max = vmax
                 A.state = STATE_BACKFIRE
                 B.state = STATE_INIT
@@ -166,13 +215,23 @@ def calcAB_t(A,B,t):
     are set
     """
     d = B.pos.value - A.pos.value
+    sign = 1
+    if d < 0:
+        sign = -1
     #calc acceleration
-    acc = calc_a_dvt(d,A.vel.value,t)
+    if sign == 1:
+        acc = calc_a_dvt(d,A.vel.value,t)
+    if sign == -1:
+        acc = -calc_a_dvt(-d,-A.vel.value,t)
     #This should not happend, we ask for longer time respect to the first acceleration tested
-    if (acc>B.acc.max):
+    if (abs(acc)>abs(B.acc.max)):
         print("ERROR")
         return A,B
-    vel = calc_vf_dva(d, A.vel.value, acc)
+    if sign == 1:
+        vel = calc_vf_dva(d, A.vel.value, acc)
+    elif sign == -1:
+        #not sure about inverting the sign of acceleration
+        vel = -calc_vf_dva(-d, -A.vel.value, -acc)
     #REQ1 
     A.acc.value = acc
     #REQ2 
@@ -210,6 +269,9 @@ def infoStep(A,B):
     stra += "S:"+str(A.y.vel.value)+"->"+str(B.y.vel.value)+"_"+str(A.y.vel.max)+"->"+str(B.y.vel.max)+"\n"
     stra += "A:"+str(A.y.acc.value)+"->"+str(B.y.acc.value)+"_"+str(A.y.acc.max)+"->"+str(B.y.acc.max)+"\n"
     stra += "t:"+str(A.y.time.value)+"->"+str(B.y.time.value)+"_"+str(A.y.time.max)+"->"+str(B.y.time.max)+"\n"
+    stra += "--- SUM\n"
+    stra += "S:"+str(A.xy.vel.value)+"->"+str(B.xy.vel.value)+"_"+str(A.xy.vel.max)+"->"+str(B.xy.vel.max)+"\n"
+    stra += "A:"+str(A.xy.acc.value)+"->"+str(B.xy.acc.value)+"_"+str(A.xy.acc.max)+"->"+str(B.xy.acc.max)+"\n"
     stra += "---\n"
     return stra
 
@@ -243,21 +305,35 @@ def calc(A,B,level):
 
     #Now the 2 elements are aligned in time
     #let's check that the max acceleration and max speed are ok
+    A.update()
+    B.update()
     while A.checkAcc() == False:
         #Acceleration constraing are not met
-        #reduce max acceleration on both axes
-        B.x.acc.max *= REDUCTION_FACTOR
-        B.y.acc.max *= REDUCTION_FACTOR
+        #reduce max acceleration on both axes by normalizing the combined acceleration
+        ratio = A.xy.acc.max / A.xy.acc.value
+        #apply a reduction factor for safety
+        ratio *= REDUCTION_FACTOR
+        B.x.acc.max *= ratio
+        B.y.acc.max *= ratio
         ret,A,B = calc(A,B,level)
+        A.update()
+        B.update()
         if ret == False:
             logging.info("Fail\n"+infoStep(A,B))
             return False,A,B
 
-
+    A.update()
+    B.update()
     while B.checkVel() == False:
-        B.x.vel.max *= REDUCTION_FACTOR
-        B.y.vel.max *= REDUCTION_FACTOR
+       #reduce max acceleration on both axes by normalizing the combined acceleration
+        ratio = B.xy.vel.max / B.xy.vel.value
+        #apply a reduction factor for safety
+        ratio *= REDUCTION_FACTOR
+        B.x.vel.max *= ratio
+        B.y.vel.max *= ratio
         ret,A,B = calc(A,B,level)
+        A.update()
+        B.update()
         if ret == False:
             logging.info("Fail\n"+infoStep(A,B))
             return False,A,B
@@ -298,9 +374,16 @@ class myPoint:
     def __init__(self, x, y, Vmax = 2, Amax = 1):
         self.x = Axis(x,Vmax,Amax)
         self.y = Axis(y,Vmax,Amax)
+        #combined value
+        self.xy = Axis(y,Vmax,Amax)
+        self.update()
         self.Vmax = Vmax
         self.Amax = Amax
     
+    def update(self):
+        self.xy.vel.value = math.sqrt(math.pow(self.x.vel.value,2)+math.pow(self.y.vel.value,2))
+        self.xy.acc.value = math.sqrt(math.pow(self.x.acc.value,2)+math.pow(self.y.acc.value,2))
+
     def string(self,pad=""):
         stringa  = pad+"x"+self.x.string()+"\n"
         stringa += pad+"y"+self.y.string()+"\n"
@@ -325,32 +408,31 @@ class myPoint:
     
     def checkVel(self):
         #check if velocity of the 2 axis in lower than the velocity Max
-        if self.x.vel.test() and self.y.vel.test():
-            value = math.pow(self.x.vel.value,2) + math.pow(self.y.vel.value,2)
-            if math.pow(self.Vmax,2) >= value:
-                return True
+        if self.xy.vel.value <= self.xy.vel.max:
+            return True
         return False
 
     def checkAcc(self):
         #check if acc of the 2 axis in lower than the velocity Max
-        if self.x.acc.test() and self.y.acc.test():
-            value = math.pow(self.x.acc.value,2) + math.pow(self.y.acc.value,2)
-            if math.pow(self.Amax,2) >= value:
-                return True
+        if self.xy.acc.value <= self.xy.acc.max:
+            return True
         return False
    
     def setMaxVel(self,Vmax):
         self.x.vel.max = Vmax
         self.y.vel.max = Vmax
-
+        self.xy.vel.max = Vmax
     def setMaxAcc(self,Amax):
         self.x.acc.max = Amax
         self.y.acc.max = Amax
+        self.xy.acc.max = Amax
     def setTargetVel(self,Vtarget):
         self.x.vel.value = Vtarget
         self.x.vel.max = Vtarget
         self.y.vel.value = Vtarget
         self.y.vel.max = Vtarget
+        self.xy.vel.value = Vtarget
+        self.xy.vel.max = Vtarget
 
 
 class trajectoryFit:
@@ -395,10 +477,13 @@ class trajectoryFit:
         #A  to B
         #last point B is end of line so do not evaluate it (array -1)
         idx = 0
+        count = 0
         while idx < (len(self.Points)-1):
             if idx == 10:
                 print("start debug")
             logging.info("IDX:" +str(idx))
+            logging.info("count:" +str(count))
+            count+=1
             #Check if thre is a valid fit for A->B
             ret,A,B = calc(self.Points[idx],self.Points[idx+1],0)
             #Found a solution move to next point
@@ -423,7 +508,7 @@ if __name__ == "__main__":
     for b in range(10):
         a.append([b*0.1,b*0.2])
     for b in range(10):
-        a.append([1-b*0.1,1-b*0.2])
+        a.append([1-b*0.1,2-b*0.2])
 
     #create the trajectory using the list [[x1,y1]..]
     tf = trajectoryFit(a)
@@ -440,7 +525,7 @@ if __name__ == "__main__":
     #Print out all the POS xy and their velocity
     if ret:
         for a in tf.Points:
-            print("Pos:\n\t"+ str(a.x.pos.value)+" Vel:" + str(a.x.vel.value)+"\n\t"+ str(a.y.pos.value)+" Vel:" + str(a.y.vel.value))    
+            print("Pos: t("+str(a.x.time.value)+")\n\t"+ str(a.x.pos.value)+" Vel:" + str(a.x.vel.value)+"\n\t"+ str(a.y.pos.value)+" Vel:" + str(a.y.vel.value)+"\n\tAcc"+ str(a.xy.acc.value)+" Vel:" + str(a.xy.vel.value))    
     else:
         print("Point calculation fail")
 
