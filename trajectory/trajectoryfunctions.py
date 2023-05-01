@@ -9,8 +9,14 @@ def calc_time(d,a,v):
 def calc_a(d,vi,vf):
     a = (vf*vf-vi*vi)/(2*d)
     return a
+"""
+d = vi*t +(a*t^2)/2
+(vf-vi)/t = a
+
+"""
 def calc_vi_dat(d,a,t):
-    vi = a/(2*t*d)
+    #vi = a/(2*t*d)
+    vi = (d/t)-(a*t)/2
     return vi
 
 def calc_t(vi,vf,a):
@@ -42,21 +48,6 @@ def calc_vf_dvt(d,v,t):
 
 if __name__ == "__main__":
     d = 0.1
-    v = 0
-    velf = -2
-    t = 0.6454
-    a = calc_a_dvt(d,v,t)
-    print("a",a)
-    print(a*t)
-
-    """
-    print(trajectoryfit.calc_a(d, v, velf))
-    a = calc_a_dvt(1,0,2)
-    print("a",a)
-    vf = calc_vf_dva(1,0,a)
-    print(vf)
-    a = calc_a_dvt(1,3,2)
-    print("a",a)
-    vf = calc_vf_dva(1,3,a)
-    print(vf)
-    """
+    a = 1
+    t = 1
+    print(calc_vi_dat(d,a,t))

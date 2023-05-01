@@ -11,8 +11,10 @@ import logging
 import math
 from trajectoryfunctions import *
 
-CORRECTION_MARGIN = 0.96
-REDUCTION_FACTOR = 0.96
+CORRECTION_MARGIN = 0.98
+REDUCTION_FACTOR = 0.98
+VEL_TOLLERANCE = 0.05
+ACC_TOLLERANCE = 0.05
 
 STATE_INIT = "INIT"
 STATE_DONE = "DONE"
@@ -21,7 +23,7 @@ STATE_BACKFIRE = "BACKFIRE"
 STATE_ERROR_ACC = "ERROR_ACC"
 
 #logging.basicConfig(level=logging.CRITICAL)
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.CRITICAL)
 
 # Calculate the time and final speed
 # to cover a distance, with a starting speed
@@ -95,7 +97,6 @@ def calcAB(A,B):
                 if A.vel.value >= 0:
                     velf = abs(B.vel.max*CORRECTION_MARGIN)
                     acc = calc_a(d, A.vel.value, velf)
-
                 else:
                     #start velocity can't be of opposite direction
                     A.vel.max = 0.0
@@ -123,6 +124,7 @@ def calcAB(A,B):
                     acc = -A.acc.max*CORRECTION_MARGIN
                 else:
                     acc = A.acc.max*CORRECTION_MARGIN
+                                
                 #with the new acceleration the max speed will be lower  
                 if sign == 1:               
                     velf = calc_vf_dva(d, A.vel.value, acc)
@@ -144,23 +146,25 @@ def calcAB(A,B):
                     vmax = calc_vf_dva(d, B.vel.max, A.acc.max*CORRECTION_MARGIN)
                 else:
                     vmax = calc_vf_dva(d, B.vel.max, -A.acc.max*CORRECTION_MARGIN)
-                A.vel.max = vmax
+                A.vel.max = abs(vmax)
                 A.state = STATE_BACKFIRE
                 B.state = STATE_INIT
                 return A,B                    
             #Need to check the if the final speed in in between the limits
-            if abs(velf) > abs(B.vel.max):
-                #Set in A the max speed it can have to reach B with its max acceleration
-                # Dont use all the max acceleration otherwise we will play on the variable precision
-                if sign == 1:
+            if sign == 1:
+                if velf > B.vel.max:
                     vmax = calc_vf_dva(d, B.vel.max, A.acc.max*CORRECTION_MARGIN)
-                elif sign == -1:
-                    #not sure about inverting the sign of acceleration
-                    vmax = -calc_vf_dva(-d, -B.vel.max, A.acc.max*CORRECTION_MARGIN)
-                A.vel.max = vmax
-                A.state = STATE_BACKFIRE
-                B.state = STATE_INIT
-                return A,B
+                    A.vel.max = abs(vmax)
+                    A.state = STATE_BACKFIRE
+                    B.state = STATE_INIT
+                    return A,B        
+            if sign == -1:
+                if velf < -B.vel.max:
+                    vmax = -calc_vf_dva(-d, B.vel.max, A.acc.max*CORRECTION_MARGIN)
+                    A.vel.max = abs(vmax)
+                    A.state = STATE_BACKFIRE
+                    B.state = STATE_INIT
+                    return A,B
             #REQ1 
             A.acc.value = acc
             #REQ2 
@@ -173,54 +177,6 @@ def calcAB(A,B):
     B.state = STATE_NEXT             
     return A,B
 
-
-def calcAB_t2(A,B,t):
-    """
-    IF state OK always make sure
-    A.acc.value  #REQ1
-    B.vel.value  #REQ2
-    B.vel.max    #REQ3
-    B.time.value is fixed
-    are set
-    """
-    d = B.pos.value - A.pos.value
-    sign = 1
-    if d < 0:
-        sign = -1
-    #calc acceleration
-    if sign == 1:
-        acc = calc_a_dvt(d,A.vel.value,t)
-    if sign == -1:
-        acc = -calc_a_dvt(-d,-A.vel.value,t)
-    #This should not happend, we ask for longer time respect to the first acceleration tested
-    if (abs(acc)>abs(A.acc.max)):
-        print("ERROR")
-        return A,B
-    if sign == 1:
-        vel = calc_vf_dva(d, A.vel.value, acc)
-    elif sign == -1:
-        #not sure about inverting the sign of acceleration
-        vel = -calc_vf_dva(-d, -A.vel.value, -acc)
-    #check if the final speed in the limits
-    if abs(vel) > abs(B.vel.max):
-        if sign == 1:
-            vmax = calc_vf_dvt(d, B.vel.max, t)
-        elif sign == -1:
-            #not sure about inverting the sign of acceleration
-            vmax = -calc_vf_dva(-d, -B.vel.max, t)
-        A.vel.max = vmax
-        A.state = STATE_BACKFIRE
-        B.state = STATE_INIT
-        return A,B        
-    #REQ1 
-    A.acc.value = acc
-    #REQ2 
-    B.vel.value = vel
-    #REQ3 no change to the max possibile speed
-    B.vel.max = B.vel.max
-    #REQ4 
-    B.time.value = t
-    return A,B
 
 def calcAB_t(A,B,t):
     """
@@ -255,9 +211,11 @@ def calcAB_t(A,B,t):
             print("ERROR velocity is negative when moving to")
             input()
         a = calc_a_dvt(d,A.vel.value,t)
-        if a <= A.acc.max:
+        if (a <= A.acc.max) and (a >= -A.acc.max):
             vf = calc_vf_dvt(d,A.vel.value,t)
-            if vf <= B.vel.max:
+            if abs(vf)<0.01:
+                vf = 0.0
+            if (vf <= B.vel.max): # and (vf >=0):
                 B.vel.value = vf
                 A.acc.value = a
                 B.time.value = t
@@ -269,7 +227,7 @@ def calcAB_t(A,B,t):
                 #What is the velocity in A that with max acc fits vel constraint in B?
                 #it also means we were decelerating
                 vf = calc_vf_dvt(d,B.vel.max,t)
-                A.vel.max = vmax
+                A.vel.max = abs(vf)
                 A.state = STATE_BACKFIRE
                 B.state = STATE_INIT
                 return A,B
@@ -277,8 +235,11 @@ def calcAB_t(A,B,t):
             #too much acceleration
             #Actual velocity is not compatible with 
             #distance and time constraint
-            v= calc_vi_dat(d,A.acc.max,t)
-            A.vel.max = v
+            if a > 0:
+                v= calc_vi_dat(d,A.acc.max,t)
+            if a < 0:
+                v= calc_vi_dat(d,-A.acc.max,t)
+            A.vel.max = abs(v)
             A.state = STATE_BACKFIRE
             B.state = STATE_INIT
             return A,B            
@@ -287,9 +248,11 @@ def calcAB_t(A,B,t):
             print("ERROR velocity is negative when moving to")
             input()
         a = -calc_a_dvt(-d,-A.vel.value,t)
-        if abs(a) <= A.acc.max:
+        if (a <= A.acc.max) and (a >= -A.acc.max):
             vf = -calc_vf_dvt(-d,-A.vel.value,t)
-            if abs(vf) <= B.vel.max:
+            if abs(vf)<0.01:
+                vf = 0.0
+            if (vf > -B.vel.max): #and (vf <= 0):
                 B.vel.value = vf
                 A.acc.value = a
                 B.time.value = t
@@ -300,8 +263,8 @@ def calcAB_t(A,B,t):
                 #Out of velocity
                 #What is the velocity in A that with max acc fits vel constraint in B?
                 #it also means we were decelerating
-                vf = -calc_vf_dvt(-d,abs(B.vel.max),t)
-                A.vel.max = vmax
+                vf = -calc_vf_dvt(-d,B.vel.max,t)
+                A.vel.max = abs(vf)
                 A.state = STATE_BACKFIRE
                 B.state = STATE_INIT
                 return A,B
@@ -309,8 +272,11 @@ def calcAB_t(A,B,t):
             #too much acceleration
             #Actual velocity is not compatible with 
             #distance and time constraint
-            v= calc_vi_dat(-d,abs(A.acc.max),t)
-            A.vel.max = v
+            if a > 0:
+                v= calc_vi_dat(-d,A.acc.max,t)
+            if a < 0:
+                v= calc_vi_dat(-d,-A.acc.max,t)            
+            A.vel.max = abs(v)
             A.state = STATE_BACKFIRE
             B.state = STATE_INIT
             return A,B  
@@ -319,6 +285,8 @@ def calcTime(A,B):
     tx = B.x.time.value
     ty = B.y.time.value
     #time clould be a little different
+    tx = round(tx,2)
+    ty = round(ty,2)
     if tx < ty:
         A.x,B.x = calcAB_t(A.x,B.x,ty)
     elif ty < tx:
@@ -391,8 +359,8 @@ def calc(A,B,level):
         ratio = A.xy.acc.max / A.xy.acc.value
         #apply a reduction factor for safety
         ratio *= REDUCTION_FACTOR
-        A.x.acc.max = A.x.acc.value * ratio
-        A.y.acc.max = A.y.acc.value * ratio
+        A.x.acc.max = abs(A.x.acc.value * ratio)
+        A.y.acc.max = abs(A.y.acc.value * ratio)
         ret,A,B = calc(A,B,level)
         A.update()
         B.update()
@@ -407,8 +375,8 @@ def calc(A,B,level):
         ratio = B.xy.vel.max / B.xy.vel.value
         #apply a reduction factor for safety
         ratio *= REDUCTION_FACTOR
-        B.x.vel.max = B.x.vel.value * ratio
-        B.y.vel.max = B.y.vel.value * ratio
+        B.x.vel.max = abs(B.x.vel.value * ratio)
+        B.y.vel.max = abs(B.y.vel.value * ratio)
         ret,A,B = calc(A,B,level)
         A.update()
         B.update()
@@ -486,13 +454,13 @@ class myPoint:
     
     def checkVel(self):
         #check if velocity of the 2 axis in lower than the velocity Max
-        if self.xy.vel.value <= self.xy.vel.max:
+        if self.xy.vel.value <= (self.xy.vel.max+VEL_TOLLERANCE):
             return True
         return False
 
     def checkAcc(self):
         #check if acc of the 2 axis in lower than the velocity Max
-        if self.xy.acc.value <= self.xy.acc.max:
+        if self.xy.acc.value <= (self.xy.acc.max+ACC_TOLLERANCE):
             return True
         return False
    
@@ -557,10 +525,12 @@ class trajectoryFit:
         idx = 0
         count = 0
         while idx < (len(self.Points)-1):
-            if idx == 32:
+            if idx == 98:
                 print("start debug")
-            logging.info("IDX:" +str(idx))
-            logging.info("count:" +str(count))
+            if count == 104:
+                print("start debug")
+            logging.critical("IDX:" +str(idx))
+            #logging.critical("count:" +str(count))
             count+=1
             #Check if thre is a valid fit for A->B
             ret,A,B = calc(self.Points[idx],self.Points[idx+1],0)
