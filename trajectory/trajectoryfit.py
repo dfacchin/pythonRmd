@@ -23,7 +23,7 @@ STATE_BACKFIRE = "BACKFIRE"
 STATE_ERROR_ACC = "ERROR_ACC"
 
 #logging.basicConfig(level=logging.CRITICAL)
-logging.basicConfig(level=logging.CRITICAL)
+logging.basicConfig(level=logging.INFO)
 
 # Calculate the time and final speed
 # to cover a distance, with a starting speed
@@ -94,7 +94,7 @@ def calcAB(A,B):
             # 1 initial speed and final speed must be of the same "sign"
             # speed sign must be of the same sign of the direction
             if sign == 1:
-                if A.vel.value >= 0:
+                if A.vel.value >= 0:                    
                     velf = abs(B.vel.max*CORRECTION_MARGIN)
                     acc = calc_a(d, A.vel.value, velf)
                 else:
@@ -138,7 +138,10 @@ def calcAB(A,B):
                 t1 = calc_t_dva(d, A.vel.value, acc)
                 #print(B.time.value, t1)
             else:
-                tim = d/A.vel.value
+                try:
+                    tim = d/A.vel.value
+                except:
+                    tim = 0.0
 
             #Check if time is negative something is not right
             if tim < 0:
@@ -215,7 +218,7 @@ def calcAB_t(A,B,t):
             vf = calc_vf_dvt(d,A.vel.value,t)
             if abs(vf)<0.01:
                 vf = 0.0
-            if (vf <= B.vel.max): # and (vf >=0):
+            if (vf <= B.vel.max) and (vf >=0):
                 B.vel.value = vf
                 A.acc.value = a
                 B.time.value = t
@@ -252,7 +255,7 @@ def calcAB_t(A,B,t):
             vf = -calc_vf_dvt(-d,-A.vel.value,t)
             if abs(vf)<0.01:
                 vf = 0.0
-            if (vf > -B.vel.max): #and (vf <= 0):
+            if (vf > -B.vel.max) and (vf <= 0):
                 B.vel.value = vf
                 A.acc.value = a
                 B.time.value = t
@@ -299,7 +302,7 @@ def infoNode(pointName,point,level):
     strA += point.string(pad=" "*len(str(level))+"\t"*(1+level)+"  ")
     return strA
 
-def infoStep(A,B):
+def infoStepold(A,B):
     stra  = "\n--- X\n"
     stra += "P:"+str(A.x.pos.value)+"->"+str(B.x.pos.value)+"\n"
     stra += "S:"+str(A.x.vel.value)+"->"+str(B.x.vel.value)+"_"+str(A.x.vel.max)+"->"+str(B.x.vel.max)+"\n"
@@ -313,6 +316,12 @@ def infoStep(A,B):
     stra += "--- SUM\n"
     stra += "S:"+str(A.xy.vel.value)+"->"+str(B.xy.vel.value)+"_"+str(A.xy.vel.max)+"->"+str(B.xy.vel.max)+"\n"
     stra += "A:"+str(A.xy.acc.value)+"->"+str(B.xy.acc.value)+"_"+str(A.xy.acc.max)+"->"+str(B.xy.acc.max)+"\n"
+    stra += "---\n"
+    return stra
+
+def infoStep(A,B):
+    stra = str(B.x.pos.value - A.x.pos.value)+"->"+str(A.x.vel.value)+"_"+str(A.x.acc.max)+"->"+str(B.x.vel.max)+"\n"
+    stra += str(B.y.pos.value - A.y.pos.value)+"->"+str(A.y.vel.value)+"_"+str(A.y.acc.max)+"->"+str(B.y.vel.max)+"\n"
     stra += "---\n"
     return stra
 
@@ -440,11 +449,13 @@ class myPoint:
     def noBackfire(self):
         ret = True
         if self.x.state == STATE_BACKFIRE:
+            logging.info("X axis backfire")
             #Speed is the output of backfire
             #we can restore the max acceleration limit
             self.x.acc.max = self.Amax
             ret = False
         if self.y.state == STATE_BACKFIRE:
+            logging.info("Y axis backfire")
             #Speed is the output of backfire
             #we can restore the max acceleration limit
             self.y.acc.max = self.Amax
@@ -525,7 +536,7 @@ class trajectoryFit:
         idx = 0
         count = 0
         while idx < (len(self.Points)-1):
-            if idx == 98:
+            if idx == 31:
                 print("start debug")
             if count == 104:
                 print("start debug")
@@ -607,12 +618,14 @@ if __name__ == "__main__":
     """
     a = traj1.equal_traj_xy
 
+    """
     a = []
     steps = 50
     for c in range(steps):
         a.append([0.1*c,0.2*c])
     for c in range(steps):
         a.append([steps*0.1-0.1*c,steps*0.2-0.2*c])
+    """
 
     #create the trajectory using the list [[x1,y1]..]
     tf = trajectoryFit(a)
