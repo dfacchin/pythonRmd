@@ -218,7 +218,7 @@ def calcAB_t(A,B,t):
             vf = calc_vf_dvt(d,A.vel.value,t)
             if abs(vf)<0.01:
                 vf = 0.0
-            if (vf <= B.vel.max) and (vf >=0):
+            if (vf <= B.vel.max):# and (vf >=0):
                 B.vel.value = vf
                 A.acc.value = a
                 B.time.value = t
@@ -255,7 +255,7 @@ def calcAB_t(A,B,t):
             vf = -calc_vf_dvt(-d,-A.vel.value,t)
             if abs(vf)<0.01:
                 vf = 0.0
-            if (vf > -B.vel.max) and (vf <= 0):
+            if (vf > -B.vel.max):# and (vf <= 0):
                 B.vel.value = vf
                 A.acc.value = a
                 B.time.value = t
@@ -618,14 +618,13 @@ if __name__ == "__main__":
     """
     a = traj1.equal_traj_xy
 
-    """
+    #sinmple trajectory
     a = []
     steps = 50
     for c in range(steps):
         a.append([0.1*c,0.2*c])
     for c in range(steps):
         a.append([steps*0.1-0.1*c,steps*0.2-0.2*c])
-    """
 
     #create the trajectory using the list [[x1,y1]..]
     tf = trajectoryFit(a)
