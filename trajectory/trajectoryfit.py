@@ -9,6 +9,7 @@
 import time
 import logging
 import math
+import copy
 from trajectoryfunctions import *
 
 CORRECTION_MARGIN = 0.98
@@ -58,7 +59,14 @@ def calcAB(A,B):
         B.vel.max = 0
         #REQ4 No time constraint        
         B.time.value = 0 
-    else:
+    else:   
+        #if distance is !=0 start and end spseed can't be equal   to 0   
+        if (A.vel.value == 0) and (B.vel.max == 0):
+            vf = calc_vf_dva(d,B.vel.max,A.acc.max)
+            A.vel.max = abs(vf)
+            A.state = STATE_BACKFIRE
+            B.state = STATE_INIT
+            return A,B
         #check if we need to change speed
         if (A.vel.value == B.vel.max) and (sign > 0):
             #REQ1 No need for acceleration
@@ -216,8 +224,7 @@ def calcAB_t(A,B,t):
         a = calc_a_dvt(d,A.vel.value,t)
         if (a <= A.acc.max) and (a >= -A.acc.max):
             vf = calc_vf_dvt(d,A.vel.value,t)
-            if abs(vf)<0.01:
-                vf = 0.0
+
             if (vf <= B.vel.max) and (vf >=0):
                 B.vel.value = vf
                 A.acc.value = a
@@ -230,6 +237,11 @@ def calcAB_t(A,B,t):
                 #What is the velocity in A that with max acc fits vel constraint in B?
                 #it also means we were decelerating
                 vf = calc_vf_dvt(d,B.vel.max,t)
+                #if velocity is on the "wrong" direction reduce the speed reachable 
+                while vf < 0:
+                    B.vel.max *= 0.95
+                    vf = calc_vf_dvt(d,B.vel.max,t)
+    
                 A.vel.max = abs(vf)
                 A.state = STATE_BACKFIRE
                 B.state = STATE_INIT
@@ -253,8 +265,9 @@ def calcAB_t(A,B,t):
         a = -calc_a_dvt(-d,-A.vel.value,t)
         if (a <= A.acc.max) and (a >= -A.acc.max):
             vf = -calc_vf_dvt(-d,-A.vel.value,t)
-            if abs(vf)<0.01:
-                vf = 0.0
+            #if there is a change in speed direction
+            #previous point must reach 0
+
             if (vf > -B.vel.max) and (vf <= 0):
                 B.vel.value = vf
                 A.acc.value = a
@@ -267,6 +280,9 @@ def calcAB_t(A,B,t):
                 #What is the velocity in A that with max acc fits vel constraint in B?
                 #it also means we were decelerating
                 vf = -calc_vf_dvt(-d,B.vel.max,t)
+                while vf > 0:
+                    B.vel.max *= 0.95
+                    vf = -calc_vf_dvt(-d,B.vel.max,t)
                 A.vel.max = abs(vf)
                 A.state = STATE_BACKFIRE
                 B.state = STATE_INIT
@@ -285,15 +301,15 @@ def calcAB_t(A,B,t):
             return A,B  
 
 def calcTime(A,B):
-    tx = B.x.time.value
-    ty = B.y.time.value
+    txp = B.x.time.value
+    typ = B.y.time.value
     #time clould be a little different
-    tx = round(tx,2)
-    ty = round(ty,2)
+    tx = round(txp,2)
+    ty = round(typ,2)
     if tx < ty:
-        A.x,B.x = calcAB_t(A.x,B.x,ty)
+        A.x,B.x = calcAB_t(A.x,B.x,typ)
     elif ty < tx:
-        A.y,B.y = calcAB_t(A.y,B.y,tx)
+           A.y,B.y = calcAB_t(A.y,B.y,txp)
     return A,B
 
 def infoNode(pointName,point,level):
@@ -345,17 +361,37 @@ def calc(A,B,level):
         logging.info("Fail\n"+infoStep(A,B))
         return False,A,B
 
-    logging.info("Intermediate1 \n"+infoStep(A,B))
+    logging.info("Test time constraint \n"+infoStep(A,B))
 
     #find the longest time of the 2 elements
     A,B = calcTime(A,B)
     #Check if the speed in B is not exceeding the imposed limit
     #if it's the case, set the max A state that will permit B to reach it's condition
     if A.noBackfire() == False:
+        #constraint on both axes
+        #start from the last point and calc the max speed the 
+        # second last can have on both axes
+        if (B.x.vel.max == 0) and (B.y.vel.max == 0):
+            Atmp = copy.deepcopy(A)
+            Btmp = copy.deepcopy(B)
+            #from A to B
+            #if a is 0 vel the result for b can be reported on A 
+            Atmp.setTargetVel(0)
+            Atmp.setMaxAcc(Atmp.Amax)
+            Btmp.setMaxVel(Atmp.Vmax)
+            ret,Atmp,Btmp = calc(Atmp,Btmp,level)
+            if ret:
+                if abs(A.x.vel.value) < abs(Btmp.x.vel.value):
+                    if abs(A.y.vel.value) < abs(Btmp.y.vel.value):
+                        #accept the action
+                        return True,A,B
+                #report on A the result
+                A.x.vel.max = abs(Btmp.x.vel.value)
+                A.y.vel.max = abs(Btmp.y.vel.value)
         logging.info("Fail\n"+infoStep(A,B))
         return False,A,B
 
-    logging.info("Intermediate1 \n"+infoStep(A,B))
+    logging.info("Test ACC \n"+infoStep(A,B))
 
 
     #Now the 2 elements are aligned in time
@@ -376,6 +412,9 @@ def calc(A,B,level):
         if ret == False:
             logging.info("Fail\n"+infoStep(A,B))
             return False,A,B
+
+    logging.info("Test SPEED \n"+infoStep(A,B))
+
 
     A.update()
     B.update()
@@ -569,11 +608,11 @@ if __name__ == "__main__":
 
     #Points = [[0,0],[0,200],[0,400],[200,400],[500,400],[800,400],[400,405]]
     #Points = [[0,200], [-300,400], [0,502],[300,600], [0,600], [0,800], [0,1000], [0,1200]]
-    #Points = [[0,200], [-300,400],[300,600], [0,600], [0,800]]
+    Points = [[0,200], [-300,400],[300,600], [0,600], [0,800]]
     #Points = [[0,200], [-300,400], [300,600], [0,800], [0,1000], [0,1200], [0,1500]]
     #Points = [[0,200], [0,400], [150,400], [300,400], [300,100], [800, 600], [0, 1000], [500, 1000]]
     #Points = [[0,200], [0,400], [300,400], [300,-300],[-300,-400], [0, 1000], [500, 1000],[0,200], [-300,400], [300,600]]
-    Points = [[0,0],[-400,400],[0,600]]
+    #Points = [[0,0],[-400,400],[0,600]]
     #Points = [[0,0],[500,800]]
 
 
@@ -584,7 +623,7 @@ if __name__ == "__main__":
     # Generate equally spaced lines
     traj1.equally_spaced_lines()
 
-    """
+
     # Plot
     import matplotlib.pyplot as plt
     
@@ -615,7 +654,7 @@ if __name__ == "__main__":
 
     plt.legend()
     plt.show()
-    """
+
     a = traj1.equal_traj_xy
 
     """
@@ -631,10 +670,10 @@ if __name__ == "__main__":
     tf = trajectoryFit(a)
 
     #set max acceleration along the entire trajectory
-    tf.setMaxAcc(1)
+    tf.setMaxAcc(20)
 
     #set max velocity along the entire trajectory
-    tf.setMaxVel(2)
+    tf.setMaxVel(500)
 
     #evalute the trajectory 
     ret = tf.evaluate()
