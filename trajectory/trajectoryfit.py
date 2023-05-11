@@ -623,8 +623,8 @@ if __name__ == "__main__":
     steps = 50
     for c in range(steps):
         a.append([0.1*c,0.2*c])
-    for c in range(steps):
-        a.append([steps*0.1-0.1*c,steps*0.2-0.2*c])
+    # for c in range(steps):
+    #     a.append([steps*0.1-0.1*c,steps*0.2-0.2*c])
 
     #create the trajectory using the list [[x1,y1]..]
     tf = trajectoryFit(a)
@@ -638,12 +638,62 @@ if __name__ == "__main__":
     #evalute the trajectory 
     ret = tf.evaluate()
 
+    # variables
+    t = []
+    x = []
+    y = []
+    vx = []
+    vy = []
+    ax = []
+    ay = []
+
+
     #Print out all the POS xy and their velocity
     if ret:
-        for a in tf.Points:
-            print("Pos: t("+str(a.x.time.value)+")\n\t"+ str(a.x.pos.value)+" Vel:" + str(a.x.vel.value)+"\n\t"+ str(a.y.pos.value)+" Vel:" + str(a.y.vel.value)+"\n\tAcc"+ str(a.xy.acc.value)+" Vel:" + str(a.xy.vel.value))    
+        prev_t = 0
+
+        for idx,a in enumerate(tf.Points):
+            #print("Pos: t("+str(a.x.time.value)+")\n\t"+ str(a.x.pos.value)+" Vel:" + str(a.x.vel.value)+"\n\t"+ str(a.y.pos.value)+" Vel:" + str(a.y.vel.value)+"\n\tAcc"+ str(a.x.acc.value)+" Vel:" + str(a.y.acc.value))    
+            
+            multip = 100
+            if idx == 0:
+                t.append(round(a.x.time.value,3))
+                x.append(round(a.x.pos.value,3) * multip)
+                y.append(round(a.y.pos.value,3) * multip)
+                vx.append(round(a.x.vel.value,3) * multip)
+                vy.append(round(a.y.vel.value,3) * multip)
+                ax.append(round(a.x.acc.value,3) * multip)
+                ay.append(round(a.y.acc.value,3) * multip)
+                prev_t += a.x.time.value
+
+            else:
+                t.append(round(prev_t + a.x.time.value,3))  
+                x.append(round(a.x.pos.value,3) * multip)
+                y.append(round(a.y.pos.value,3) * multip)
+                vx.append(round(a.x.vel.value,3) * multip)
+                vy.append(round(a.y.vel.value,3) * multip)
+                ax.append(round(a.x.acc.value,3) * multip)
+                ay.append(round(a.y.acc.value,3) * multip)
+                prev_t += a.x.time.value
+    
     else:
         print("Point calculation fail")
+
+    import numpy as np
+
+    # ti = np.linspace(0,29.3,100)
+    # ti = list(ti)
+
+    print("t: \n", t, "\n len t: ", len(t))
+
+    print("x: \n", x, "\n len x: ", len(x))
+    print("y: \n", y, "\n len y: ", len(y))
+
+    print("vx: \n", vx, "\n len vx: ", len(vx))
+    print("vy: \n", vy, "\n len vy: ", len(vy))
+
+    print("ax: \n", ax, "\n len ax: ", len(ax))
+    print("ay: \n", ay, "\n len ay: ", len(ay))
 
     #Tell the execution time
     print("Execution time:",tf.executionTime)
