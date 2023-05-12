@@ -336,8 +336,8 @@ def infoStepold(A,B):
     return stra
 
 def infoStep(A,B):
-    stra = str(B.x.pos.value - A.x.pos.value)+"->"+str(A.x.vel.value)+"_"+str(A.x.acc.max)+"->"+str(B.x.vel.max)+"\n"
-    stra += str(B.y.pos.value - A.y.pos.value)+"->"+str(A.y.vel.value)+"_"+str(A.y.acc.max)+"->"+str(B.y.vel.max)+"\n"
+    stra  = "d:"+str(B.x.pos.value - A.x.pos.value)+" V:"+str(A.x.vel.value)+"->"+str(B.x.vel.max)+" A:"+str(A.x.acc.value)+"/"+str(A.x.acc.max)+" t:"+str(A.x.time.value)+"\n"
+    stra += "d:"+str(B.y.pos.value - A.y.pos.value)+" V:"+str(A.y.vel.value)+"->"+str(B.y.vel.max)+" A:"+str(A.y.acc.value)+"/"+str(A.y.acc.max)+" t:"+str(A.y.time.value)+"\n"
     stra += "---\n"
     return stra
 
@@ -398,6 +398,7 @@ def calc(A,B,level):
     #let's check that the max acceleration and max speed are ok
     A.update()
     B.update()
+    """
     while A.checkAcc() == False:
         #Acceleration constraing are not met
         #reduce max acceleration on both axes by normalizing the combined acceleration
@@ -431,7 +432,7 @@ def calc(A,B,level):
         if ret == False:
             logging.info("Fail\n"+infoStep(A,B))
             return False,A,B
-        
+    """
     #Solution found, return True and the values
     #logging.debug(infoNode("Aou",A,level-1) + infoNode("Bou",A,level-1))
     logging.info("Sucseed \n"+infoStep(A,B))
@@ -653,7 +654,7 @@ if __name__ == "__main__":
     plt.ylabel("y")
 
     plt.legend()
-    plt.show()
+
 
     a = traj1.equal_traj_xy
 
@@ -670,20 +671,22 @@ if __name__ == "__main__":
     tf = trajectoryFit(a)
 
     #set max acceleration along the entire trajectory
-    tf.setMaxAcc(20)
+    tf.setMaxAcc(1)
 
     #set max velocity along the entire trajectory
-    tf.setMaxVel(500)
+    tf.setMaxVel(2)
 
     #evalute the trajectory 
     ret = tf.evaluate()
 
     #Print out all the POS xy and their velocity
+    idx = 0
     if ret:
         for a in tf.Points:
-            print("Pos: t("+str(a.x.time.value)+")\n\t"+ str(a.x.pos.value)+" Vel:" + str(a.x.vel.value)+"\n\t"+ str(a.y.pos.value)+" Vel:" + str(a.y.vel.value)+"\n\tAcc"+ str(a.xy.acc.value)+" Vel:" + str(a.xy.vel.value))    
+            print("IDX:" +str(idx)+" Pos: t("+str(a.x.time.value)+")\n\t"+ str(a.x.pos.value)+" Vel:" + str(a.x.vel.value)+"\n\t"+ str(a.y.pos.value)+" Vel:" + str(a.y.vel.value)+"\n\tAcc"+ str(a.xy.acc.value)+" Vel:" + str(a.xy.vel.value))    
+            idx +=1
     else:
         print("Point calculation fail")
-
+    plt.show()
     #Tell the execution time
     print("Execution time:",tf.executionTime)
