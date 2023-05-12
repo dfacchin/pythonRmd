@@ -655,7 +655,7 @@ if __name__ == "__main__":
         for idx,a in enumerate(tf.Points):
             #print("Pos: t("+str(a.x.time.value)+")\n\t"+ str(a.x.pos.value)+" Vel:" + str(a.x.vel.value)+"\n\t"+ str(a.y.pos.value)+" Vel:" + str(a.y.vel.value)+"\n\tAcc"+ str(a.x.acc.value)+" Vel:" + str(a.y.acc.value))    
             
-            multip = 100
+            multip = 1
             if idx == 0:
                 t.append(round(a.x.time.value,3))
                 x.append(round(a.x.pos.value,3) * multip)
