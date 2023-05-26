@@ -43,13 +43,17 @@ int HardwareSerial::available(void)
 }
 int HardwareSerial::write(uint8_t value)
 {
+  return 0;
 }
 int HardwareSerial::read(void)
 {
+  return 0;
 }
 int HardwareSerial::writeBuffer(uint8_t* pui8Buffer, uint16_t ui16Size)
 {
   HAL_UART_Transmit(huart,pui8Buffer,ui16Size,40);
+  return 1;
+
 }
 int HardwareSerial::readBuffer(uint8_t* pui8Buffer, uint16_t ui16Size)
 {

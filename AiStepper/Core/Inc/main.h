@@ -31,6 +31,36 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stdbool.h"
+typedef struct
+{
+  GPIO_TypeDef  *port;
+  uint32_t pin;
+} pint_t;
+
+typedef struct
+{
+  int32_t i32PulseMax;
+  int32_t i32PulseStep;
+  int32_t i32PulseStop;
+  GPIO_PinState bDirActive;
+  bool bRunning;
+  bool bEmergencyStop;
+  int32_t i32ActualStep;
+  int32_t i32DesireStep;
+  int32_t i32ActualPulse;
+  uint8_t idx;
+  uint32_t ui32PulseCnt;
+  pint_t dir;
+  pint_t stp;
+  pint_t en;
+  pint_t stop;
+} stepper_t;
+
+extern stepper_t sStepper1;
+void stepperInit(stepper_t *psStepper);
+
+void Timer100usCallback(void);
 
 /* USER CODE END Includes */
 

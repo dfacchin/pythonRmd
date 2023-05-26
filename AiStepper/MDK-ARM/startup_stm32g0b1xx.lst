@@ -382,9 +382,11 @@ ARM Macro Assembler    Page 6
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M0+ --apcs=inter
 work --depend=aistepper\startup_stm32g0b1xx.d -oaistepper\startup_stm32g0b1xx.o
  -I.\RTE\_AiStepper -IC:\Users\DanieleF\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0
-\CMSIS\Core\Include --predefine="__MICROLIB SETA 1" --predefine="__UVISION_VERS
-ION SETA 538" --predefine="_RTE_ SETA 1" --predefine="_RTE_ SETA 1" --list=star
-tup_stm32g0b1xx.lst startup_stm32g0b1xx.s
+\CMSIS\Core\Include -IC:\Users\DanieleF\AppData\Local\Arm\Packs\Keil\STM32G0xx_
+DFP\1.4.0\Drivers\CMSIS\Device\ST\STM32G0xx\Include --predefine="__MICROLIB SET
+A 1" --predefine="__UVISION_VERSION SETA 538" --predefine="_RTE_ SETA 1" --pred
+efine="STM32G0B1xx SETA 1" --predefine="_RTE_ SETA 1" --list=startup_stm32g0b1x
+x.lst startup_stm32g0b1xx.s
 
 
 
@@ -929,4 +931,4 @@ Symbol: __main
       At line 122 in file startup_stm32g0b1xx.s
 Comment: __main used once
 2 symbols
-389 symbols in table
+390 symbols in table

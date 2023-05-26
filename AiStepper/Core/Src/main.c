@@ -89,13 +89,25 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  //Set hardware pin
+  sStepper1.dir.pin = XDIR_Pin;
+  sStepper1.dir.port = XDIR_GPIO_Port;
+  sStepper1.stp.pin = XSTP_Pin;
+  sStepper1.stp.port = XSTP_GPIO_Port;
+  sStepper1.en.pin = XEN_Pin;
+  sStepper1.en.port = XEN_GPIO_Port;
+  sStepper1.stop.pin = X_STOP_Pin;
+  sStepper1.stop.port = X_STOP_GPIO_Port;
+  //Init structure
+  stepperInit(&sStepper1);
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    Timer100usCallback();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
