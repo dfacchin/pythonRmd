@@ -396,7 +396,7 @@
           <Files>
             <File>
               <FileName>main.c</FileName>
-              <FileType>1</FileType>
+              <FileType>8</FileType>
               <FilePath>../Core/Src/main.c</FilePath>
             </File>
             <File>
