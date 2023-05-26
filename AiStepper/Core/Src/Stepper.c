@@ -28,6 +28,8 @@ uC speed 68Mhz
 #define PULSE_STEP 10
 
 stepper_t sStepper1;
+stepper_t sStepper2;
+stepper_t sStepper3;
 
 // Based on the distance 
 static int32_t i32CalcPulse;
@@ -76,7 +78,7 @@ void triggerPulse(stepper_t* psStepper)
 static int32_t i32DesirePulse;
 static int32_t i32StepDiff;
 static int32_t i32StepDiff;
-void EvaluateStepper(stepper_t* psStepper)
+void evaluateStepper(stepper_t* psStepper)
 {
   //always reset the step pin to Low
   if (psStepper->bRunning)
@@ -157,7 +159,9 @@ void Timer100usCallback(void)
   {
     Timer10msCallback();
   }
-  EvaluateStepper(&sStepper1);
+  evaluateStepper(&sStepper1);
+  evaluateStepper(&sStepper2);
+  evaluateStepper(&sStepper3);
   
   ui32TimerCounter++;
 }

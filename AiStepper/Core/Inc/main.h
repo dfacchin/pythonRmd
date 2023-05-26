@@ -58,6 +58,8 @@ typedef struct
 } stepper_t;
 
 extern stepper_t sStepper1;
+extern stepper_t sStepper2;
+extern stepper_t sStepper3;
 void stepperInit(stepper_t *psStepper);
 
 void Timer100usCallback(void);
