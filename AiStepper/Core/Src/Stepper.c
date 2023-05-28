@@ -57,8 +57,8 @@ void triggerPulse(stepper_t* psStepper)
       psStepper->bDirActive = DIR_CW;
       HAL_GPIO_WritePin(psStepper->dir.port, psStepper->dir.pin, psStepper->bDirActive);
     }
-    //Change actual pulse counter
-    psStepper->i32ActualPulse++;
+    //Change actual step counter
+    psStepper->i32ActualStep++;
   }
   else
   {
@@ -68,15 +68,14 @@ void triggerPulse(stepper_t* psStepper)
       psStepper->bDirActive = DIR_CCW;
       HAL_GPIO_WritePin(psStepper->dir.port, psStepper->dir.pin, psStepper->bDirActive);
     }
-    //Change actual pulse counter
-    psStepper->i32ActualPulse--;    
+    //Change actual step counter
+    psStepper->i32ActualStep--;    
   }
   //Toggle the step command
   HAL_GPIO_WritePin( psStepper->stp.port, psStepper->stp.pin, GPIO_PIN_SET);
 }
 
 static int32_t i32DesirePulse;
-static int32_t i32StepDiff;
 static int32_t i32StepDiff;
 void evaluateStepper(stepper_t* psStepper)
 {

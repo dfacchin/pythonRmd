@@ -14,7 +14,8 @@ class HardwareSerial
 {
   public:
     UART_HandleTypeDef *huart;
-    HardwareSerial(UART_HandleTypeDef *huartIn);
+    HardwareSerial(void);
+		void setSerial(UART_HandleTypeDef *huartIn);
     void begin(uint32_t baudrate);
     int available(void);
     int write(uint8_t value);

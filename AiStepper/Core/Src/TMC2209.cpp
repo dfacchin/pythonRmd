@@ -30,10 +30,15 @@ void digitalWrite(uint8_t pinIdx, uint8_t pinState)
 {
 
 }
-HardwareSerial::HardwareSerial(UART_HandleTypeDef* huartIn)
+HardwareSerial::HardwareSerial(void)
+{
+  
+}
+void HardwareSerial::setSerial(UART_HandleTypeDef* huartIn)
 {
   huart = huartIn;
 }
+
 void HardwareSerial::begin(uint32_t baudrate)
 {
 }
@@ -80,7 +85,7 @@ void TMC2209::setup(HardwareSerial & serial,
   SerialAddress serial_address)
 {
   hardware_serial_ptr_ = &serial;
-  hardware_serial_ptr_->begin(serial_baud_rate);
+  //hardware_serial_ptr_->begin(serial_baud_rate);
 
   //initialize(serial_baud_rate, serial_address);
 }

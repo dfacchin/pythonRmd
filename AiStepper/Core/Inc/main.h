@@ -109,8 +109,8 @@ void Error_Handler(void);
 #define TH0_GPIO_Port GPIOA
 #define SERVOS_Pin GPIO_PIN_1
 #define SERVOS_GPIO_Port GPIOA
-#define CD_CS_Pin GPIO_PIN_4
-#define CD_CS_GPIO_Port GPIOA
+#define SD_CS_Pin GPIO_PIN_4
+#define SD_CS_GPIO_Port GPIOA
 #define THB_Pin GPIO_PIN_4
 #define THB_GPIO_Port GPIOC
 #define ZDIR_Pin GPIO_PIN_5
@@ -165,7 +165,7 @@ void Error_Handler(void);
 #define A1_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-
+#define SD_SPI_HANDLE hspi1
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

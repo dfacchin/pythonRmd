@@ -18,11 +18,17 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "TMC2209.h"
+#include "app_fatfs.h"
+#include "spi.h"
+#include "tim.h"
+#include "usart.h"
+#include "usb_device.h"
+#include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "TMC2209.h"
+#include "app_fatfs.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,7 +47,6 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
@@ -49,15 +54,18 @@ UART_HandleTypeDef huart1;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
-static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+TMC2209 tmc1;
+TMC2209 tmc2;
+TMC2209 tmc3;
+TMC2209* tmcArray[3];
 
+HardwareSerial hwSerial;
 /* USER CODE END 0 */
 
 /**
@@ -67,7 +75,13 @@ static void MX_USART1_UART_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  TMC2209 tmc1;// = TMC2209();
+	hwSerial.setSerial(&huart4);
+	tmc1.setup(hwSerial,115200,TMC2209::SERIAL_ADDRESS_0);
+	tmc2.setup(hwSerial,115200,TMC2209::SERIAL_ADDRESS_1);
+	tmc3.setup(hwSerial,115200,TMC2209::SERIAL_ADDRESS_2);
+	tmcArray[0] = &tmc1;
+	tmcArray[1] = &tmc1;
+	tmcArray[2] = &tmc1;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -89,7 +103,22 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
+  MX_USB_Device_Init();
+  MX_USART4_UART_Init();
+  if (MX_FATFS_Init() != APP_OK) {
+    Error_Handler();
+  }
+  MX_SPI1_Init();
+  MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
+	
+	HAL_Delay(20);
+	for (int idx = 0; idx < 3; idx++)
+	{
+		tmcArray[idx]->setRunCurrent(100);
+		tmcArray[idx]->enableCoolStep();
+		tmcArray[idx]->enable();
+	}
 
 //Set hardware pin
   sStepper1.dir.pin = XDIR_Pin;
@@ -126,16 +155,15 @@ int main(void)
   sStepper3.stop.port = Z_STOP_GPIO_Port;
   //Init structure
   stepperInit(&sStepper3);
+	
+	HAL_TIM_Base_Start_IT(&htim7);
 
-/* USER CODE END 2 */
+  /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    Timer100usCallback();
-    tmc1.enable();
-    tmc1.setMicrostepsPerStepPowerOfTwo(0);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -159,8 +187,9 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_HSI48;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1;
@@ -187,179 +216,17 @@ void SystemClock_Config(void)
   }
 }
 
-/**
-  * @brief USART1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USART1_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART1_Init 0 */
-
-  /* USER CODE END USART1_Init 0 */
-
-  /* USER CODE BEGIN USART1_Init 1 */
-
-  /* USER CODE END USART1_Init 1 */
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
-  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART1_Init 2 */
-
-  /* USER CODE END USART1_Init 2 */
-
-}
-
-/**
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_GPIO_Init(void)
-{
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-/* USER CODE BEGIN MX_GPIO_Init_1 */
-/* USER CODE END MX_GPIO_Init_1 */
-
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOF_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, PC12_Pin|PS_ON_Pin|THB_Pin|ZDIR_Pin
-                          |FAN0_PWM_Pin|FAN_PWM_Pin|HE0_PWM_Pin|BED_PWM_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, TH0_Pin|SERVOS_Pin|CD_CS_Pin|Neo_Pin
-                          |BTN_ENC_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, ZSTP_Pin|ZEN_Pin|YDIR_Pin|YSTP_Pin
-                          |YEN_Pin|XDIR_Pin|XSTP_Pin|XEN_Pin
-                          |FAN1_PWM_Pin|E0STP_Pin|E0DIR_Pin|BEEPER_Pin
-                          |A2_Pin|A1_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, SPI1_CS_Pin|E0EN_Pin|LCD_EN_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pins : PC11 PC10 */
-  GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_10;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF1_USART4;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PC12_Pin PS_ON_Pin THB_Pin ZDIR_Pin
-                           FAN0_PWM_Pin FAN_PWM_Pin HE0_PWM_Pin BED_PWM_Pin */
-  GPIO_InitStruct.Pin = PC12_Pin|PS_ON_Pin|THB_Pin|ZDIR_Pin
-                          |FAN0_PWM_Pin|FAN_PWM_Pin|HE0_PWM_Pin|BED_PWM_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PROBE_Pin E0_STOP_Pin X_STOP_Pin Y_STOP_Pin
-                           Z_STOP_Pin SD_DET_Pin */
-  GPIO_InitStruct.Pin = PROBE_Pin|E0_STOP_Pin|X_STOP_Pin|Y_STOP_Pin
-                          |Z_STOP_Pin|SD_DET_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : TH0_Pin SERVOS_Pin CD_CS_Pin Neo_Pin
-                           BTN_ENC_Pin */
-  GPIO_InitStruct.Pin = TH0_Pin|SERVOS_Pin|CD_CS_Pin|Neo_Pin
-                          |BTN_ENC_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PA2 PA3 */
-  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF1_USART2;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PA5 PA6 PA7 */
-  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF0_SPI1;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : ZSTP_Pin ZEN_Pin YDIR_Pin YSTP_Pin
-                           YEN_Pin XDIR_Pin XSTP_Pin XEN_Pin
-                           FAN1_PWM_Pin E0STP_Pin E0DIR_Pin BEEPER_Pin
-                           A2_Pin A1_Pin */
-  GPIO_InitStruct.Pin = ZSTP_Pin|ZEN_Pin|YDIR_Pin|YSTP_Pin
-                          |YEN_Pin|XDIR_Pin|XSTP_Pin|XEN_Pin
-                          |FAN1_PWM_Pin|E0STP_Pin|E0DIR_Pin|BEEPER_Pin
-                          |A2_Pin|A1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : STATUS_Pin */
-  GPIO_InitStruct.Pin = STATUS_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(STATUS_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : SPI1_CS_Pin E0EN_Pin LCD_EN_Pin */
-  GPIO_InitStruct.Pin = SPI1_CS_Pin|E0EN_Pin|LCD_EN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PB6 PB7 */
-  GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF6_I2C1;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
-}
-
 /* USER CODE BEGIN 4 */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* Prevent unused argument(s) compilation warning */
+  UNUSED(htim);
 
+	if (htim == &htim7)
+	{
+    Timer100usCallback();
+	}
+}
 /* USER CODE END 4 */
 
 /**

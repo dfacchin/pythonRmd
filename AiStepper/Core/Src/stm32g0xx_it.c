@@ -55,7 +55,9 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-
+extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
+extern TIM_HandleTypeDef htim7;
+extern UART_HandleTypeDef huart4;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -139,6 +141,48 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32g0xx.s).                    */
 /******************************************************************************/
+
+/**
+  * @brief This function handles USB, UCPD1 and UCPD2 global interrupts.
+  */
+void USB_UCPD1_2_IRQHandler(void)
+{
+  /* USER CODE BEGIN USB_UCPD1_2_IRQn 0 */
+
+  /* USER CODE END USB_UCPD1_2_IRQn 0 */
+  HAL_PCD_IRQHandler(&hpcd_USB_DRD_FS);
+  /* USER CODE BEGIN USB_UCPD1_2_IRQn 1 */
+
+  /* USER CODE END USB_UCPD1_2_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM7 and LPTIM2 global Interrupt.
+  */
+void TIM7_LPTIM2_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM7_LPTIM2_IRQn 0 */
+
+  /* USER CODE END TIM7_LPTIM2_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim7);
+  /* USER CODE BEGIN TIM7_LPTIM2_IRQn 1 */
+
+  /* USER CODE END TIM7_LPTIM2_IRQn 1 */
+}
+
+/**
+  * @brief This function handles USART3, USART4, USART5, USART6, LPUART1 globlal Interrupts (combined with EXTI 28).
+  */
+void USART3_4_5_6_LPUART1_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART3_4_5_6_LPUART1_IRQn 0 */
+
+  /* USER CODE END USART3_4_5_6_LPUART1_IRQn 0 */
+  HAL_UART_IRQHandler(&huart4);
+  /* USER CODE BEGIN USART3_4_5_6_LPUART1_IRQn 1 */
+
+  /* USER CODE END USART3_4_5_6_LPUART1_IRQn 1 */
+}
 
 /* USER CODE BEGIN 1 */
 
