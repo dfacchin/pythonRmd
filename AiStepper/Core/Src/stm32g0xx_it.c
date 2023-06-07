@@ -26,7 +26,8 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN TD */
-
+void USART_CharReception_Callback(void);
+void Error_Callback(void);
 /* USER CODE END TD */
 
 /* Private define ------------------------------------------------------------*/
@@ -57,7 +58,6 @@
 /* External variables --------------------------------------------------------*/
 extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
 extern TIM_HandleTypeDef htim7;
-extern UART_HandleTypeDef huart4;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -157,6 +157,34 @@ void USB_UCPD1_2_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles DMA1 channel 2 and channel 3 interrupts.
+  */
+void DMA1_Channel2_3_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Channel2_3_IRQn 0 */
+
+  /* USER CODE END DMA1_Channel2_3_IRQn 0 */
+
+  /* USER CODE BEGIN DMA1_Channel2_3_IRQn 1 */
+
+  /* USER CODE END DMA1_Channel2_3_IRQn 1 */
+}
+
+/**
+  * @brief This function handles DMA1 Ch4 to Ch7, DMA2 Ch1 to Ch5 and DMAMUX1 Overrun Interrupts.
+  */
+void DMA1_Ch4_7_DMA2_Ch1_5_DMAMUX1_OVR_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Ch4_7_DMA2_Ch1_5_DMAMUX1_OVR_IRQn 0 */
+
+  /* USER CODE END DMA1_Ch4_7_DMA2_Ch1_5_DMAMUX1_OVR_IRQn 0 */
+
+  /* USER CODE BEGIN DMA1_Ch4_7_DMA2_Ch1_5_DMAMUX1_OVR_IRQn 1 */
+
+  /* USER CODE END DMA1_Ch4_7_DMA2_Ch1_5_DMAMUX1_OVR_IRQn 1 */
+}
+
+/**
   * @brief This function handles TIM7 and LPTIM2 global Interrupt.
   */
 void TIM7_LPTIM2_IRQHandler(void)
@@ -176,9 +204,19 @@ void TIM7_LPTIM2_IRQHandler(void)
 void USART3_4_5_6_LPUART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART3_4_5_6_LPUART1_IRQn 0 */
-
+  if (LL_USART_IsActiveFlag_RXNE(USART4) && LL_USART_IsEnabledIT_RXNE(USART4))
+  {
+    /* RXNE flag will be cleared by reading of RDR register (done in call) */
+    /* Call function in charge of handling Character reception */
+    USART_CharReception_Callback();
+  }
+  else
+  {
+    /* Call Error function */
+    Error_Callback();
+  }
   /* USER CODE END USART3_4_5_6_LPUART1_IRQn 0 */
-  HAL_UART_IRQHandler(&huart4);
+
   /* USER CODE BEGIN USART3_4_5_6_LPUART1_IRQn 1 */
 
   /* USER CODE END USART3_4_5_6_LPUART1_IRQn 1 */

@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "app_fatfs.h"
 #include "spi.h"
 #include "tim.h"
@@ -27,8 +28,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "TMC2209.h"
+
 #include "app_fatfs.h"
+#include "usbd_cdc_if.h"
+#include "TMC2209.h"
+//#include "stm32g0xx_hal_uart.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -60,12 +64,18 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-TMC2209 tmc1;
-TMC2209 tmc2;
-TMC2209 tmc3;
-TMC2209* tmcArray[3];
 
-HardwareSerial hwSerial;
+TMC2209TypeDef tmc2209;
+ConfigurationTypeDef sConfig;
+void tmc2209_readWriteArray(uint8_t channel, uint8_t *data, size_t writeLength, size_t readLength);
+uint8_t tmc2209_CRC8(uint8_t *data, size_t length);
+
+
+uint32_t ui32Read;
+char buff[5] = "ciao";
+uint32_t milli;
+uint8_t ui8Tmp;
+uint8_t ui8Buffer[10];
 /* USER CODE END 0 */
 
 /**
@@ -75,13 +85,7 @@ HardwareSerial hwSerial;
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	hwSerial.setSerial(&huart4);
-	tmc1.setup(hwSerial,115200,TMC2209::SERIAL_ADDRESS_0);
-	tmc2.setup(hwSerial,115200,TMC2209::SERIAL_ADDRESS_1);
-	tmc3.setup(hwSerial,115200,TMC2209::SERIAL_ADDRESS_2);
-	tmcArray[0] = &tmc1;
-	tmcArray[1] = &tmc1;
-	tmcArray[2] = &tmc1;
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -102,6 +106,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART1_UART_Init();
   MX_USB_Device_Init();
   MX_USART4_UART_Init();
@@ -112,58 +117,60 @@ int main(void)
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
 	
-	HAL_Delay(20);
-	for (int idx = 0; idx < 3; idx++)
-	{
-		tmcArray[idx]->setRunCurrent(100);
-		tmcArray[idx]->enableCoolStep();
-		tmcArray[idx]->enable();
-	}
+	HAL_GPIO_WritePin(XEN_GPIO_Port,XEN_Pin, GPIO_PIN_RESET);
+	HAL_Delay(10);
+	HAL_GPIO_WritePin(XEN_GPIO_Port,XEN_Pin, GPIO_PIN_SET);
+	HAL_Delay(10);
+	HAL_GPIO_WritePin(XEN_GPIO_Port,XEN_Pin, GPIO_PIN_RESET);
+	HAL_Delay(10);
+//	//HAL_GPIO_WritePin(XDIR_GPIO_Port,XDIR_Pin, GPIO_PIN_SET);
+	tmc_fillCRC8Table(0x07, true, 1);
+//	
+//	ui8Buffer[0] =  0x5;
+//	ui8Buffer[1] =  0x0;
+//	ui8Buffer[2] =  0x0;
+// 	ui8Buffer[3] =  tmc2209_CRC8(ui8Buffer,3);
+//	tmc2209_readWriteArray(0, ui8Buffer,4,8);
+//	
+//	ui8Buffer[0] =  0x5;
+//	ui8Buffer[1] =  0x1;
+//	ui8Buffer[2] =  0x0;
+// 	ui8Buffer[3] =  tmc2209_CRC8(ui8Buffer,3);
+//	tmc2209_readWriteArray(0, ui8Buffer,4,8);
 
-//Set hardware pin
-  sStepper1.dir.pin = XDIR_Pin;
-  sStepper1.dir.port = XDIR_GPIO_Port;
-  sStepper1.stp.pin = XSTP_Pin;
-  sStepper1.stp.port = XSTP_GPIO_Port;
-  sStepper1.en.pin = XEN_Pin;
-  sStepper1.en.port = XEN_GPIO_Port;
-  sStepper1.stop.pin = X_STOP_Pin;
-  sStepper1.stop.port = X_STOP_GPIO_Port;
-  //Init structure
-  stepperInit(&sStepper1);
-  
-//Set hardware pin
-  sStepper2.dir.pin = YDIR_Pin;
-  sStepper2.dir.port = YDIR_GPIO_Port;
-  sStepper2.stp.pin = YSTP_Pin;
-  sStepper2.stp.port = YSTP_GPIO_Port;
-  sStepper2.en.pin = YEN_Pin;
-  sStepper2.en.port = YEN_GPIO_Port;
-  sStepper2.stop.pin = Y_STOP_Pin;
-  sStepper2.stop.port = Y_STOP_GPIO_Port;
-  //Init structure
-  stepperInit(&sStepper2);
+//	ui8Buffer[0] =  0x5;
+//	ui8Buffer[1] =  0x2;
+//	ui8Buffer[2] =  0x0;
+// 	ui8Buffer[3] =  tmc2209_CRC8(ui8Buffer,3);
+//	tmc2209_readWriteArray(0, ui8Buffer,4,8);
 
-//Set hardware pin
-  sStepper3.dir.pin = ZDIR_Pin;
-  sStepper3.dir.port = ZDIR_GPIO_Port;
-  sStepper3.stp.pin = ZSTP_Pin;
-  sStepper3.stp.port = ZSTP_GPIO_Port;
-  sStepper3.en.pin = ZEN_Pin;
-  sStepper3.en.port = ZEN_GPIO_Port;
-  sStepper3.stop.pin = Z_STOP_Pin;
-  sStepper3.stop.port = Z_STOP_GPIO_Port;
-  //Init structure
-  stepperInit(&sStepper3);
+//	ui8Buffer[0] =  0x5;
+//	ui8Buffer[1] =  0x3;
+//	ui8Buffer[2] =  0x0;
+// 	ui8Buffer[3] =  tmc2209_CRC8(ui8Buffer,3);
+//	tmc2209_readWriteArray(0, ui8Buffer,4,8);
+
+	HAL_GPIO_WritePin(XEN_GPIO_Port,XEN_Pin, GPIO_PIN_SET);
+
+	tmc2209_init(&tmc2209, 0, 0, &sConfig, tmc2209_defaultRegisterResetState);
+	tmc2209_periodicJob(&tmc2209,HAL_GetTick());
+	tmc2209_reset(&tmc2209);
 	
-	HAL_TIM_Base_Start_IT(&htim7);
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		//CDC_Transmit_FS((uint8_t*)buff,5);
+		milli = HAL_GetTick();
+  	tmc2209_periodicJob(&tmc2209,milli);	
+		HAL_Delay(1);
+		if (tmc2209.config->state == CONFIG_READY)
+		{
+			ui8Tmp = tmc2209_readInt(&tmc2209,TMC2209_GCONF);
+		}
+		HAL_GPIO_TogglePin(XSTP_GPIO_Port,XSTP_Pin);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -227,6 +234,120 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     Timer100usCallback();
 	}
 }
+
+uint8_t aui8gDataOut[16];
+uint8_t aui8gDataIn[16];
+volatile uint8 ui8gIdxTx;
+volatile uint8 ui8gIdx;
+volatile uint8 ui8gIdxRx = 0;
+volatile uint8_t ui8GlobalFlag = 0;
+volatile uint16_t ui8GlobalRx = 0;
+
+void USART_CharReception_Callback(void)
+{
+	aui8gDataIn[ui8gIdxRx++] = LL_USART_ReceiveData8(USART4);
+	ui8gIdxRx%=16;
+}
+
+void Error_Callback(void)
+{
+	if (LL_USART_IsActiveFlag_ORE(USART4))
+	{
+	  LL_USART_ClearFlag_ORE(USART4);
+	}
+}
+void tmc2209_readWriteArray(uint8_t channel, uint8_t *data, size_t writeLength, size_t readLength)
+{
+	ui8gIdx = 0;
+	ui8gIdxRx = 0;
+  /* Clear Overrun flag, in case characters have already been sent to USART */
+	if (readLength>0)
+	{
+		LL_USART_ReceiveData8(USART4);
+		LL_USART_EnableIT_ERROR(USART4);
+		LL_USART_EnableIT_RXNE(USART4);
+	}
+	
+	while(ui8gIdx < writeLength)
+	{
+		LL_USART_TransmitData8(USART4, data[ui8gIdx++]);
+		while (!LL_USART_IsActiveFlag_TXE(USART4));
+	}
+	if(readLength>0)
+	{
+		//while (!LL_USART_IsActiveFlag_TC(USART4)) ui8gIdx++;
+		while( ui8gIdxRx < (writeLength+readLength) ) ui8gIdx++;
+		memcpy(data,&aui8gDataIn[writeLength],readLength);
+		LL_USART_DisableIT_ERROR(USART4);
+		LL_USART_DisableIT_RXNE(USART4);
+	}
+}
+	
+
+
+//void tmc2209_readWriteArray2(uint8_t channel, uint8_t *data, size_t writeLength, size_t readLength)
+//{
+//	HAL_StatusTypeDef ret;
+//	ret = HAL_OK;
+//	//ret = HAL_HalfDuplex_EnableTransmitter(&huart4);
+//	if (ret == HAL_OK)
+//	{
+//		ret = HAL_UART_Transmit(&huart4,data,writeLength,5);
+//		if (ret == HAL_OK)
+//		{
+//			//ret = HAL_HalfDuplex_EnableReceiver(&huart4);
+//			//HAL_Delay(1);
+//			__HAL_UART_FLUSH_DRREGISTER(&huart4);
+//			if (readLength > 0)
+//			{
+//				//memset(data,0xff,writeLength);
+//				if (ret == HAL_OK)
+//				{
+//					//ret = HAL_UARTEx_ReceiveToIdle(&huart4,data,readLength,&readLength,100);
+//					ret = HAL_UART_Receive(&huart4,data,readLength,100);
+//					if (ret == HAL_OK)
+//					{
+//						return;
+//					}
+//				}
+//			}
+//			else
+//			{
+//				return;
+//			}
+//		}
+//	}
+//	return;
+////	uart->rxtx.clearBuffers();
+////	uart->rxtx.txN(data, writeLength);
+////	Hal_
+////	/* Workaround: Give the UART time to send. Otherwise another write/readRegister can do clearBuffers()
+////	 * before we're done. This currently is an issue with the IDE when using the Register browser and the
+////	 * periodic refresh of values gets requested right after the write request.
+////	 */
+////	wait(2);
+
+////	// Abort early if no data needs to be read back
+////	if (readLength <= 0)
+////		return 0;
+
+////	// Wait for reply with timeout limit
+////	uint32_t timestamp = systick_getTick();
+////	while(uart->rxtx.bytesAvailable() < readLength)
+////	{
+////		if(timeSince(timestamp) > UART_TIMEOUT_VALUE)
+////		{
+////			// Abort on timeout
+////			return -1;
+////		}
+////	}
+
+////	uart->rxtx.rxN(data, readLength);
+
+////	return 0;
+//}
+
+
 /* USER CODE END 4 */
 
 /**

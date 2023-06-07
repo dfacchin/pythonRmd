@@ -21,9 +21,34 @@ void pinMode(uint8_t pinIdx, uint8_t pinMode)
 
 }
 
-void delayMicroseconds(uint32_t uSec)
-{
+//******************************************************************************
 
+volatile unsigned int *DWT_CYCCNT = (volatile unsigned int *)0xE0001004; //address of the register
+volatile unsigned int *DWT_CONTROL = (volatile unsigned int *)0xE0001000; //address of the register
+volatile unsigned int *SCB_DEMCR = (volatile unsigned int *)0xE000EDFC; //address of the register
+//******************************************************************************
+
+void EnableTiming(void)
+{
+  *SCB_DEMCR = *SCB_DEMCR | 0x01000000;
+  *DWT_CYCCNT = 0; // reset the counter
+  *DWT_CONTROL = *DWT_CONTROL | 1 ; // enable the counter
+}
+
+//******************************************************************************
+void HAL_Delay_us(uint32_t tick)
+{
+  unsigned int start, current;
+  start = *DWT_CYCCNT;
+	do
+	{
+		current = *DWT_CYCCNT;
+	} while((current - start) < tick);
+}
+
+__STATIC_INLINE void delayMicroseconds(uint32_t uSec)
+{
+	HAL_Delay_us(uSec);
 }
 
 void digitalWrite(uint8_t pinIdx, uint8_t pinState)
