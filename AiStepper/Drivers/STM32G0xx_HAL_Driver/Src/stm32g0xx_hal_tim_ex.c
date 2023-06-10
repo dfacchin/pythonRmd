@@ -109,9 +109,9 @@
 /* Private macros ------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
-static void TIM_DMADelayPulseNCplt(DMA_HandleTypeDef *hdma);
-static void TIM_DMAErrorCCxN(DMA_HandleTypeDef *hdma);
-static void TIM_CCxNChannelCmd(TIM_TypeDef *TIMx, uint32_t Channel, uint32_t ChannelNState);
+void TIM_DMADelayPulseNCplt(DMA_HandleTypeDef *hdma);
+void TIM_DMAErrorCCxN(DMA_HandleTypeDef *hdma);
+void TIM_CCxNChannelCmd(TIM_TypeDef *TIMx, uint32_t Channel, uint32_t ChannelNState);
 
 /* Exported functions --------------------------------------------------------*/
 /** @defgroup TIMEx_Exported_Functions TIM Extended Exported Functions
@@ -2763,7 +2763,7 @@ void TIMEx_DMACommutationHalfCplt(DMA_HandleTypeDef *hdma)
   * @param  hdma pointer to DMA handle.
   * @retval None
   */
-static void TIM_DMADelayPulseNCplt(DMA_HandleTypeDef *hdma)
+void TIM_DMADelayPulseNCplt(DMA_HandleTypeDef *hdma)
 {
   TIM_HandleTypeDef *htim = (TIM_HandleTypeDef *)((DMA_HandleTypeDef *)hdma)->Parent;
 
@@ -2822,7 +2822,7 @@ static void TIM_DMADelayPulseNCplt(DMA_HandleTypeDef *hdma)
   * @param  hdma pointer to DMA handle.
   * @retval None
   */
-static void TIM_DMAErrorCCxN(DMA_HandleTypeDef *hdma)
+void TIM_DMAErrorCCxN(DMA_HandleTypeDef *hdma)
 {
   TIM_HandleTypeDef *htim = (TIM_HandleTypeDef *)((DMA_HandleTypeDef *)hdma)->Parent;
 
@@ -2867,7 +2867,7 @@ static void TIM_DMAErrorCCxN(DMA_HandleTypeDef *hdma)
   *          This parameter can be: TIM_CCxN_ENABLE or TIM_CCxN_Disable.
   * @retval None
   */
-static void TIM_CCxNChannelCmd(TIM_TypeDef *TIMx, uint32_t Channel, uint32_t ChannelNState)
+void TIM_CCxNChannelCmd(TIM_TypeDef *TIMx, uint32_t Channel, uint32_t ChannelNState)
 {
   uint32_t tmp;
 

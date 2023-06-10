@@ -65,9 +65,9 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, ZSTP_Pin|ZEN_Pin|YDIR_Pin|YSTP_Pin
-                          |YEN_Pin|XDIR_Pin|XSTP_Pin|XEN_Pin
-                          |FAN1_PWM_Pin|E0STP_Pin|E0DIR_Pin|BEEPER_Pin
-                          |A2_Pin|A1_Pin, GPIO_PIN_RESET);
+                          |YEN_Pin|XDIR_Pin|XEN_Pin|FAN1_PWM_Pin
+                          |E0STP_Pin|E0DIR_Pin|BEEPER_Pin|A2_Pin
+                          |A1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, SPI1_CS_Pin|E0EN_Pin|LCD_EN_Pin, GPIO_PIN_RESET);
@@ -109,11 +109,11 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pins : PBPin PBPin PBPin PBPin
                            PBPin PBPin PBPin PBPin
                            PBPin PBPin PBPin PBPin
-                           PBPin PBPin */
+                           PBPin */
   GPIO_InitStruct.Pin = ZSTP_Pin|ZEN_Pin|YDIR_Pin|YSTP_Pin
-                          |YEN_Pin|XDIR_Pin|XSTP_Pin|XEN_Pin
-                          |FAN1_PWM_Pin|E0STP_Pin|E0DIR_Pin|BEEPER_Pin
-                          |A2_Pin|A1_Pin;
+                          |YEN_Pin|XDIR_Pin|XEN_Pin|FAN1_PWM_Pin
+                          |E0STP_Pin|E0DIR_Pin|BEEPER_Pin|A2_Pin
+                          |A1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

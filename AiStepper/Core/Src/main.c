@@ -26,6 +26,7 @@
 #include "usb_device.h"
 #include "gpio.h"
 
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -33,6 +34,8 @@
 #include "usbd_cdc_if.h"
 #include "TMC2209.h"
 //#include "stm32g0xx_hal_uart.h"
+
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -54,12 +57,38 @@
 
 /* USER CODE BEGIN PV */
 
+/* Asse X
+  #pturn = 200pulses turn
+	#turns = 5
+	#start freq 100
+	#maxfreq 200
+	#maxacc = 1
+*/
+#define X_TURN_PULSES 200 //must be an odd number
+#define X_TURNS 15
+#define X_TOTAL_PULSES (X_TURN_PULSES * X_TURNS)
+#define X_MIN_PULSE 20
+#define X_MAX_PULSE 3000
+#define X_ACC_PULSE 10
+#define X_TIM_CLK 100000
+
+uint16_t aui32XBuffer[X_TOTAL_PULSES/2];
+uint8_t ui8XState = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
+void TIM_DMADelayPulseCplt(DMA_HandleTypeDef *hdma);
+void TIM_DMADelayPulseNCplt(DMA_HandleTypeDef *hdma);
+void TIM_DMAErrorCCxN(DMA_HandleTypeDef *hdma);
 
+void TIM_CCxNChannelCmd(TIM_TypeDef *TIMx, uint32_t Channel, uint32_t ChannelNState);
+
+HAL_StatusTypeDef HAL_TIM_PWM_Start_DMA2(TIM_HandleTypeDef *htim, uint32_t Channel, const uint32_t *pData,
+                                        uint16_t Length);
+HAL_StatusTypeDef HAL_TIMEx_PWMN_Start_DMA2(TIM_HandleTypeDef *htim, uint32_t Channel, const uint32_t *pData,
+                                           uint16_t Length);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -76,6 +105,10 @@ char buff[5] = "ciao";
 uint32_t milli;
 uint8_t ui8Tmp;
 uint8_t ui8Buffer[10];
+
+	uint32_t ui32Tmp;
+uint32_t ui32BootTime;
+
 /* USER CODE END 0 */
 
 /**
@@ -85,6 +118,21 @@ uint8_t ui8Buffer[10];
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+	uint32_t ui32Idx;
+	uint16_t pulse = X_MIN_PULSE ;
+	uint16_t CounterPeriod;
+	
+	//Fill bulses
+	for( ui32Idx = 0; ui32Idx < (X_TOTAL_PULSES/2); ui32Idx++)
+	{
+		CounterPeriod = X_TIM_CLK / pulse;
+		aui32XBuffer[ui32Idx] = CounterPeriod;
+		pulse += X_ACC_PULSE;
+		if (pulse > X_MAX_PULSE)
+		{
+			pulse = X_MAX_PULSE;
+		}	
+	}
 
   /* USER CODE END 1 */
 
@@ -115,13 +163,14 @@ int main(void)
   }
   MX_SPI1_Init();
   MX_TIM7_Init();
+  MX_TIM15_Init();
   /* USER CODE BEGIN 2 */
 	
 	HAL_GPIO_WritePin(XEN_GPIO_Port,XEN_Pin, GPIO_PIN_RESET);
 	HAL_Delay(10);
 	HAL_GPIO_WritePin(XEN_GPIO_Port,XEN_Pin, GPIO_PIN_SET);
 	HAL_Delay(10);
-	HAL_GPIO_WritePin(XEN_GPIO_Port,XEN_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(XEN_GPIO_Port,XEN_Pin, GPIO_PIN_SET);
 	HAL_Delay(10);
 //	//HAL_GPIO_WritePin(XDIR_GPIO_Port,XDIR_Pin, GPIO_PIN_SET);
 	tmc_fillCRC8Table(0x07, true, 1);
@@ -156,21 +205,87 @@ int main(void)
 	tmc2209_periodicJob(&tmc2209,HAL_GetTick());
 	tmc2209_reset(&tmc2209);
 	
+	
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+	ui32BootTime = HAL_GetTick();
   while (1)
   {
-		//CDC_Transmit_FS((uint8_t*)buff,5);
+//		//CDC_Transmit_FS((uint8_t*)buff,5);
 		milli = HAL_GetTick();
   	tmc2209_periodicJob(&tmc2209,milli);	
 		HAL_Delay(1);
 		if (tmc2209.config->state == CONFIG_READY)
 		{
-			ui8Tmp = tmc2209_readInt(&tmc2209,TMC2209_GCONF);
+			if (ui8XState == 0)
+			{
+				if ( ( HAL_GetTick() - ui32BootTime) > 10000)
+				{
+					ui8XState = 1;
+				}
+			}
+
+
+			if (ui8XState == 1)
+			{
+				ui32Tmp = tmc2209_readInt(&tmc2209,TMC2209_GCONF);
+				ui32Tmp = tmc2209_readInt(&tmc2209,0x6c);				
+				ui32Tmp = TMC2209_FIELD_READ(&tmc2209, TMC2209_CHOPCONF, TMC2209_MRES_MASK, TMC2209_MRES_SHIFT);
+				ui32Tmp = 256 >> ui32Tmp;
+
+				ui32Tmp = 0;
+				//Set the microstef by software
+
+				//TMC2209_FIELD_UPDATE(&tmc2209, TMC2209_CHOPCONF, TMC2209_MRES_MASK, TMC2209_MRES_SHIFT, ui32Tmp);
+
+				ui32Tmp = 256 >> TMC2209_FIELD_READ(&tmc2209, TMC2209_CHOPCONF, TMC2209_MRES_MASK, TMC2209_MRES_SHIFT);
+				
+				ui32Tmp = tmc2209_readInt(&tmc2209,0x6c);
+				ui32Tmp = tmc2209_readInt(&tmc2209,1);
+				ui32Tmp = tmc2209_readInt(&tmc2209,2);
+				ui32Tmp = tmc2209_readInt(&tmc2209,3);
+				ui32Tmp = tmc2209_readInt(&tmc2209,4);
+				ui32Tmp = tmc2209_readInt(&tmc2209,5);
+				ui32Tmp = tmc2209_readInt(&tmc2209,6);
+				ui32Tmp = tmc2209_readInt(&tmc2209,7);
+				ui32Tmp = tmc2209_readInt(&tmc2209,8);
+				ui32Tmp = tmc2209_readInt(&tmc2209,9);
+				ui32Tmp = tmc2209_readInt(&tmc2209,10);
+				ui32Tmp = tmc2209_readInt(&tmc2209,11);
+				ui32Tmp = tmc2209_readInt(&tmc2209,12);
+				ui32Tmp = tmc2209_readInt(&tmc2209,13);
+				ui32Tmp = tmc2209_readInt(&tmc2209,14);
+				ui32Tmp = tmc2209_readInt(&tmc2209,18);
+				ui32Tmp = tmc2209_readInt(&tmc2209,16);
+				ui32Tmp = tmc2209_readInt(&tmc2209,17);
+				ui32Tmp = tmc2209_readInt(&tmc2209,18);
+				ui32Tmp = tmc2209_readInt(&tmc2209,19);
+				ui32Tmp = tmc2209_readInt(&tmc2209,20);				
+				
+				ui8XState = 2;
+				HAL_GPIO_WritePin(XEN_GPIO_Port, XEN_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(XDIR_GPIO_Port, XDIR_Pin, GPIO_PIN_SET);
+
+				if (HAL_TIMEx_PWMN_Start_IT(&htim15,TIM_CHANNEL_1) == HAL_OK)
+				{
+					//HAL_TIM_PWM_Start_DMA2(&htim15, TIM_CHANNEL_1, (uint32_t)*aui32XBuffer, X_TOTAL_PULSES);
+				}				
+			}
+			else if (ui8XState == 2)
+			{
+				//read current 
+				ui32Tmp = tmc2209_readInt(&tmc2209, TMC2209_SG_RESULT);
+				
+				CDC_Transmit_FS(ui8Buffer,sprintf(ui8Buffer,"%d\n",ui32Tmp));
+				HAL_Delay(20);
+
+			}
+
 		}
-		HAL_GPIO_TogglePin(XSTP_GPIO_Port,XSTP_Pin);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -224,16 +339,7 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-  /* Prevent unused argument(s) compilation warning */
-  UNUSED(htim);
 
-	if (htim == &htim7)
-	{
-    Timer100usCallback();
-	}
-}
 
 uint8_t aui8gDataOut[16];
 uint8_t aui8gDataIn[16];
@@ -258,6 +364,10 @@ void Error_Callback(void)
 }
 void tmc2209_readWriteArray(uint8_t channel, uint8_t *data, size_t writeLength, size_t readLength)
 {
+	uint32_t timeout;
+	timeout = HAL_GetTick();
+	HAL_Delay(2);
+	
 	ui8gIdx = 0;
 	ui8gIdxRx = 0;
   /* Clear Overrun flag, in case characters have already been sent to USART */
@@ -276,76 +386,73 @@ void tmc2209_readWriteArray(uint8_t channel, uint8_t *data, size_t writeLength, 
 	if(readLength>0)
 	{
 		//while (!LL_USART_IsActiveFlag_TC(USART4)) ui8gIdx++;
-		while( ui8gIdxRx < (writeLength+readLength) ) ui8gIdx++;
+		while( ui8gIdxRx < (writeLength+readLength) ) 
+		{
+			if ((HAL_GetTick() -timeout) > 50 )
+			{
+				memset(data,0,readLength);
+				LL_USART_DisableIT_ERROR(USART4);
+				LL_USART_DisableIT_RXNE(USART4);
+				LL_USART_ClearFlag_ORE(USART4);			
+			}		
+		}
+		ui8gIdx++;
 		memcpy(data,&aui8gDataIn[writeLength],readLength);
 		LL_USART_DisableIT_ERROR(USART4);
 		LL_USART_DisableIT_RXNE(USART4);
+	  LL_USART_ClearFlag_ORE(USART4);
 	}
 }
 	
+volatile uint32_t ui32CounterPeriod = 0;
+volatile uint32_t ui32CounterPulse = 0;
 
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* Prevent unused argument(s) compilation warning */
+  UNUSED(htim);
 
-//void tmc2209_readWriteArray2(uint8_t channel, uint8_t *data, size_t writeLength, size_t readLength)
-//{
-//	HAL_StatusTypeDef ret;
-//	ret = HAL_OK;
-//	//ret = HAL_HalfDuplex_EnableTransmitter(&huart4);
-//	if (ret == HAL_OK)
-//	{
-//		ret = HAL_UART_Transmit(&huart4,data,writeLength,5);
-//		if (ret == HAL_OK)
-//		{
-//			//ret = HAL_HalfDuplex_EnableReceiver(&huart4);
-//			//HAL_Delay(1);
-//			__HAL_UART_FLUSH_DRREGISTER(&huart4);
-//			if (readLength > 0)
-//			{
-//				//memset(data,0xff,writeLength);
-//				if (ret == HAL_OK)
-//				{
-//					//ret = HAL_UARTEx_ReceiveToIdle(&huart4,data,readLength,&readLength,100);
-//					ret = HAL_UART_Receive(&huart4,data,readLength,100);
-//					if (ret == HAL_OK)
-//					{
-//						return;
-//					}
-//				}
-//			}
-//			else
-//			{
-//				return;
-//			}
-//		}
-//	}
-//	return;
-////	uart->rxtx.clearBuffers();
-////	uart->rxtx.txN(data, writeLength);
-////	Hal_
-////	/* Workaround: Give the UART time to send. Otherwise another write/readRegister can do clearBuffers()
-////	 * before we're done. This currently is an issue with the IDE when using the Register browser and the
-////	 * periodic refresh of values gets requested right after the write request.
-////	 */
-////	wait(2);
+	if (htim == &htim7)
+	{
+    Timer100usCallback();
+	}
+	if (htim == &htim15)
+	{
+		ui32CounterPeriod++;
+	}
+}
 
-////	// Abort early if no data needs to be read back
-////	if (readLength <= 0)
-////		return 0;
-
-////	// Wait for reply with timeout limit
-////	uint32_t timestamp = systick_getTick();
-////	while(uart->rxtx.bytesAvailable() < readLength)
-////	{
-////		if(timeSince(timestamp) > UART_TIMEOUT_VALUE)
-////		{
-////			// Abort on timeout
-////			return -1;
-////		}
-////	}
-
-////	uart->rxtx.rxN(data, readLength);
-
-////	return 0;
-//}
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
+{
+	static uint16_t ui16Value = 0;
+	if (htim == &htim15)
+	{
+		if (ui32CounterPulse < X_TOTAL_PULSES/2)
+		{
+			htim15.Instance->ARR = aui32XBuffer[ui32CounterPulse++];
+		}
+		else if (ui32CounterPulse < X_TOTAL_PULSES)
+		{
+			ui16Value = (ui32CounterPulse++) - X_TOTAL_PULSES/2 ;
+			htim15.Instance->ARR = aui32XBuffer[X_TOTAL_PULSES/2 - ui16Value - 1];
+		}
+	//	else if (ui32CounterPulse < DMA_BUFFER_SIZE*9)
+	//		htim15.Instance->ARR = ui32DmaBuffer[DMA_BUFFER_SIZE-1];
+	//	else if (ui32CounterPulse < DMA_BUFFER_SIZE*10)
+	//		htim15.Instance->ARR = ui32DmaBuffer[DMA_BUFFER_SIZE-(ui32CounterPulse%DMA_BUFFER_SIZE)];
+		else
+		{
+			ui32CounterPulse = 0;
+			ui32CounterPeriod++;
+			if (ui32CounterPeriod == 3)
+			{
+				HAL_TIM_PWM_Stop_IT(&htim15,TIM_CHANNEL_1);
+				HAL_GPIO_WritePin(XEN_GPIO_Port, XEN_Pin, GPIO_PIN_SET);
+			}
+			
+		}	
+	}
+}
 
 
 /* USER CODE END 4 */

@@ -41,6 +41,7 @@ void tmc2209_writeInt(TMC2209TypeDef *tmc2209, uint8_t address, int32_t value)
 
 int32_t tmc2209_readInt(TMC2209TypeDef *tmc2209, uint8_t address)
 {
+
 	uint8_t data[8] = { 0 };
 
 	address = TMC_ADDRESS(address);

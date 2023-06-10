@@ -33,10 +33,17 @@ typedef struct {
 typedef void (*tmc2209_callback)(TMC2209TypeDef*, ConfigState);
 
 // Default Register values
-#define R00 0x00000040  // GCONF
+//#define R00 0x00000040  // GCONF
+//2:SpreadCycle
+//6:pdn_uart uart mode
+//7:step selection register
+#define R00 0x000000C4  // GCONF
 #define R10 0x00071703  // IHOLD_IRUN
 #define R11 0x00000014  // TPOWERDOWN
-#define R6C 0x10000053  // CHOPCONF
+//#define R6C 0x10000053  // CHOPCONF
+#define R6C 0x18000053  // CHOPCONF
+
+
 #define R70 0xC10D0024  // PWMCONF
 
 // Register access permissions:
