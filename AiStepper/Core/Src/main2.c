@@ -32,9 +32,10 @@
 
 #include "app_fatfs.h"
 #include "usbd_cdc_if.h"
-#include "aiStepper.h"
+#include "TMC2209.h"
 //#include "stm32g0xx_hal_uart.h"
 
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,25 +57,25 @@
 
 /* USER CODE BEGIN PV */
 
-void criticalError(void)
-{
-	//Do something to show error state
-	while(true)
-	{
-		HAL_GPIO_TogglePin(BED_PWM_GPIO_Port, BED_PWM_Pin);
-		HAL_Delay(200);
-	}	
-}
+	
+/* Asse X
+  #pturn = 200pulses turn
+	#turns = 5
+	#start freq 100
+	#maxfreq 200
+	#maxacc = 1
+*/
+#define X_TURN_PULSES 200 //must be an odd number
+#define X_TURNS 5
+#define X_TOTAL_PULSES (X_TURN_PULSES * X_TURNS)
+#define X_HALF_PULSES (X_TOTAL_PULSES/2)
+#define X_MIN_PULSE 5
+#define X_MAX_PULSE 800
+#define X_ACC_PULSE 5
+#define X_TIM_CLK 100000
 
-void fMotorXStart(void)
-{
-	HAL_TIMEx_PWMN_Start_IT(&htim15,TIM_CHANNEL_1);
-}
-
-void fMotorXStop(void)
-{
-	HAL_TIMEx_PWMN_Stop_IT(&htim15,TIM_CHANNEL_1);
-}
+uint16_t aui32XBuffer[X_HALF_PULSES];
+uint8_t ui8XState = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -84,10 +85,42 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-motorCtrl_t sMotorX;
 
-uint8_t ui8Test1;
-int32_t i32Test1;
+TMC2209TypeDef tmc2209;
+ConfigurationTypeDef sConfig;
+void tmc2209_readWriteArray(uint8_t channel, uint8_t *data, size_t writeLength, size_t readLength);
+uint8_t tmc2209_CRC8(uint8_t *data, size_t length);
+
+
+uint32_t ui32Read;
+char buff[5] = "ciao";
+uint32_t milli;
+uint8_t ui8Tmp;
+uint8_t ui8Buffer[10];
+
+uint32_t ui32Tmp0;
+uint32_t ui32Tmp1;
+uint32_t ui32Tmp2;
+uint32_t ui32BootTime;
+uint8_t aui8StringBuffer[256];
+uint8_t ui8StringLen;
+
+volatile uint32_t ui32CounterPeriod = 0;
+volatile uint32_t ui32CounterPulse = 0;
+uint32_t ui32TimerWait;
+
+typedef struct
+{
+	int32_t i32TargetPosition;
+	int32_t i32TargetPositionPrev;
+	int32_t i32ActualPosition;
+	uint32_t ui32MaxPulse;
+	uint32_t ui32MinPulse;
+	uint32_t ui32MaxAcceleration;
+	uint32_t ui32Idx;
+	
+} motorCtrl_t;
+
 /* USER CODE END 0 */
 
 /**
@@ -97,7 +130,26 @@ int32_t i32Test1;
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  static uint32_t millis;
+	uint32_t ui32Idx;
+	uint16_t pulse = X_MIN_PULSE ;
+	uint16_t CounterPeriod;
+	uint8_t ui8Tmp1;
+	uint8_t ui8Tmp2;
+	uint8_t ui8Tmp3;
+	uint8_t ui8Tmp4;
+	
+	//Fill bulses
+	for( ui32Idx = 0; ui32Idx < (X_TOTAL_PULSES/2); ui32Idx++)
+	{
+		CounterPeriod = X_TIM_CLK / pulse;
+		aui32XBuffer[ui32Idx] = CounterPeriod;
+		pulse += X_ACC_PULSE;
+		if (pulse > X_MAX_PULSE)
+		{
+			pulse = X_MAX_PULSE;
+		}	
+	}
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -129,76 +181,60 @@ int main(void)
   MX_TIM7_Init();
   MX_TIM15_Init();
   /* USER CODE BEGIN 2 */
-	//tmc general function
+	
+	HAL_GPIO_WritePin(XEN_GPIO_Port,XEN_Pin, GPIO_PIN_RESET);
+	HAL_Delay(10);
+	HAL_GPIO_WritePin(XEN_GPIO_Port,XEN_Pin, GPIO_PIN_SET);
+	HAL_Delay(10);
+	HAL_GPIO_WritePin(XEN_GPIO_Port,XEN_Pin, GPIO_PIN_SET);
+	HAL_Delay(10);
+//	//HAL_GPIO_WritePin(XDIR_GPIO_Port,XDIR_Pin, GPIO_PIN_SET);
 	tmc_fillCRC8Table(0x07, true, 1);
-	
-	//Prepare motor 1
+//	
+//	ui8Buffer[0] =  0x5;
+//	ui8Buffer[1] =  0x0;
+//	ui8Buffer[2] =  0x0;
+// 	ui8Buffer[3] =  tmc2209_CRC8(ui8Buffer,3);
+//	tmc2209_readWriteArray(0, ui8Buffer,4,8);
+//	
+//	ui8Buffer[0] =  0x5;
+//	ui8Buffer[1] =  0x1;
+//	ui8Buffer[2] =  0x0;
+// 	ui8Buffer[3] =  tmc2209_CRC8(ui8Buffer,3);
+//	tmc2209_readWriteArray(0, ui8Buffer,4,8);
 
-	sMotorX.DirPort = XDIR_GPIO_Port;
-	sMotorX.DirPin = XDIR_Pin;
-	sMotorX.EnPort = XEN_GPIO_Port;
-	sMotorX.EnPin = XEN_Pin;
-	sMotorX.psHTim = &htim15;
-	sMotorX.ui32Clock = X_TIM_CLK;
-	//motor1 tmc	
-	tmc2209_init(&sMotorX.tmc2209, 0, 0, &sMotorX.sConfig, tmc2209_defaultRegisterResetState);
-	tmc2209_periodicJob(&sMotorX.tmc2209,HAL_GetTick());
-	tmc2209_reset(&sMotorX.tmc2209);
-	//specific funcitons
-	sMotorX.pfStart = &fMotorXStart;
-	sMotorX.pfStop  = &fMotorXStop;
-	
-		
-	//Blink varius leds
-	for (millis = 0; millis < 5; millis++)
-	{
-		HAL_GPIO_TogglePin(FAN0_PWM_GPIO_Port, FAN0_PWM_Pin);
-		HAL_Delay(200);
-	}
+//	ui8Buffer[0] =  0x5;
+//	ui8Buffer[1] =  0x2;
+//	ui8Buffer[2] =  0x0;
+// 	ui8Buffer[3] =  tmc2209_CRC8(ui8Buffer,3);
+//	tmc2209_readWriteArray(0, ui8Buffer,4,8);
 
-	for (millis = 0; millis < 5; millis++)
-	{
-		HAL_GPIO_TogglePin(FAN1_PWM_GPIO_Port, FAN1_PWM_Pin);
-		HAL_Delay(200);
-	}
+//	ui8Buffer[0] =  0x5;
+//	ui8Buffer[1] =  0x3;
+//	ui8Buffer[2] =  0x0;
+// 	ui8Buffer[3] =  tmc2209_CRC8(ui8Buffer,3);
+//	tmc2209_readWriteArray(0, ui8Buffer,4,8);
 
-	for (millis = 0; millis < 5; millis++)
-	{
-		HAL_GPIO_TogglePin(BED_PWM_GPIO_Port, BED_PWM_Pin);
-		HAL_Delay(200);
-	}
+	HAL_GPIO_WritePin(XEN_GPIO_Port,XEN_Pin, GPIO_PIN_SET);
 
-	for (millis = 0; millis < 5; millis++)
-	{
-		HAL_GPIO_TogglePin(FAN_PWM_GPIO_Port, FAN_PWM_Pin);
-		HAL_Delay(200);
-	}
+	tmc2209_init(&tmc2209, 0, 0, &sConfig, tmc2209_defaultRegisterResetState);
+	tmc2209_periodicJob(&tmc2209,HAL_GetTick());
+	tmc2209_reset(&tmc2209);
 	
-	//Init motor 1
-	if (aiStepper_init(&sMotorX) == false)
-	{
-		criticalError();
-	}
-	
-	ui8Test1 = 0;
 	
 	
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
+	ui32BootTime = HAL_GetTick();
   while (1)
   {
-		aiStepper_run(&sMotorX);
-		if (ui8Test1 == 1)
-		{
-		  aiStepper_moveTo(&sMotorX, i32Test1);
-			ui8Test1 = 0;
-		}
-		/*
-
-		if (sMotorX.tmc2209.config->state == CONFIG_READY)
+//		//CDC_Transmit_FS((uint8_t*)buff,5);
+		milli = HAL_GetTick();
+  	tmc2209_periodicJob(&tmc2209,milli);	
+		HAL_Delay(1);
+		if (tmc2209.config->state == CONFIG_READY)
 		{
 			if (ui8XState == 0)
 			{
@@ -211,10 +247,48 @@ int main(void)
 
 			if (ui8XState == 1)
 			{
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,TMC2209_GCONF);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,0x6c);				
+				ui32Tmp0 = TMC2209_FIELD_READ(&tmc2209, TMC2209_CHOPCONF, TMC2209_MRES_MASK, TMC2209_MRES_SHIFT);
+				ui32Tmp0 = 256 >> ui32Tmp0;
+
+				ui32Tmp0 = 0;
+				//Set the microstef by software
+
+				//TMC2209_FIELD_UPDATE(&tmc2209, TMC2209_CHOPCONF, TMC2209_MRES_MASK, TMC2209_MRES_SHIFT, ui32Tmp0);
+
+				ui32Tmp0 = 256 >> TMC2209_FIELD_READ(&tmc2209, TMC2209_CHOPCONF, TMC2209_MRES_MASK, TMC2209_MRES_SHIFT);
+				
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,0x6c);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,1);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,2);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,3);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,4);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,5);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,6);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,7);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,8);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,9);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,10);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,11);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,12);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,13);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,14);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,18);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,16);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,17);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,18);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,19);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,20);				
+				
+				ui8XState = 2;
+				HAL_GPIO_WritePin(XEN_GPIO_Port, XEN_Pin, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(XDIR_GPIO_Port, XDIR_Pin, GPIO_PIN_SET);
+				HAL_Delay(100);
 
 				if (HAL_TIMEx_PWMN_Start_IT(&htim15,TIM_CHANNEL_1) == HAL_OK)
 				{
-					//HAL_TIM_PWM_Start_DMA2(&htim15, TIM_CHANNEL_1, (uint32_t)*aui16Buffer, X_TOTAL_PULSES);
+					//HAL_TIM_PWM_Start_DMA2(&htim15, TIM_CHANNEL_1, (uint32_t)*aui32XBuffer, X_TOTAL_PULSES);
 				}				
 			}
 			else if (ui8XState == 2)
@@ -265,13 +339,13 @@ int main(void)
 					ui32CounterPulse = 0;
 					if (HAL_TIMEx_PWMN_Start_IT(&htim15,TIM_CHANNEL_1) == HAL_OK)
 					{
-						//HAL_TIM_PWM_Start_DMA2(&htim15, TIM_CHANNEL_1, (uint32_t)*aui16Buffer, X_TOTAL_PULSES);
+						//HAL_TIM_PWM_Start_DMA2(&htim15, TIM_CHANNEL_1, (uint32_t)*aui32XBuffer, X_TOTAL_PULSES);
 					}							
 				}
 			}
 
 		}
-*/
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -327,6 +401,69 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 
 
+uint8_t aui8gDataOut[16];
+uint8_t aui8gDataIn[16];
+volatile uint8 ui8gIdxTx;
+volatile uint8 ui8gIdx;
+volatile uint8 ui8gIdxRx = 0;
+volatile uint8_t ui8GlobalFlag = 0;
+volatile uint16_t ui8GlobalRx = 0;
+
+void USART_CharReception_Callback(void)
+{
+	aui8gDataIn[ui8gIdxRx++] = LL_USART_ReceiveData8(USART4);
+	ui8gIdxRx%=16;
+}
+
+void Error_Callback(void)
+{
+	if (LL_USART_IsActiveFlag_ORE(USART4))
+	{
+	  LL_USART_ClearFlag_ORE(USART4);
+	}
+}
+void tmc2209_readWriteArray(uint8_t channel, uint8_t *data, size_t writeLength, size_t readLength)
+{
+	uint32_t timeout;
+	timeout = HAL_GetTick();
+	HAL_Delay(2);
+	
+	ui8gIdx = 0;
+	ui8gIdxRx = 0;
+  /* Clear Overrun flag, in case characters have already been sent to USART */
+	if (readLength>0)
+	{
+		LL_USART_ReceiveData8(USART4);
+		LL_USART_EnableIT_ERROR(USART4);
+		LL_USART_EnableIT_RXNE(USART4);
+	}
+	
+	while(ui8gIdx < writeLength)
+	{
+		LL_USART_TransmitData8(USART4, data[ui8gIdx++]);
+		while (!LL_USART_IsActiveFlag_TXE(USART4));
+	}
+	if(readLength>0)
+	{
+		//while (!LL_USART_IsActiveFlag_TC(USART4)) ui8gIdx++;
+		while( ui8gIdxRx < (writeLength+readLength) ) 
+		{
+			if ((HAL_GetTick() -timeout) > 50 )
+			{
+				memset(data,0,readLength);
+				LL_USART_DisableIT_ERROR(USART4);
+				LL_USART_DisableIT_RXNE(USART4);
+				LL_USART_ClearFlag_ORE(USART4);			
+			}		
+		}
+		ui8gIdx++;
+		memcpy(data,&aui8gDataIn[writeLength],readLength);
+		LL_USART_DisableIT_ERROR(USART4);
+		LL_USART_DisableIT_RXNE(USART4);
+	  LL_USART_ClearFlag_ORE(USART4);
+	}
+}
+	
 
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
@@ -334,15 +471,42 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* Prevent unused argument(s) compilation warning */
   UNUSED(htim);
 
+	if (htim == &htim7)
+	{
+    Timer100usCallback();
+	}
+	if (htim == &htim15)
+	{
+		ui32CounterPeriod++;
+	}
 }
-
 
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 {
 	static uint16_t ui16Value = 0;
-	if (htim == sMotorX.psHTim)
+	if (htim == &htim15)
 	{
-		motor_interrupt(&sMotorX);
+		if (ui32CounterPulse < X_HALF_PULSES)
+		{
+			htim15.Instance->ARR = aui32XBuffer[ui32CounterPulse++];
+		}
+		else if (ui32CounterPulse < X_TOTAL_PULSES)
+		{
+			ui16Value = (ui32CounterPulse++) - X_HALF_PULSES ;
+			htim15.Instance->ARR = aui32XBuffer[X_HALF_PULSES - ui16Value - 1];
+		}
+	//	else if (ui32CounterPulse < DMA_BUFFER_SIZE*9)
+	//		htim15.Instance->ARR = ui32DmaBuffer[DMA_BUFFER_SIZE-1];
+	//	else if (ui32CounterPulse < DMA_BUFFER_SIZE*10)
+	//		htim15.Instance->ARR = ui32DmaBuffer[DMA_BUFFER_SIZE-(ui32CounterPulse%DMA_BUFFER_SIZE)];
+		else
+		{
+			HAL_GPIO_TogglePin(XDIR_GPIO_Port, XDIR_Pin);
+			ui32CounterPulse = 0xFFFFFFFE;
+			ui32CounterPeriod++;	
+			HAL_TIMEx_PWMN_Stop_IT(&htim15,TIM_CHANNEL_1);
+			//HAL_GPIO_WritePin(XEN_GPIO_Port, XEN_Pin, GPIO_PIN_SET);			
+		}	
 	}
 }
 

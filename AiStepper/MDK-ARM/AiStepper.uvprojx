@@ -663,6 +663,16 @@
               <FileType>1</FileType>
               <FilePath>../Core/Src/stm32g0xx_hal_msp.c</FilePath>
             </File>
+            <File>
+              <FileName>utilis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\utilis.c</FilePath>
+            </File>
+            <File>
+              <FileName>aiStepper.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\aiStepper.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
