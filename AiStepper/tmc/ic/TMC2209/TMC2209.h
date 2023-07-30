@@ -34,11 +34,17 @@ typedef void (*tmc2209_callback)(TMC2209TypeDef*, ConfigState);
 
 // Default Register values
 //#define R00 0x00000040  // GCONF
+//1:External resistor NO
 //2:SpreadCycle
 //6:pdn_uart uart mode
 //7:step selection register
-#define R00 0x000000C4  // GCONF
-#define R10 0x00071703  // IHOLD_IRUN
+//#define R00 0x000000C4  // GCONF ext resistor and spread cycle
+#define R00 0x000000C0  // GCONF ext resistor and stalth chop cycle
+// I HOLD
+// 0-4 Standstill current
+// 8-12 IRUN
+// 16-19
+#define R10 0x00031F01// DEF 0x00071703  // IHOLD_IRUN
 #define R11 0x00000014  // TPOWERDOWN
 //#define R6C 0x10000053  // CHOPCONF
 #define R6C 0x18000053  // CHOPCONF

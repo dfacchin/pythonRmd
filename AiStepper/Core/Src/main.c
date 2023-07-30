@@ -56,7 +56,17 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte)  \
+  ((byte) & 0x80 ? '1' : '0'), \
+  ((byte) & 0x40 ? '1' : '0'), \
+  ((byte) & 0x20 ? '1' : '0'), \
+  ((byte) & 0x10 ? '1' : '0'), \
+  ((byte) & 0x08 ? '1' : '0'), \
+  ((byte) & 0x04 ? '1' : '0'), \
+  ((byte) & 0x02 ? '1' : '0'), \
+  ((byte) & 0x01 ? '1' : '0') 
+	
 /* Asse X
   #pturn = 200pulses turn
 	#turns = 5
@@ -65,14 +75,15 @@
 	#maxacc = 1
 */
 #define X_TURN_PULSES 200 //must be an odd number
-#define X_TURNS 15
+#define X_TURNS 5
 #define X_TOTAL_PULSES (X_TURN_PULSES * X_TURNS)
-#define X_MIN_PULSE 20
-#define X_MAX_PULSE 3000
-#define X_ACC_PULSE 10
+#define X_HALF_PULSES (X_TOTAL_PULSES/2)
+#define X_MIN_PULSE 5
+#define X_MAX_PULSE 800
+#define X_ACC_PULSE 5
 #define X_TIM_CLK 100000
 
-uint16_t aui32XBuffer[X_TOTAL_PULSES/2];
+uint16_t aui32XBuffer[X_HALF_PULSES];
 uint8_t ui8XState = 0;
 /* USER CODE END PV */
 
@@ -106,8 +117,16 @@ uint32_t milli;
 uint8_t ui8Tmp;
 uint8_t ui8Buffer[10];
 
-	uint32_t ui32Tmp;
+uint32_t ui32Tmp0;
+uint32_t ui32Tmp1;
+uint32_t ui32Tmp2;
 uint32_t ui32BootTime;
+uint8_t aui8StringBuffer[256];
+uint8_t ui8StringLen;
+
+volatile uint32_t ui32CounterPeriod = 0;
+volatile uint32_t ui32CounterPulse = 0;
+uint32_t ui32TimerWait;
 
 /* USER CODE END 0 */
 
@@ -121,6 +140,10 @@ int main(void)
 	uint32_t ui32Idx;
 	uint16_t pulse = X_MIN_PULSE ;
 	uint16_t CounterPeriod;
+	uint8_t ui8Tmp1;
+	uint8_t ui8Tmp2;
+	uint8_t ui8Tmp3;
+	uint8_t ui8Tmp4;
 	
 	//Fill bulses
 	for( ui32Idx = 0; ui32Idx < (X_TOTAL_PULSES/2); ui32Idx++)
@@ -222,7 +245,7 @@ int main(void)
 		{
 			if (ui8XState == 0)
 			{
-				if ( ( HAL_GetTick() - ui32BootTime) > 10000)
+				if ( ( HAL_GetTick() - ui32BootTime) > 4000)
 				{
 					ui8XState = 1;
 				}
@@ -231,43 +254,44 @@ int main(void)
 
 			if (ui8XState == 1)
 			{
-				ui32Tmp = tmc2209_readInt(&tmc2209,TMC2209_GCONF);
-				ui32Tmp = tmc2209_readInt(&tmc2209,0x6c);				
-				ui32Tmp = TMC2209_FIELD_READ(&tmc2209, TMC2209_CHOPCONF, TMC2209_MRES_MASK, TMC2209_MRES_SHIFT);
-				ui32Tmp = 256 >> ui32Tmp;
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,TMC2209_GCONF);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,0x6c);				
+				ui32Tmp0 = TMC2209_FIELD_READ(&tmc2209, TMC2209_CHOPCONF, TMC2209_MRES_MASK, TMC2209_MRES_SHIFT);
+				ui32Tmp0 = 256 >> ui32Tmp0;
 
-				ui32Tmp = 0;
+				ui32Tmp0 = 0;
 				//Set the microstef by software
 
-				//TMC2209_FIELD_UPDATE(&tmc2209, TMC2209_CHOPCONF, TMC2209_MRES_MASK, TMC2209_MRES_SHIFT, ui32Tmp);
+				//TMC2209_FIELD_UPDATE(&tmc2209, TMC2209_CHOPCONF, TMC2209_MRES_MASK, TMC2209_MRES_SHIFT, ui32Tmp0);
 
-				ui32Tmp = 256 >> TMC2209_FIELD_READ(&tmc2209, TMC2209_CHOPCONF, TMC2209_MRES_MASK, TMC2209_MRES_SHIFT);
+				ui32Tmp0 = 256 >> TMC2209_FIELD_READ(&tmc2209, TMC2209_CHOPCONF, TMC2209_MRES_MASK, TMC2209_MRES_SHIFT);
 				
-				ui32Tmp = tmc2209_readInt(&tmc2209,0x6c);
-				ui32Tmp = tmc2209_readInt(&tmc2209,1);
-				ui32Tmp = tmc2209_readInt(&tmc2209,2);
-				ui32Tmp = tmc2209_readInt(&tmc2209,3);
-				ui32Tmp = tmc2209_readInt(&tmc2209,4);
-				ui32Tmp = tmc2209_readInt(&tmc2209,5);
-				ui32Tmp = tmc2209_readInt(&tmc2209,6);
-				ui32Tmp = tmc2209_readInt(&tmc2209,7);
-				ui32Tmp = tmc2209_readInt(&tmc2209,8);
-				ui32Tmp = tmc2209_readInt(&tmc2209,9);
-				ui32Tmp = tmc2209_readInt(&tmc2209,10);
-				ui32Tmp = tmc2209_readInt(&tmc2209,11);
-				ui32Tmp = tmc2209_readInt(&tmc2209,12);
-				ui32Tmp = tmc2209_readInt(&tmc2209,13);
-				ui32Tmp = tmc2209_readInt(&tmc2209,14);
-				ui32Tmp = tmc2209_readInt(&tmc2209,18);
-				ui32Tmp = tmc2209_readInt(&tmc2209,16);
-				ui32Tmp = tmc2209_readInt(&tmc2209,17);
-				ui32Tmp = tmc2209_readInt(&tmc2209,18);
-				ui32Tmp = tmc2209_readInt(&tmc2209,19);
-				ui32Tmp = tmc2209_readInt(&tmc2209,20);				
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,0x6c);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,1);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,2);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,3);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,4);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,5);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,6);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,7);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,8);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,9);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,10);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,11);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,12);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,13);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,14);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,18);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,16);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,17);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,18);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,19);
+				ui32Tmp0 = tmc2209_readInt(&tmc2209,20);				
 				
 				ui8XState = 2;
 				HAL_GPIO_WritePin(XEN_GPIO_Port, XEN_Pin, GPIO_PIN_RESET);
 				HAL_GPIO_WritePin(XDIR_GPIO_Port, XDIR_Pin, GPIO_PIN_SET);
+				HAL_Delay(100);
 
 				if (HAL_TIMEx_PWMN_Start_IT(&htim15,TIM_CHANNEL_1) == HAL_OK)
 				{
@@ -277,11 +301,54 @@ int main(void)
 			else if (ui8XState == 2)
 			{
 				//read current 
-				ui32Tmp = tmc2209_readInt(&tmc2209, TMC2209_SG_RESULT);
-				
-				CDC_Transmit_FS(ui8Buffer,sprintf(ui8Buffer,"%d\n",ui32Tmp));
+				ui32Tmp0 = tmc2209_readInt(&tmc2209, TMC2209_SG_RESULT);
+				ui32Tmp1 = tmc2209_readInt(&tmc2209, TMC2209_IOIN);
+				ui8Tmp = ui32Tmp1;
+				ui32Tmp1 = tmc2209_readInt(&tmc2209, TMC2209_DRVSTATUS);
+				ui8Tmp1 = ui32Tmp1&0xFF;
+				ui8Tmp2 = (ui32Tmp1>>8)&0xFF;
+				ui8Tmp3 = (ui32Tmp1>>16)&0xFF;
+				ui8Tmp4 = (ui32Tmp1>>24)&0xFF;
+				ui32Tmp2 = tmc2209_readInt(&tmc2209, TMC2209_IFCNT);
+				ui8StringLen = sprintf((char*)aui8StringBuffer,"%05.0d %05.0d [ "BYTE_TO_BINARY_PATTERN" ]-"BYTE_TO_BINARY_PATTERN"-"BYTE_TO_BINARY_PATTERN"-"BYTE_TO_BINARY_PATTERN"-"BYTE_TO_BINARY_PATTERN"\n",
+						ui32Tmp0,ui32Tmp2,
+						BYTE_TO_BINARY(ui8Tmp),
+						BYTE_TO_BINARY(ui8Tmp4),
+						BYTE_TO_BINARY(ui8Tmp3),
+						BYTE_TO_BINARY(ui8Tmp2),
+						BYTE_TO_BINARY(ui8Tmp1));
+				//ui8StringLen = sprintf((char*)aui8StringBuffer,"%d-%d\n",ui32Tmp0,ui32Tmp1);
+
+				CDC_Transmit_FS(aui8StringBuffer,ui8StringLen);
 				HAL_Delay(20);
 
+			}
+			else if(ui8XState == 3)				
+			{
+				HAL_GPIO_WritePin(XEN_GPIO_Port, XEN_Pin, GPIO_PIN_SET);				
+			}
+			
+			if (ui32CounterPulse == 0xFFFFFFFE)
+			{
+				ui32CounterPulse = 0xFFFFFFFF;
+				ui32TimerWait = HAL_GetTick();
+				//HAL_GPIO_WritePin(XEN_GPIO_Port, XEN_Pin, GPIO_PIN_SET);
+			}
+			else if (ui32CounterPulse == 0xFFFFFFFF)
+			{
+				if ( (HAL_GetTick() - ui32TimerWait) > 2000)
+				{
+					ui32CounterPulse = 0;
+					HAL_GPIO_WritePin(XEN_GPIO_Port, XEN_Pin, GPIO_PIN_RESET);
+				}
+				if ( (HAL_GetTick() - ui32TimerWait) > 2000)
+				{
+					ui32CounterPulse = 0;
+					if (HAL_TIMEx_PWMN_Start_IT(&htim15,TIM_CHANNEL_1) == HAL_OK)
+					{
+						//HAL_TIM_PWM_Start_DMA2(&htim15, TIM_CHANNEL_1, (uint32_t)*aui32XBuffer, X_TOTAL_PULSES);
+					}							
+				}
 			}
 
 		}
@@ -404,8 +471,7 @@ void tmc2209_readWriteArray(uint8_t channel, uint8_t *data, size_t writeLength, 
 	}
 }
 	
-volatile uint32_t ui32CounterPeriod = 0;
-volatile uint32_t ui32CounterPulse = 0;
+
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
@@ -427,14 +493,14 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 	static uint16_t ui16Value = 0;
 	if (htim == &htim15)
 	{
-		if (ui32CounterPulse < X_TOTAL_PULSES/2)
+		if (ui32CounterPulse < X_HALF_PULSES)
 		{
 			htim15.Instance->ARR = aui32XBuffer[ui32CounterPulse++];
 		}
 		else if (ui32CounterPulse < X_TOTAL_PULSES)
 		{
-			ui16Value = (ui32CounterPulse++) - X_TOTAL_PULSES/2 ;
-			htim15.Instance->ARR = aui32XBuffer[X_TOTAL_PULSES/2 - ui16Value - 1];
+			ui16Value = (ui32CounterPulse++) - X_HALF_PULSES ;
+			htim15.Instance->ARR = aui32XBuffer[X_HALF_PULSES - ui16Value - 1];
 		}
 	//	else if (ui32CounterPulse < DMA_BUFFER_SIZE*9)
 	//		htim15.Instance->ARR = ui32DmaBuffer[DMA_BUFFER_SIZE-1];
@@ -442,14 +508,11 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 	//		htim15.Instance->ARR = ui32DmaBuffer[DMA_BUFFER_SIZE-(ui32CounterPulse%DMA_BUFFER_SIZE)];
 		else
 		{
-			ui32CounterPulse = 0;
-			ui32CounterPeriod++;
-			if (ui32CounterPeriod == 3)
-			{
-				HAL_TIM_PWM_Stop_IT(&htim15,TIM_CHANNEL_1);
-				HAL_GPIO_WritePin(XEN_GPIO_Port, XEN_Pin, GPIO_PIN_SET);
-			}
-			
+			HAL_GPIO_TogglePin(XDIR_GPIO_Port, XDIR_Pin);
+			ui32CounterPulse = 0xFFFFFFFE;
+			ui32CounterPeriod++;	
+			HAL_TIMEx_PWMN_Stop_IT(&htim15,TIM_CHANNEL_1);
+			//HAL_GPIO_WritePin(XEN_GPIO_Port, XEN_Pin, GPIO_PIN_SET);			
 		}	
 	}
 }
